@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="心情紀錄">
+<meta name="theme-color" content="#f4f5f7">
+<title>心情紀錄</title>
+<link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIuW/g+aDhee0gOmMhCIsCiAgInNob3J0X25hbWUiOiAi5b+D5oOFIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmYWY4ZjUiLAogICJ0aGVtZV9jb2xvciI6ICIjZmFmOGY1Igp9">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+:root {
+  --ff: 'Noto Sans TC', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --bg: #f4f5f7;
+  --grid-color: rgba(100,110,130,0.045);
+  --border-light: rgba(100,110,130,0.08);
+  --text-dark: #3a3530;
+  --text-mid: #887870;
+  --text-light: #b0a898;
+  --text-faint: #c0b8a8;
+  --warm-accent: #d06040;
+  --cool-accent: #1a9a8a;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0; background: var(--bg); font-family: var(--ff);
+  -webkit-font-smoothing: antialiased; overscroll-behavior: none;
+}
+input[type=range] { -webkit-appearance: none; appearance: none; }
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 3px solid white; box-shadow: 0 1px 6px rgba(0,0,0,0.2); cursor: pointer;
+}
+input[type=range]::-webkit-slider-runnable-track { height: 8px; background: transparent; }
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+.page { display: none; }
+.page.active { display: block; }
+#app {
+  max-width: 440px; margin: 0 auto; position: relative; min-height: 100vh;
+  min-height: 100dvh;
+}
+.grid-bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+.content { position: relative; z-index: 1; padding: 14px 10px env(safe-area-inset-bottom); }
+
+/* Header */
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 0 4px; }
+.header .nav-btn {
+  border: none; background: none; font-size: 22px; cursor: pointer;
+  color: #b0a090; padding: 6px 12px; line-height: 1;
+}
+.header .center { text-align: center; }
+.header .year { font-size: 11px; color: #c0b0a0; font-family: var(--mono); letter-spacing: 2px; }
+.header .month-name { font-size: 20px; font-weight: 800; color: var(--text-dark); letter-spacing: 3px; }
+
+/* Info row */
+.info-row {
+  display: flex; justify-content: center; align-items: center; gap: 20px;
+  margin-bottom: 14px; font-size: 12px; color: var(--text-faint); font-family: var(--mono);
+}
+.info-row button {
+  border: none; background: none; cursor: pointer; color: #a09080;
+  font-size: 12px; font-family: var(--mono); text-decoration: underline; text-underline-offset: 3px;
+}
+
+/* Calendar */
+.cal-wrap {
+  background: rgba(255,255,255,0.55); border-radius: 14px; overflow: hidden;
+  border: 1px solid var(--border-light); box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+}
+.cal-weekdays {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid rgba(100,110,130,0.1);
+}
+.cal-weekdays span {
+  text-align: center; padding: 7px 0; font-size: 10px; color: #b0a090;
+  font-weight: 500; font-family: var(--mono);
+}
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); transition: opacity 0.3s; }
+.day-cell {
+  position: relative; background: transparent; border: none;
+  border-right: 1px solid rgba(100,110,130,0.08); border-bottom: 1px solid rgba(100,110,130,0.08);
+  padding: 3px 1px 4px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 1; min-height: 66px;
+}
+.day-cell.today { background: rgba(100,110,130,0.06); outline: 1.5px solid rgba(180,60,80,0.25); outline-offset: -1px; }
+.day-cell .day-num {
+  font-size: 10px; font-weight: 400; color: #a09888;
+  font-family: var(--mono); line-height: 1.2;
+}
+.day-cell.today .day-num { font-weight: 700; color: #b03050; }
+.day-cell .dots { display: flex; flex-direction: column; align-items: center; gap: 2; flex: 1; justify-content: center; }
+.dot {
+  width: 12px; height: 12px; border-radius: 50%; transition: background 0.3s;
+}
+.dot.empty { background: #ece8e4; opacity: 0.35; }
+.cycle-bar {
+  width: 80%; height: 3px; border-radius: 2px; margin-bottom: 1px; opacity: 0.7;
+}
+.cycle-bar.period { background: linear-gradient(90deg, #d44060, #e06080); }
+.cycle-bar.pms { background: linear-gradient(90deg, #4090d0, #60b0e8); }
+.note-dot {
+  position: absolute; bottom: 2px; right: 2px;
+  width: 4px; height: 4px; border-radius: 50%; background: #c0b8b0;
+}
+.gradient-fill {
+  flex: 1; width: 85%; border-radius: 4px;
+  min-height: 32px; transition: background 0.3s;
+}
+.empty-cell {
+  border-right: 1px solid rgba(100,110,130,0.04);
+  border-bottom: 1px solid rgba(100,110,130,0.04);
+  min-height: 66px;
+}
+
+/* Legend */
+.legend {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 12;
+  margin-top: 14px; font-size: 10px; color: var(--text-faint);
+}
+.legend-item { display: flex; align-items: center; gap: 4; }
+.legend-dots { display: flex; gap: 2; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+.legend-bar { width: 14px; height: 3px; border-radius: 2px; }
+
+.footer {
+  text-align: center; margin-top: 24px; font-size: 9px;
+  color: #ddd; letter-spacing: 3px; font-family: var(--mono);
+}
+
+/* Overlay / Modal */
+.overlay {
+  position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.3);
+  display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+  animation: fadeIn 0.2s ease;
+}
+.modal {
+  width: 100%; max-width: 440px; background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -4px 30px rgba(0,0,0,0.12);
+  animation: slideUp 0.3s ease;
+  display: flex; flex-direction: column;
+  max-height: 80vh; max-height: 80dvh;
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 14px 10px; flex-shrink: 0;
+}
+.modal-header h2 { margin: 0; font-size: 17px; font-weight: 800; color: var(--text-dark); }
+.close-btn {
+  border: none; background: #eee; border-radius: 50%;
+  width: 30px; height: 30px; cursor: pointer; font-size: 15px; color: #999;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-body {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 0 14px calc(28px + env(safe-area-inset-bottom));
+}
+
+/* Cycle toggles */
+.cycle-toggles { display: flex; gap: 8px; margin-bottom: 14px; }
+.cycle-btn {
+  flex: 1; padding: 8px 0; border-radius: 10px; cursor: pointer;
+  font-size: 12px; font-family: var(--ff); transition: all 0.2s;
+}
+.cycle-btn.off { border: 2px solid #e8e4e0; background: white; color: #ccc; font-weight: 400; }
+.cycle-btn.pms-on { border: 2px solid #4090d0; background: rgba(64,144,208,0.15); color: #3070a0; font-weight: 700; }
+.cycle-btn.period-on { border: 2px solid #c04060; background: rgba(200,60,90,0.1); color: #b03050; font-weight: 700; }
+
+/* Entry editor */
+.entry-editor {
+  padding: 12px 14px; border-radius: 14px;
+  display: flex; flex-direction: column; gap: 10px; transition: background 0.3s;
+}
+.entry-editor.positive { background: rgba(255,215,195,0.35); }
+.entry-editor.negative { background: rgba(190,235,230,0.35); }
+.entry-top { display: flex; justify-content: space-between; align-items: center; }
+.period-label { font-size: 14px; font-weight: 700; color: #554; }
+.mode-btns { display: flex; gap: 3px; }
+.mode-btn {
+  padding: 2px 9px; border-radius: 6px; border: none; font-size: 10px;
+  cursor: pointer; font-family: var(--ff);
+}
+.mode-btn.active { background: #555; color: #fff; }
+.mode-btn.inactive { background: #eee; color: #999; }
+.type-row { display: flex; gap: 6px; }
+.type-btn {
+  flex: 1; padding: 8px 0; border-radius: 10px; font-size: 13px;
+  cursor: pointer; font-family: var(--ff); transition: all 0.2s;
+}
+.type-btn.off { border: 2px solid #e8e4e0; background: white; color: #bbb; font-weight: 400; }
+.type-btn.pos-on { border: 2px solid var(--warm-accent); background: rgba(255,215,195,0.7); color: var(--warm-accent); font-weight: 700; }
+.type-btn.neg-on { border: 2px solid var(--cool-accent); background: rgba(190,235,230,0.7); color: var(--cool-accent); font-weight: 700; }
+
+.slider-wrap { display: flex; align-items: center; gap: 10px; width: 100%; }
+.slider-track {
+  position: relative; flex: 1; height: 36px; display: flex; align-items: center;
+}
+.slider-bg {
+  position: absolute; left: 0; right: 0; height: 8px; border-radius: 4px; opacity: 0.5;
+}
+.slider-input {
+  width: 100%; appearance: none; -webkit-appearance: none; background: transparent;
+  position: relative; z-index: 1; height: 36px; cursor: pointer;
+}
+.score-display {
+  font-family: var(--mono); font-size: 15px; font-weight: 700;
+  min-width: 32px; text-align: right;
+}
+.number-wrap { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
+.number-input {
+  width: 80px; padding: 7px 10px; border-radius: 10px; font-family: var(--mono);
+  font-size: 16px; text-align: center; outline: none; background: white;
+}
+.color-preview { width: 18px; height: 18px; border-radius: 50%; transition: all 0.3s; }
+.note-input {
+  padding: 10px 14px; border-radius: 10px; border: 1px solid #e0dcd8;
+  font-family: var(--ff); font-size: 15px; color: #666; outline: none;
+  background: rgba(255,255,255,0.7); width: 100%; min-height: 42px;
+}
+.note-input::placeholder { color: #bbb; }
+.note-area { width: 100%; }
+.note-display {
+  display: block; padding: 8px 14px; font-family: var(--ff); font-size: 15px;
+  color: #3a3530; cursor: pointer; line-height: 1.5;
+  transition: color 0.2s;
+}
+.note-display:active { color: #000; }
+.save-row { display: flex; gap: 8px; }
+.save-btn {
+  flex: 1; padding: 7px 0; border-radius: 8px; border: none; cursor: pointer;
+  color: white; font-weight: 600; font-size: 12px; font-family: var(--ff);
+}
+.clear-btn {
+  padding: 7px 12px; border-radius: 8px; border: 1px solid #ddd;
+  background: white; color: #bbb; font-size: 11px; cursor: pointer; font-family: var(--ff);
+}
+.unified-save-btn {
+  display: block; width: fit-content; min-width: 140px; padding: 12px 32px;
+  border-radius: 12px; border: none; cursor: pointer; margin: 14px auto 0;
+  background: #4a4540; color: white; font-weight: 700; font-size: 15px;
+  font-family: var(--ff); letter-spacing: 1px;
+  transition: background 0.2s;
+}
+.unified-save-btn:active { background: #3a3530; }
+.clear-link {
+  border: none; background: none; color: #ccc; font-size: 10px;
+  cursor: pointer; font-family: var(--ff); text-decoration: underline;
+  text-underline-offset: 2px; padding: 0;
+}
+
+/* Stats page */
+.stats-page {
+  position: fixed; inset: 0; z-index: 100; background: var(--bg);
+  overflow-y: auto; animation: fadeIn 0.2s ease;
+}
+.stats-inner { max-width: 440px; margin: 0 auto; padding: 16px 14px 40px; }
+.stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.back-btn {
+  border: none; background: none; font-size: 14px; cursor: pointer;
+  color: #a09080; font-family: var(--ff); font-weight: 600;
+}
+.stats-title { margin: 0; font-size: 16px; font-weight: 800; color: var(--text-dark); }
+.stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.stat-card {
+  background: rgba(255,255,255,0.7); border-radius: 14px; padding: 14px 16px;
+  border: 1px solid var(--border-light);
+}
+.stat-card .label { font-size: 10px; color: var(--text-light); font-family: var(--mono); margin-bottom: 4px; }
+.stat-card .value { font-size: 24px; font-weight: 800; font-family: var(--mono); }
+.section-box {
+  background: rgba(255,255,255,0.7); border-radius: 14px; padding: 14px 16px;
+  border: 1px solid var(--border-light); margin-bottom: 20px;
+}
+.section-title { font-size: 13px; font-weight: 700; color: #665; margin-bottom: 10px; }
+.cycle-summary { display: flex; gap: 16px; font-size: 12px; color: #887; margin-bottom: 8px; }
+.cycle-insight {
+  margin-top: 6px; padding: 6px 10px; border-radius: 8px;
+  background: rgba(200,160,50,0.1); font-size: 11px; color: #3070a0;
+}
+.bar-chart { display: flex; align-items: flex-end; gap: 2px; height: 100px; }
+.bar-col {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: flex-end; height: 100%; position: relative;
+}
+.bar { width: 100%; max-width: 8px; border-radius: 3px; transition: height 0.4s ease, background 0.3s; }
+.bar.empty-bar { height: 2px !important; background: #ece8e4; }
+.bar-cycle-dot {
+  position: absolute; top: 0; width: 4px; height: 4px; border-radius: 50%;
+}
+.chart-labels {
+  display: flex; justify-content: space-between; margin-top: 4px;
+  font-size: 8px; color: #c0b8b0; font-family: var(--mono);
+}
+
+/* Backup section */
+.backup-section { margin-top: 20px; }
+.backup-btns { display: flex; gap: 8px; }
+.backup-btn {
+  flex: 1; padding: 10px 0; border-radius: 10px; cursor: pointer;
+  font-size: 12px; font-family: var(--ff); font-weight: 600;
+}
+.export-btn { border: 2px solid #b0a898; background: white; color: #887870; }
+.import-btn { border: 2px solid #b0a898; background: white; color: #887870; }
+#import-file { display: none; }
+
+/* Pattern analysis */
+.pattern-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.pattern-label { font-size: 11px; color: var(--text-mid); font-family: var(--mono); width: 32px; text-align: right; flex-shrink: 0; }
+.pattern-bar-wrap { flex: 1; height: 5px; background: #ece8e4; border-radius: 3px; overflow: hidden; }
+.pattern-bar-fill { height: 100%; border-radius: 3px; }
+.pattern-val { font-size: 11px; font-family: var(--mono); font-weight: 600; min-width: 32px; text-align: right; }
+.pattern-sub { font-size: 10px; color: var(--text-faint); min-width: 50px; }
+.dow-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 4px; }
+.dow-cell { display: flex; flex-direction: column; align-items: center; }
+.dow-name { font-size: 9px; color: var(--text-faint); font-family: var(--mono); margin-bottom: 3px; }
+.dow-bar-wrap { width: 100%; height: 44px; display: flex; align-items: flex-end; justify-content: center; }
+.dow-bar { width: 70%; border-radius: 2px 2px 0 0; }
+.dow-val { font-size: 9px; font-family: var(--mono); color: var(--text-mid); margin-top: 2px; }
+.insight-box { padding: 7px 10px; border-radius: 8px; font-size: 11px; line-height: 1.6; margin-top: 8px; }
+.insight-box.warn { background: rgba(200,70,40,0.08); color: #a03020; }
+.insight-box.info { background: rgba(200,160,50,0.1); color: #7a6020; }
+.insight-box.good { background: rgba(40,160,90,0.08); color: #2a7040; }
+.week-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.week-label { font-size: 11px; color: var(--text-mid); font-family: var(--mono); width: 36px; flex-shrink: 0; }
+.period-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-light); }
+.period-row:last-of-type { border-bottom: none; }
+.row-tag { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; white-space: nowrap; }
+.row-tag.worst { background: rgba(26,154,138,0.12); color: var(--cool-accent); }
+.row-tag.best { background: rgba(208,96,64,0.12); color: var(--warm-accent); }
+
+.month-summary-card { background: rgba(255,255,255,0.7); border-radius: 14px; padding: 20px 16px; border: 1px solid var(--border-light); margin-bottom: 16px; text-align: center; }
+.summary-verdict { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+.summary-pct { font-size: 13px; font-weight: 600; margin-bottom: 6px; opacity: 0.85; }
+.summary-meta { font-size: 11px; color: var(--text-faint); font-family: var(--mono); }
+.discovery-list { display: flex; flex-direction: column; gap: 8px; }
+.discovery-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.6); border: 1px solid var(--border-light); font-size: 13px; line-height: 1.5; color: var(--text-dark); }
+.discovery-icon { flex-shrink: 0; font-size: 15px; line-height: 1.4; }
+
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div id="app">
+  <!-- MAIN PAGE -->
+  <div id="page-main" class="page active">
+    <div class="content">
+      <div class="header">
+        <button class="nav-btn" id="prev-month">‹</button>
+        <div class="center">
+          <div class="year" id="display-year"></div>
+          <div class="month-name" id="display-month"></div>
+        </div>
+        <button class="nav-btn" id="next-month">›</button>
+      </div>
+      <div class="info-row">
+        <span id="entry-count"></span>
+        <button id="toggle-view">● 圓點</button>
+        <button id="open-stats">月度統計 →</button>
+      </div>
+      <div class="cal-wrap">
+        <div class="cal-weekdays">
+          <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-dots" id="legend-warm"></div>
+          <span>正面</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-dots" id="legend-cool"></div>
+          <span>負面</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-bar" style="background:linear-gradient(90deg,#4090d0,#60b0e8)"></div>
+          <span>經前</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-bar" style="background:linear-gradient(90deg,#d44060,#e06080)"></div>
+          <span>月經</span>
+        </div>
+      </div>
+      <div class="footer">MOOD · TRACKER</div>
+    </div>
+  </div>
+
+  <!-- DAY MODAL (injected dynamically) -->
+  <div id="day-modal"></div>
+
+  <!-- STATS PAGE -->
+  <div id="page-stats" class="page"></div>
+</div>
+
+<script>
+// ===== COLOR SYSTEM =====
+const WARM = [[255,210,190],[255,170,140],[245,130,100],[225,95,70],[195,65,45]];
+const COOL = [[190,235,230],[130,210,200],[70,185,175],[30,155,145],[10,120,110]];
+
+function lerp(stops, t) {
+  t = Math.max(0, Math.min(1, t));
+  const seg = t * (stops.length - 1);
+  const i = Math.floor(seg), f = seg - i;
+  const a = stops[Math.min(i, stops.length-1)], b = stops[Math.min(i+1, stops.length-1)];
+  return `rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`;
+}
+function getColor(type, score) {
+  if (score == null) return '#e0dcd8';
+  return lerp(type === 'positive' ? WARM : COOL, score / 100);
+}
+
+// ===== CONSTANTS =====
+const MONTHS_TW = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+const PERIOD_KEYS = ['morning','afternoon','evening'];
+const PERIOD_NAMES = ['早上','下午','晚上'];
+
+// ===== STATE =====
+const today = new Date();
+let curYear = today.getFullYear(), curMonth = today.getMonth();
+let monthData = {}, cycleData = {};
+let viewMode = 'dots'; // 'dots' or 'gradient'
+
+// ===== STORAGE =====
+function sKey(y,m) { return `mood:${y}-${String(m+1).padStart(2,'0')}`; }
+function cKey(y,m) { return `cycle:${y}-${String(m+1).padStart(2,'0')}`; }
+function loadData() {
+  try { monthData = JSON.parse(localStorage.getItem(sKey(curYear,curMonth))) || {}; } catch { monthData = {}; }
+  try { cycleData = JSON.parse(localStorage.getItem(cKey(curYear,curMonth))) || {}; } catch { cycleData = {}; }
+}
+function saveData() {
+  localStorage.setItem(sKey(curYear,curMonth), JSON.stringify(monthData));
+  localStorage.setItem(cKey(curYear,curMonth), JSON.stringify(cycleData));
+}
+
+// ===== RENDER CALENDAR =====
+function daysInMonth(y,m) { return new Date(y,m+1,0).getDate(); }
+function firstDow(y,m) { return new Date(y,m,1).getDay(); }
+
+function renderCalendar() {
+  loadData();
+  document.getElementById('display-year').textContent = curYear;
+  document.getElementById('display-month').textContent = MONTHS_TW[curMonth];
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+  const dim = daysInMonth(curYear, curMonth);
+  const fdow = firstDow(curYear, curMonth);
+  const isCur = curYear === today.getFullYear() && curMonth === today.getMonth();
+
+  // Empty cells
+  for (let i = 0; i < fdow; i++) {
+    const el = document.createElement('div');
+    el.className = 'empty-cell';
+    grid.appendChild(el);
+  }
+
+  // Day cells
+  for (let d = 1; d <= dim; d++) {
+    const btn = document.createElement('button');
+    btn.className = 'day-cell' + (isCur && d === today.getDate() ? ' today' : '');
+    const dk = String(d);
+    const dayD = monthData[dk];
+    const dayC = cycleData[dk];
+
+    let html = `<span class="day-num">${d}</span>`;
+
+    if (dayC?.pms || dayC?.period) {
+      html += `<div class="cycle-bar ${dayC.period ? 'period' : 'pms'}"></div>`;
+    }
+
+    if (viewMode === 'gradient') {
+      // Gradient mode: blend all period colors into one fill
+      const entries = PERIOD_KEYS.map(pk => dayD?.[pk]).filter(e => e?.score != null);
+      if (entries.length > 0) {
+        if (entries.length === 1) {
+          html += `<div class="gradient-fill" style="background:${getColor(entries[0].type, entries[0].score)}"></div>`;
+        } else {
+          const colors = entries.map((e, i) => {
+            const pct = (i / (entries.length - 1)) * 100;
+            return `${getColor(e.type, e.score)} ${pct}%`;
+          });
+          html += `<div class="gradient-fill" style="background:linear-gradient(180deg,${colors.join(',')})"></div>`;
+        }
+      } else {
+        html += '<div class="gradient-fill" style="background:#ece8e4;opacity:0.3"></div>';
+      }
+    } else {
+      // Dots mode
+      html += '<div class="dots">';
+      PERIOD_KEYS.forEach(pk => {
+        const e = dayD?.[pk];
+        if (e?.score != null) {
+          html += `<div class="dot" style="background:${getColor(e.type, e.score)}"></div>`;
+        } else {
+          html += '<div class="dot empty"></div>';
+        }
+      });
+      html += '</div>';
+    }
+
+    if (dayD && PERIOD_KEYS.some(pk => dayD[pk]?.note)) {
+      html += '<div class="note-dot"></div>';
+    }
+
+    btn.innerHTML = html;
+    btn.addEventListener('click', () => openDayModal(d));
+    grid.appendChild(btn);
+  }
+
+  // Trailing empties
+  const total = fdow + dim;
+  const rem = (7 - (total % 7)) % 7;
+  for (let i = 0; i < rem; i++) {
+    const el = document.createElement('div');
+    el.className = 'empty-cell';
+    grid.appendChild(el);
+  }
+
+  // Entry count
+  let cnt = 0;
+  Object.values(monthData).forEach(day => {
+    PERIOD_KEYS.forEach(pk => { if (day[pk]?.score != null) cnt++; });
+  });
+  document.getElementById('entry-count').textContent = `已記錄 ${cnt} 筆`;
+}
+
+// ===== LEGEND =====
+function renderLegend() {
+  const warmEl = document.getElementById('legend-warm');
+  const coolEl = document.getElementById('legend-cool');
+  [20,50,80].forEach(s => {
+    const d1 = document.createElement('div');
+    d1.className = 'legend-dot';
+    d1.style.background = getColor('positive', s);
+    warmEl.appendChild(d1);
+    const d2 = document.createElement('div');
+    d2.className = 'legend-dot';
+    d2.style.background = getColor('negative', s);
+    coolEl.appendChild(d2);
+  });
+}
+
+// ===== DAY MODAL =====
+function openDayModal(day, initialDirty = false) {
+  const dk = String(day);
+  const dayD = monthData[dk] || {};
+  const dayC = cycleData[dk] || {};
+
+  const modal = document.getElementById('day-modal');
+  modal.innerHTML = `
+    <div class="overlay" id="modal-overlay">
+      <div class="modal" id="modal-content">
+        <div class="modal-header">
+          <h2>${curYear}/${curMonth+1}/${day}</h2>
+          <button class="close-btn" id="modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="cycle-toggles">
+            <button class="cycle-btn ${dayC.pms ? 'pms-on' : 'off'}" id="toggle-pms">🌙 經前症候群</button>
+            <button class="cycle-btn ${dayC.period ? 'period-on' : 'off'}" id="toggle-period">🔴 月經期間</button>
+          </div>
+          <div id="editors" style="display:flex;flex-direction:column;gap:10px;"></div>
+          <button id="unified-save" class="unified-save-btn">儲存全部</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Cycle toggles
+  document.getElementById('toggle-pms').addEventListener('click', () => {
+    if (!cycleData[dk]) cycleData[dk] = {};
+    cycleData[dk].pms = !cycleData[dk].pms;
+    if (!cycleData[dk].pms && !cycleData[dk].period) delete cycleData[dk];
+    saveData(); openDayModal(day, true);
+  });
+  document.getElementById('toggle-period').addEventListener('click', () => {
+    if (!cycleData[dk]) cycleData[dk] = {};
+    cycleData[dk].period = !cycleData[dk].period;
+    if (!cycleData[dk].pms && !cycleData[dk].period) delete cycleData[dk];
+    saveData(); openDayModal(day, true);
+  });
+
+  // Close
+  document.getElementById('modal-close').addEventListener('click', closeDayModal);
+  document.getElementById('modal-overlay').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeDayModal();
+  });
+
+  // Editors
+  const editorsEl = document.getElementById('editors');
+  PERIOD_KEYS.forEach((pk, idx) => {
+    const entry = dayD[pk] || {};
+    const editorId = `editor-${pk}`;
+    const hasExisting = entry.score != null;
+
+    const div = document.createElement('div');
+    div.id = editorId;
+    div.className = `entry-editor ${entry.type || 'positive'}`;
+    div.innerHTML = buildEditorHTML(pk, idx, entry, hasExisting);
+    editorsEl.appendChild(div);
+    attachEditorEvents(div, pk, day, entry);
+  });
+
+  let modalDirty = initialDirty;
+
+  // Unified save button
+  document.getElementById('unified-save').addEventListener('click', () => {
+    const editors = editorsEl.querySelectorAll('.entry-editor');
+    editors.forEach(edDiv => {
+      if (!edDiv._getState || !edDiv._periodKey) return;
+      const state = edDiv._getState();
+      const pk = edDiv._periodKey;
+
+      if (state.cleared) {
+        // Remove this period
+        if (monthData[dk]?.[pk]) {
+          delete monthData[dk][pk];
+          if (Object.keys(monthData[dk]).length === 0) delete monthData[dk];
+          modalDirty = true;
+        }
+      } else if (state.touched) {
+        // Save this period
+        if (!monthData[dk]) monthData[dk] = {};
+        monthData[dk][pk] = { type: state.type, score: state.score, note: state.note };
+        modalDirty = true;
+      }
+      // If not touched and not cleared, skip (don't write defaults)
+    });
+    if (modalDirty) saveData();
+    closeDayModal(modalDirty);
+  });
+}
+
+function buildEditorHTML(pk, idx, entry, hasExisting) {
+  const type = entry.type || 'positive';
+  const score = hasExisting ? entry.score : 50;
+  const note = entry.note || '';
+  const color = hasExisting ? getColor(type, score) : '#ccc';
+  const gradStr = hasExisting
+    ? (type === 'positive'
+      ? `linear-gradient(to right, rgb(${WARM[0]}), rgb(${WARM[2]}), rgb(${WARM[4]}))`
+      : `linear-gradient(to right, rgb(${COOL[0]}), rgb(${COOL[2]}), rgb(${COOL[4]}))`)
+    : 'linear-gradient(to right, #e8e4e0, #ccc)';
+
+  return `
+    <div class="entry-top">
+      <span class="period-label">${PERIOD_NAMES[idx]}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        ${hasExisting ? '<button class="clear-link">清除</button>' : ''}
+        <div class="mode-btns">
+          <button class="mode-btn active" data-mode="slider">滑桿</button>
+          <button class="mode-btn inactive" data-mode="number">數字</button>
+        </div>
+      </div>
+    </div>
+    <div class="type-row">
+      <button class="type-btn ${type==='positive' ? 'pos-on' : 'off'}" data-type="positive">正面情緒</button>
+      <button class="type-btn ${type==='negative' ? 'neg-on' : 'off'}" data-type="negative">負面情緒</button>
+    </div>
+    <div class="input-area" data-current-mode="slider">
+      <div class="slider-wrap">
+        <div class="slider-track">
+          <div class="slider-bg" style="background:${gradStr}"></div>
+          <input type="range" class="slider-input" min="0" max="100" value="${score}">
+        </div>
+        <span class="score-display" style="color:${color}">${hasExisting ? score : '—'}</span>
+      </div>
+      <div class="number-wrap" style="display:none">
+        <input type="number" class="number-input" min="0" max="100" value="${hasExisting ? score : ''}" placeholder="0-100"
+          style="border-color:${hasExisting ? color : '#ddd'}">
+        ${hasExisting ? `<div class="color-preview" style="background:${color}"></div>` : ''}
+      </div>
+    </div>
+    <div class="note-area">
+      <span class="note-display" style="color:${note ? '#3a3530' : '#9a9590'}">${note ? note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : '＋ 附註'}</span>
+      <input type="text" class="note-input" value="${note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}" placeholder="附註（選填）" style="display:none">
+    </div>
+  `;
+}
+
+function attachEditorEvents(div, pk, day, initialEntry) {
+  let type = initialEntry.type || 'positive';
+  let score = initialEntry.score ?? 50;
+  const dk = String(day);
+  const hadExisting = initialEntry.score != null;
+  let touched = hadExisting; // already existing = treat as touched
+  let cleared = false;
+
+  function markTouched() { touched = true; cleared = false; }
+
+  // Mode toggle
+  div.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      div.querySelectorAll('.mode-btn').forEach(b => b.className = 'mode-btn ' + (b.dataset.mode === mode ? 'active' : 'inactive'));
+      div.querySelector('.slider-wrap').style.display = mode === 'slider' ? 'flex' : 'none';
+      div.querySelector('.number-wrap').style.display = mode === 'number' ? 'flex' : 'none';
+    });
+  });
+
+  // Type toggle
+  div.querySelectorAll('.type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      type = btn.dataset.type;
+      div.className = `entry-editor ${type}`;
+      div.querySelectorAll('.type-btn').forEach(b => {
+        if (b.dataset.type === type) {
+          b.className = `type-btn ${type === 'positive' ? 'pos-on' : 'neg-on'}`;
+        } else {
+          b.className = 'type-btn off';
+        }
+      });
+      markTouched();
+      updateColors();
+    });
+  });
+
+  function updateColors() {
+    const color = touched ? getColor(type, score) : '#ccc';
+    const gradStr = touched
+      ? (type === 'positive'
+        ? `linear-gradient(to right, rgb(${WARM[0]}), rgb(${WARM[2]}), rgb(${WARM[4]}))`
+        : `linear-gradient(to right, rgb(${COOL[0]}), rgb(${COOL[2]}), rgb(${COOL[4]}))`)
+      : 'linear-gradient(to right, #e8e4e0, #ccc)';
+    div.querySelector('.slider-bg').style.background = gradStr;
+    div.querySelector('.score-display').style.color = color;
+    div.querySelector('.score-display').textContent = touched ? score : '—';
+    const ni = div.querySelector('.number-input');
+    ni.style.borderColor = touched ? color : '#ddd';
+    const cp = div.querySelector('.color-preview');
+    if (cp) cp.style.background = color;
+    const si = div.querySelector('.slider-input');
+    si.style.color = color;
+  }
+
+  // Slider
+  const slider = div.querySelector('.slider-input');
+  slider.addEventListener('input', (e) => {
+    score = parseInt(e.target.value);
+    div.querySelector('.number-input').value = score;
+    markTouched();
+    updateColors();
+  });
+
+  // Number
+  const numInput = div.querySelector('.number-input');
+  numInput.addEventListener('input', (e) => {
+    const v = e.target.value === '' ? 50 : Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+    score = v;
+    slider.value = v;
+    markTouched();
+    updateColors();
+  });
+
+  // Note: click-to-edit toggle
+  const noteDisplay = div.querySelector('.note-display');
+  const noteInput = div.querySelector('.note-input');
+  noteDisplay.addEventListener('click', () => {
+    noteDisplay.style.display = 'none';
+    noteInput.style.display = '';
+    noteInput.focus();
+  });
+  noteInput.addEventListener('blur', () => {
+    const val = noteInput.value.trim();
+    noteDisplay.textContent = val || '＋ 附註';
+    noteDisplay.style.color = val ? '#3a3530' : '#9a9590';
+    noteDisplay.style.display = '';
+    noteInput.style.display = 'none';
+    if (val) markTouched();
+  });
+
+  // Save - handled by unified button, store getters on div
+  div._getState = () => ({ type, score, note: div.querySelector('.note-input').value.trim(), touched, cleared });
+  div._periodKey = pk;
+
+  // Clear
+  const clearLink = div.querySelector('.clear-link');
+  if (clearLink) {
+    clearLink.addEventListener('click', () => {
+      cleared = true;
+      touched = false;
+      // Visual feedback: dim the editor
+      div.style.opacity = '0.35';
+    });
+  }
+
+  // Init thumb color
+  slider.style.color = hadExisting ? getColor(type, score) : '#ccc';
+}
+
+function closeDayModal(dirty = false) {
+  document.getElementById('day-modal').innerHTML = '';
+  if (dirty) renderCalendar();
+}
+
+// ===== STATS PAGE =====
+function openStats() {
+  document.getElementById('page-main').classList.remove('active');
+  const statsPage = document.getElementById('page-stats');
+  statsPage.classList.add('active');
+
+  const dim = daysInMonth(curYear, curMonth);
+  let posCount=0, negCount=0, posSum=0, negSum=0;
+  let pmsDays=0, periodDays=0;
+  let pmsMoodNeg=[], nonPmsMoodNeg=[];
+  const dailyAvgs = [];
+
+  for (let d=1; d<=dim; d++) {
+    const dk = String(d);
+    const dayD = monthData[dk];
+    const dayC = cycleData[dk];
+    if (dayC?.pms) pmsDays++;
+    if (dayC?.period) periodDays++;
+    let scores = [];
+    if (dayD) {
+      PERIOD_KEYS.forEach(pk => {
+        const e = dayD[pk];
+        if (e?.score != null) {
+          scores.push(e.score);
+          if (e.type==='positive') { posCount++; posSum+=e.score; }
+          else { negCount++; negSum+=e.score; }
+          if (e.type==='negative') {
+            if (dayC?.pms || dayC?.period) pmsMoodNeg.push(e.score);
+            else nonPmsMoodNeg.push(e.score);
+          }
+        }
+      });
+    }
+    dailyAvgs.push(scores.length > 0 ? scores.reduce((a,b)=>a+b,0)/scores.length : null);
+  }
+
+  const filledDays = Object.keys(monthData).filter(k => {
+    const d = monthData[k];
+    return d && PERIOD_KEYS.some(pk => d[pk]?.score != null);
+  }).length;
+  const posAvg = posCount > 0 ? Math.round(posSum/posCount) : null;
+  const negAvg = negCount > 0 ? Math.round(negSum/negCount) : null;
+  const pmsNegAvg = pmsMoodNeg.length > 0 ? Math.round(pmsMoodNeg.reduce((a,b)=>a+b,0)/pmsMoodNeg.length) : null;
+  const nonPmsNegAvg = nonPmsMoodNeg.length > 0 ? Math.round(nonPmsMoodNeg.reduce((a,b)=>a+b,0)/nonPmsMoodNeg.length) : null;
+
+  // Cycle correlation: compare neg rate on cycle days vs non-cycle days, broken down by time of day
+  let cycleTotalEntries = 0, cycleNegEntries = 0;
+  let nonCycleTotalEntries = 0, nonCycleNegEntries = 0;
+  const cycleByPeriod = PERIOD_KEYS.map(() => ({ total: 0, neg: 0 }));
+  for (let d = 1; d <= dim; d++) {
+    const dk = String(d);
+    const dayD = monthData[dk];
+    const dayC = cycleData[dk];
+    const isCycle = dayC?.pms || dayC?.period;
+    if (dayD) {
+      PERIOD_KEYS.forEach((pk, pi) => {
+        const e = dayD[pk];
+        if (e?.score != null) {
+          if (isCycle) {
+            cycleTotalEntries++;
+            cycleByPeriod[pi].total++;
+            if (e.type === 'negative') { cycleNegEntries++; cycleByPeriod[pi].neg++; }
+          } else {
+            nonCycleTotalEntries++;
+            if (e.type === 'negative') nonCycleNegEntries++;
+          }
+        }
+      });
+    }
+  }
+  const cycleNegRatio = cycleTotalEntries > 0 ? cycleNegEntries / cycleTotalEntries : null;
+  const nonCycleNegRatio = nonCycleTotalEntries > 0 ? nonCycleNegEntries / nonCycleTotalEntries : null;
+
+  // ===== ADDITIONAL ANALYTICS =====
+  const DOW_TW = ['日','一','二','三','四','五','六'];
+
+  // Time of day: negative frequency + intensity per period
+  const periodAnalysis = PERIOD_KEYS.map(pk => {
+    let negCnt = 0, negSum = 0, total = 0;
+    for (let d = 1; d <= dim; d++) {
+      const e = monthData[String(d)]?.[pk];
+      if (e?.score != null) {
+        total++;
+        if (e.type === 'negative') { negCnt++; negSum += e.score; }
+      }
+    }
+    return { total, negCnt, negAvg: negCnt > 0 ? Math.round(negSum / negCnt) : null };
+  });
+
+  // Day of week: negative entry count per weekday
+  const dowStats = Array(7).fill(null).map(() => ({ negCnt: 0, total: 0 }));
+  for (let d = 1; d <= dim; d++) {
+    const dow = new Date(curYear, curMonth, d).getDay();
+    const dayD = monthData[String(d)];
+    if (dayD) {
+      PERIOD_KEYS.forEach(pk => {
+        const e = dayD[pk];
+        if (e?.score != null) {
+          dowStats[dow].total++;
+          if (e.type === 'negative') dowStats[dow].negCnt++;
+        }
+      });
+    }
+  }
+
+  // Weekly counts: positive vs negative entries per week
+  const weekCounts = [0, 1, 2, 3].map(() => ({ pos: 0, neg: 0 }));
+  for (let d = 1; d <= dim; d++) {
+    const wk = Math.min(Math.floor((d - 1) / 7), 3);
+    const dayD = monthData[String(d)];
+    if (dayD) {
+      PERIOD_KEYS.forEach(pk => {
+        const e = dayD[pk];
+        if (e?.score != null) {
+          if (e.type === 'positive') weekCounts[wk].pos++;
+          else weekCounts[wk].neg++;
+        }
+      });
+    }
+  }
+
+  // Consecutive low mood: days with any negative entry scoring >= 50
+  let maxLowRun = [], curLowRun = [];
+  for (let d = 1; d <= dim; d++) {
+    const dayD = monthData[String(d)];
+    const isLow = dayD && PERIOD_KEYS.some(pk => dayD[pk]?.type === 'negative' && dayD[pk].score >= 50);
+    if (isLow) {
+      curLowRun.push(d);
+    } else {
+      if (curLowRun.length > maxLowRun.length) maxLowRun = [...curLowRun];
+      curLowRun = [];
+    }
+  }
+  if (curLowRun.length > maxLowRun.length) maxLowRun = curLowRun;
+
+  // Cross-month comparison (net valence vs previous month)
+  const prevM = curMonth === 0 ? 11 : curMonth - 1;
+  const prevY = curMonth === 0 ? curYear - 1 : curYear;
+  let prevMData = {};
+  try { prevMData = JSON.parse(localStorage.getItem(sKey(prevY, prevM))) || {}; } catch { prevMData = {}; }
+  const prevValArr = [], curValArr = [];
+  Object.values(prevMData).forEach(dayD => {
+    if (typeof dayD !== 'object' || !dayD) return;
+    PERIOD_KEYS.forEach(pk => {
+      const e = dayD[pk];
+      if (e?.score != null) prevValArr.push(e.type === 'positive' ? e.score : -e.score);
+    });
+  });
+  for (let d = 1; d <= dim; d++) {
+    const dayD = monthData[String(d)];
+    if (dayD) PERIOD_KEYS.forEach(pk => {
+      const e = dayD[pk];
+      if (e?.score != null) curValArr.push(e.type === 'positive' ? e.score : -e.score);
+    });
+  }
+  const prevNetAvg = prevValArr.length ? Math.round(prevValArr.reduce((a, b) => a + b, 0) / prevValArr.length) : null;
+  const curNetAvg = curValArr.length ? Math.round(curValArr.reduce((a, b) => a + b, 0) / curValArr.length) : null;
+
+  let cycleHTML = '';
+  if (pmsDays > 0 || periodDays > 0) {
+    const cycleDaysDesc = [
+      pmsDays > 0 ? `${pmsDays} 天經前症候群` : '',
+      periodDays > 0 ? `${periodDays} 天月經期間` : ''
+    ].filter(Boolean).join('、');
+
+    // Main correlation sentence
+    let correlationText = '';
+    if (cycleNegRatio !== null && nonCycleNegRatio !== null && cycleTotalEntries >= 3) {
+      const cyclePct = Math.round(cycleNegRatio * 100);
+      const nonCyclePct = Math.round(nonCycleNegRatio * 100);
+      const diff = cyclePct - nonCyclePct;
+      if (diff >= 20) {
+        correlationText = `週期期間的負面情緒明顯比平時多，佔該期間記錄的 ${cyclePct}%，平時則是 ${nonCyclePct}%，情緒受週期影響較大`;
+      } else if (diff >= 10) {
+        correlationText = `週期期間有輕微的情緒波動，負面情緒佔 ${cyclePct}%，比平時的 ${nonCyclePct}% 稍高`;
+      } else if (diff > -5) {
+        correlationText = `週期期間情緒與平時相近（${cyclePct}% vs ${nonCyclePct}%），這個月週期對情緒影響不明顯`;
+      } else {
+        correlationText = `週期期間情緒比平時還穩定（${cyclePct}% vs ${nonCyclePct}%），這個月應對得很好`;
+      }
+    } else if (cycleNegRatio !== null && cycleTotalEntries >= 2) {
+      correlationText = `週期期間共記錄了 ${cycleTotalEntries} 筆，其中 ${cycleNegEntries} 次是負面情緒`;
+    }
+
+    // Most affected time of day during cycle
+    let worstCycleTimeText = '';
+    if (cycleTotalEntries >= 3) {
+      const activeCP = PERIOD_KEYS.map((pk, i) => ({ ...cycleByPeriod[i], idx: i })).filter(p => p.total >= 2);
+      if (activeCP.length > 1) {
+        const sortedCP = [...activeCP].sort((a, b) => (b.neg / b.total) - (a.neg / a.total));
+        const worst = sortedCP[0], best = sortedCP[sortedCP.length - 1];
+        if ((worst.neg / worst.total) - (best.neg / best.total) >= 0.15 && worst.neg / worst.total >= 0.4) {
+          const pct = Math.round(worst.neg / worst.total * 100);
+          worstCycleTimeText = `週期期間，${PERIOD_NAMES[worst.idx]}的情緒最受影響（${pct}% 是負面情緒）`;
+        }
+      }
+    }
+
+    cycleHTML = `
+      <div class="section-box">
+        <div class="section-title">週期與情緒</div>
+        <div style="font-size:11px;color:var(--text-faint);margin-bottom:10px">這個月有 ${cycleDaysDesc}</div>
+        ${correlationText ? `<div class="discovery-item"${worstCycleTimeText ? ' style="margin-bottom:8px"' : ''}>
+          <span class="discovery-icon">🔄</span>
+          <span>${correlationText}</span>
+        </div>` : ''}
+        ${worstCycleTimeText ? `<div class="discovery-item">
+          <span class="discovery-icon">🕐</span>
+          <span>${worstCycleTimeText}</span>
+        </div>` : ''}
+      </div>
+    `;
+  }
+
+  // ===== GENERATE DISCOVERIES =====
+  const discoveries = [];
+
+  // 1. Consecutive low mood (highest priority — empathy first)
+  if (maxLowRun.length >= 3) {
+    discoveries.push({
+      icon: '⚠️',
+      text: `第 ${maxLowRun[0]} 至 ${maxLowRun[maxLowRun.length - 1]} 日連續 ${maxLowRun.length} 天出現強烈負面情緒，那段時間辛苦了`
+    });
+  }
+
+  // 2. Worst time of day (≥3 entries per period, ≥12% gap)
+  const periodWithData = periodAnalysis.map((p, i) => ({ ...p, idx: i })).filter(p => p.total >= 3);
+  if (periodWithData.length > 1) {
+    const sortedP = [...periodWithData].sort((a, b) => (b.negCnt / b.total) - (a.negCnt / a.total));
+    const worstP = sortedP[0], bestP = sortedP[sortedP.length - 1];
+    if ((worstP.negCnt / worstP.total) - (bestP.negCnt / bestP.total) >= 0.12) {
+      const pct = Math.round(worstP.negCnt / worstP.total * 100);
+      discoveries.push({
+        icon: '🕐',
+        text: `${PERIOD_NAMES[worstP.idx]}是你最容易情緒低落的時段，${pct}% 的${PERIOD_NAMES[worstP.idx]}紀錄是負面情緒`
+      });
+    }
+  }
+
+  // 3. Worst weekday (negCnt ≥ 3, ratio ≥ 50%)
+  const dowWithData = dowStats.map((d, i) => ({ ...d, idx: i })).filter(d => d.negCnt >= 2 && d.total >= 2);
+  if (dowWithData.length > 0) {
+    const sortedDow = [...dowWithData].sort((a, b) => (b.negCnt / b.total) - (a.negCnt / a.total));
+    const worstD = sortedDow[0];
+    if (worstD.negCnt >= 3 && worstD.negCnt / worstD.total >= 0.5) {
+      const pct = Math.round(worstD.negCnt / worstD.total * 100);
+      discoveries.push({
+        icon: '📅',
+        text: `每逢星期${DOW_TW[worstD.idx]}，情緒往往較不穩定（${worstD.negCnt} 次負面，佔 ${pct}%）`
+      });
+    }
+  }
+
+  // 4. Monthly trend: first half vs second half (≥20% difference)
+  const fH = weekCounts.slice(0, 2).reduce((a, w) => ({ pos: a.pos + w.pos, neg: a.neg + w.neg }), { pos: 0, neg: 0 });
+  const sH = weekCounts.slice(2).reduce((a, w) => ({ pos: a.pos + w.pos, neg: a.neg + w.neg }), { pos: 0, neg: 0 });
+  const fHR = (fH.pos + fH.neg) > 0 ? fH.neg / (fH.pos + fH.neg) : null;
+  const sHR = (sH.pos + sH.neg) > 0 ? sH.neg / (sH.pos + sH.neg) : null;
+  if (fHR !== null && sHR !== null && Math.abs(sHR - fHR) >= 0.2) {
+    if (sHR < fHR) {
+      discoveries.push({ icon: '📈', text: '這個月情緒越來越好，後半段比前半段正面許多' });
+    } else {
+      discoveries.push({ icon: '📉', text: '這個月後半段情緒比前半段低落，留意一下自己的狀態' });
+    }
+  }
+
+  // 5. Cross-month comparison (≥10% change)
+  if (prevValArr.length > 0 && curValArr.length > 0) {
+    const prevPos = prevValArr.filter(v => v > 0).length;
+    const curPos = curValArr.filter(v => v > 0).length;
+    const prevPct = Math.round(prevPos / prevValArr.length * 100);
+    const curPct = Math.round(curPos / curValArr.length * 100);
+    const diff = curPct - prevPct;
+    if (diff >= 10) {
+      discoveries.push({ icon: '✨', text: `比${MONTHS_TW[prevM]}正面情緒提升了 ${diff} 個百分點，這個月狀態很好` });
+    } else if (diff <= -10) {
+      discoveries.push({ icon: '💙', text: `比${MONTHS_TW[prevM]}負面情緒多了 ${Math.abs(diff)} 個百分點，多關注一下自己` });
+    }
+  }
+
+  // Fallback
+  if (discoveries.length === 0) {
+    if (posCount + negCount >= 10 && posCount > negCount * 1.5) {
+      discoveries.push({ icon: '🌱', text: '這個月整體情緒穩定，沒有特別明顯的固定低落模式' });
+    } else {
+      discoveries.push({ icon: '📝', text: '記錄越多天，這裡就能幫你找出情緒規律' });
+    }
+  }
+
+  // ===== SUMMARY =====
+  const totalEntries = posCount + negCount;
+  const posRatio = totalEntries > 0 ? posCount / totalEntries : null;
+  const posRatioPct = posRatio !== null ? Math.round(posRatio * 100) : null;
+  let summaryVerdict, verdictColor;
+  if (posRatio === null || totalEntries < 3) {
+    summaryVerdict = '開始記錄你的情緒旅程';
+    verdictColor = 'var(--text-dark)';
+  } else if (posRatio >= 0.68) {
+    summaryVerdict = `${MONTHS_TW[curMonth]}整體情緒不錯`;
+    verdictColor = 'var(--warm-accent)';
+  } else if (posRatio >= 0.52) {
+    summaryVerdict = `${MONTHS_TW[curMonth]}情緒偏正面`;
+    verdictColor = 'var(--warm-accent)';
+  } else if (posRatio >= 0.42) {
+    summaryVerdict = `${MONTHS_TW[curMonth]}情緒正負均衡`;
+    verdictColor = 'var(--text-dark)';
+  } else {
+    summaryVerdict = `${MONTHS_TW[curMonth]}是情緒比較辛苦的一個月`;
+    verdictColor = 'var(--cool-accent)';
+  }
+
+  // ===== BAR CHART =====
+  let barsHTML = '';
+  for (let i = 0; i < dailyAvgs.length; i++) {
+    const dk = String(i + 1);
+    const dayD = monthData[dk];
+    const dayC = cycleData[dk];
+    const hasCycle = dayC?.pms || dayC?.period;
+    let dotHTML = '';
+    if (hasCycle) {
+      dotHTML = `<div class="bar-cycle-dot" style="background:${dayC.period ? '#d04060' : '#4090d0'}"></div>`;
+    }
+    if (dailyAvgs[i] === null) {
+      barsHTML += `<div class="bar-col">${dotHTML}<div class="bar empty-bar"></div></div>`;
+    } else {
+      const avg = dailyAvgs[i];
+      const h = (avg / 100) * 80 + 4;
+      let pCnt = 0, nCnt = 0;
+      if (dayD) PERIOD_KEYS.forEach(pk => { if (dayD[pk]?.type === 'positive') pCnt++; else if (dayD[pk]?.type === 'negative') nCnt++; });
+      const domType = pCnt >= nCnt ? 'positive' : 'negative';
+      barsHTML += `<div class="bar-col">${dotHTML}<div class="bar" style="height:${h}px;background:${getColor(domType, avg)}"></div></div>`;
+    }
+  }
+
+  statsPage.innerHTML = `
+    <div class="stats-page">
+      <div class="stats-inner">
+        <div class="stats-header">
+          <button class="back-btn" id="stats-back">← 返回</button>
+          <h2 class="stats-title">${MONTHS_TW[curMonth]}</h2>
+          <div style="width:40px"></div>
+        </div>
+
+        <div class="month-summary-card">
+          <div class="summary-verdict" style="color:${verdictColor}">${summaryVerdict}</div>
+          ${posRatioPct !== null ? `<div class="summary-pct" style="color:${verdictColor}">正面情緒佔 ${posRatioPct}%</div>` : ''}
+          <div class="summary-meta">記錄了 ${filledDays} 天・共 ${totalEntries} 筆</div>
+        </div>
+
+        <div class="section-box" style="margin-bottom:16px">
+          <div class="bar-chart">${barsHTML}</div>
+          <div class="chart-labels"><span>1</span><span>${Math.ceil(dim / 2)}</span><span>${dim}</span></div>
+        </div>
+
+        <div class="section-box">
+          <div class="section-title">本月發現</div>
+          <div class="discovery-list" style="margin-top:10px">
+            ${discoveries.map(d => `<div class="discovery-item"><span class="discovery-icon">${d.icon}</span><span>${d.text}</span></div>`).join('')}
+          </div>
+        </div>
+
+        ${cycleHTML}
+
+        <div class="section-box backup-section">
+          <div class="section-title">資料備份</div>
+          <p style="font-size:11px;color:#a09888;margin-bottom:10px;line-height:1.6">
+            匯出所有月份的情緒紀錄為 JSON 檔案，可隨時匯入還原。建議定期備份。
+          </p>
+          <div class="backup-btns">
+            <button class="backup-btn export-btn" id="btn-export">📤 匯出備份</button>
+            <button class="backup-btn import-btn" id="btn-import">📥 匯入備份</button>
+            <input type="file" id="import-file" accept=".json">
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('stats-back').addEventListener('click', closeStats);
+  document.getElementById('btn-export').addEventListener('click', exportData);
+  document.getElementById('btn-import').addEventListener('click', () => document.getElementById('import-file').click());
+  document.getElementById('import-file').addEventListener('change', importData);
+}
+
+function closeStats() {
+  document.getElementById('page-stats').classList.remove('active');
+  document.getElementById('page-stats').innerHTML = '';
+  document.getElementById('page-main').classList.add('active');
+}
+
+// ===== EXPORT / IMPORT =====
+function exportData() {
+  const allData = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith('mood:') || key.startsWith('cycle:')) {
+      try { allData[key] = JSON.parse(localStorage.getItem(key)); } catch {}
+    }
+  }
+  const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mood-backup-${curYear}${String(curMonth+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+function sanitizeEntry(entry) {
+  if (typeof entry !== 'object' || entry === null) return null;
+  const type = entry.type === 'negative' ? 'negative' : 'positive';
+  const score = typeof entry.score === 'number'
+    ? Math.max(0, Math.min(100, Math.round(entry.score))) : null;
+  const note = typeof entry.note === 'string'
+    ? entry.note.slice(0, 500) : '';
+  if (score === null) return null;
+  return { type, score, note };
+}
+
+function sanitizeMonthData(val) {
+  if (typeof val !== 'object' || val === null || Array.isArray(val)) return null;
+  const out = {};
+  for (const [dk, dayVal] of Object.entries(val)) {
+    if (!/^\d{1,2}$/.test(dk)) continue;
+    if (typeof dayVal !== 'object' || dayVal === null) continue;
+    const dayOut = {};
+    for (const pk of PERIOD_KEYS) {
+      if (dayVal[pk] != null) {
+        const clean = sanitizeEntry(dayVal[pk]);
+        if (clean) dayOut[pk] = clean;
+      }
+    }
+    if (Object.keys(dayOut).length > 0) out[dk] = dayOut;
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
+
+function sanitizeCycleData(val) {
+  if (typeof val !== 'object' || val === null || Array.isArray(val)) return null;
+  const out = {};
+  for (const [dk, dayVal] of Object.entries(val)) {
+    if (!/^\d{1,2}$/.test(dk)) continue;
+    if (typeof dayVal !== 'object' || dayVal === null) continue;
+    const clean = {};
+    if (dayVal.pms === true) clean.pms = true;
+    if (dayVal.period === true) clean.period = true;
+    if (Object.keys(clean).length > 0) out[dk] = clean;
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    alert('檔案過大（上限 5MB），請確認是否為正確的備份檔案');
+    e.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      let count = 0;
+      Object.entries(data).forEach(([key, val]) => {
+        if (key.startsWith('mood:')) {
+          const clean = sanitizeMonthData(val);
+          if (clean) { localStorage.setItem(key, JSON.stringify(clean)); count++; }
+        } else if (key.startsWith('cycle:')) {
+          const clean = sanitizeCycleData(val);
+          if (clean) { localStorage.setItem(key, JSON.stringify(clean)); count++; }
+        }
+      });
+      alert(`已匯入 ${count} 筆月份資料`);
+      loadData();
+      renderCalendar();
+      closeStats();
+    } catch {
+      alert('檔案格式錯誤，請選擇正確的備份檔案');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ===== NAV =====
+document.getElementById('prev-month').addEventListener('click', () => {
+  curMonth--;
+  if (curMonth < 0) { curMonth = 11; curYear--; }
+  renderCalendar();
+});
+document.getElementById('next-month').addEventListener('click', () => {
+  curMonth++;
+  if (curMonth > 11) { curMonth = 0; curYear++; }
+  renderCalendar();
+});
+document.getElementById('open-stats').addEventListener('click', openStats);
+document.getElementById('toggle-view').addEventListener('click', () => {
+  viewMode = viewMode === 'dots' ? 'gradient' : 'dots';
+  document.getElementById('toggle-view').textContent = viewMode === 'dots' ? '● 圓點' : '◧ 漸層';
+  renderCalendar();
+});
+
+// ===== INIT =====
+renderLegend();
+renderCalendar();
+</script>
+</body>
+</html>
