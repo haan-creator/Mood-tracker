@@ -680,6 +680,26 @@ input[type=number] { -moz-appearance: textfield; }
 .day-cell { min-height: var(--cell-h, 66px); }
 .empty-cell { min-height: var(--cell-h, 66px); }
 
+/* Journal watermark below calendar */
+.cal-whisper {
+  text-align: center; padding: 14px 20px 0;
+  cursor: pointer; transition: opacity 0.2s;
+}
+.cal-whisper:active { opacity: 0.5; }
+.cal-whisper-text {
+  font-family: var(--ff); font-size: 12px;
+  color: #c8c0b8; letter-spacing: 0.3px;
+  line-height: 1.6;
+  overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; max-width: 280px;
+  margin: 0 auto;
+}
+.cal-whisper-hint {
+  font-family: var(--mono); font-size: 9px;
+  color: #d8d0c8; letter-spacing: 1px;
+  margin-top: 2px;
+}
+
 /* ===== SPLASH SCREEN ===== */
 #splash {
   position: fixed; inset: 0; z-index: 99999;
@@ -803,12 +823,13 @@ input[type=number] { -moz-appearance: textfield; }
           </button>
         </div>
       </div>
-      <div class="cal-wrap">
+      <div class="cal-wrap" id="cal-wrap">
         <div class="cal-weekdays">
           <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
         </div>
         <div class="cal-grid" id="cal-grid"></div>
       </div>
+      <div class="cal-whisper" id="cal-whisper" style="display:none;"></div>
       <div class="legend">
         <div class="legend-item">
           <div class="legend-dots" id="legend-warm"></div>
@@ -827,7 +848,7 @@ input[type=number] { -moz-appearance: textfield; }
           <span>月經</span>
         </div>
       </div>
-      <div class="footer">MOOD · TRACKER <svg viewBox="0 0 16 12" width="16" height="12" style="vertical-align:middle;margin-left:4px;"><circle cx="5" cy="4" r="1.3" fill="#c0b8b0"/><circle cx="11" cy="4" r="1.3" fill="#c0b8b0"/><line x1="6" y1="9" x2="10" y2="9" stroke="#c0b8b0" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div class="footer">MOOD · TRACKER <span id="footer-monster" style="display:inline-block;vertical-align:middle;margin-left:4px;"></span></div>
     </div>
   </div>
 
@@ -1278,6 +1299,9 @@ function renderCalendar() {
 
   // Update cell heights for current row count
   if (typeof updateCellHeight === 'function') updateCellHeight();
+  if (typeof updateSkyBg === 'function') updateSkyBg();
+  if (typeof updateFooterMonster === 'function') updateFooterMonster();
+  if (typeof updateCalWhisper === 'function') updateCalWhisper();
 }
 
 // ===== LEGEND =====
@@ -2864,6 +2888,79 @@ document.getElementById('toggle-view').innerHTML = viewMode === 'monster' ? VIEW
   }, 2500);
 })();
 
+// ===== SKY BACKGROUND =====
+function updateSkyBg() {
+  const wrap = document.getElementById('cal-wrap');
+  if (!wrap) return;
+  let pos = 0, neg = 0;
+  for (const [dk, dayVal] of Object.entries(monthData)) {
+    PERIOD_KEYS.forEach(pk => {
+      const e = dayVal?.[pk];
+      if (e?.score != null) {
+        if (e.type === 'positive') pos++; else neg++;
+      }
+    });
+  }
+  const total = pos + neg;
+  if (total < 3) {
+    wrap.style.background = 'rgba(255,255,255,0.55)';
+    return;
+  }
+  const ratio = pos / total;
+  if (ratio >= 0.6) {
+    wrap.style.background = 'rgba(255,235,190,0.25)';
+  } else if (ratio <= 0.4) {
+    wrap.style.background = 'rgba(190,220,235,0.2)';
+  } else {
+    wrap.style.background = 'rgba(255,255,255,0.55)';
+  }
+}
+
+// ===== FOOTER LIVE MONSTER =====
+function updateFooterMonster() {
+  const el = document.getElementById('footer-monster');
+  if (!el) return;
+  const todayY = today.getFullYear(), todayM = today.getMonth(), todayD = today.getDate();
+  let todayData = null;
+  try {
+    const raw = JSON.parse(localStorage.getItem(sKey(todayY, todayM)));
+    const clean = sanitizeMonthData(raw);
+    if (clean && clean[String(todayD)]) todayData = clean[String(todayD)];
+  } catch {}
+  if (todayData) {
+    el.innerHTML = generateMiniMonster(todayData, 16);
+  } else {
+    el.innerHTML = '<svg viewBox="0 0 16 12" width="16" height="12"><rect x="4" y="2" width="8" height="8" rx="2" fill="#d0ccc8" opacity="0.3"/></svg>';
+  }
+}
+
+// ===== JOURNAL WHISPER =====
+function updateCalWhisper() {
+  const el = document.getElementById('cal-whisper');
+  if (!el) return;
+  let latest = null;
+  for (const [dk, dayVal] of Object.entries(monthData)) {
+    const day = parseInt(dk, 10);
+    for (let pi = PERIOD_KEYS.length - 1; pi >= 0; pi--) {
+      const e = dayVal?.[PERIOD_KEYS[pi]];
+      if (e?.note?.trim()) {
+        const sortKey = day * 10 + pi;
+        if (!latest || sortKey > latest.sortKey) {
+          latest = { sortKey, note: e.note.trim(), day };
+        }
+      }
+    }
+  }
+  if (!latest) {
+    el.style.display = 'none';
+    return;
+  }
+  const preview = latest.note.length > 30 ? latest.note.slice(0, 30) + '...' : latest.note;
+  el.style.display = 'block';
+  el.innerHTML = '<div class="cal-whisper-text">' + preview.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>';
+  el.onclick = () => openJournal();
+}
+
 // ===== DYNAMIC CELL HEIGHT =====
 function updateCellHeight() {
   const grid = document.getElementById('cal-grid');
@@ -2885,6 +2982,7 @@ function updateCellHeight() {
 renderLegend();
 renderCalendar();
 updateCellHeight();
+updateFooterMonster();
 window.addEventListener('resize', updateCellHeight);
 </script>
 </body>
