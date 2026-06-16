@@ -687,44 +687,55 @@ input[type=number] { -moz-appearance: textfield; }
 }
 #splash-sky {
   position: absolute; inset: 0;
-  background: linear-gradient(180deg, #f8d878 0%, #f0c870 30%, #e88050 55%, #a0d4e8 100%);
+  background: linear-gradient(180deg, #e8a050 0%, #f0c468 10%, #f8d878 30%, #f5d470 72%, #b8dce8 92%, #88c8d8 100%);
   transform: translateY(100%);
-  animation: splashUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: splashUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 #splash-face {
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -55%);
   width: 180px; height: auto;
+}
+#splash-d-group {
   opacity: 0;
-  animation: splashFaceIn 0.3s ease-out 0.35s forwards;
+  animation: splashFadeIn 0.35s ease-out 0.5s forwards, splashDPoint 0.4s ease-in-out 1.6s both;
+}
+#splash-eyes {
+  opacity: 0;
+  animation: splashFadeIn 0.35s ease-out 0.5s forwards, splashBlink 0.45s ease-in-out 0.9s both;
 }
 #splash-wave {
   stroke-dasharray: 320;
   stroke-dashoffset: 320;
-  animation: splashDraw 0.5s ease-out 0.3s forwards;
-}
-#splash-eyes {
-  transform-origin: center 55%;
-  animation: splashBlink 0.5s ease-in-out 0.7s both;
+  animation: splashDraw 0.55s ease-out 1.0s forwards, splashUndulate 0.5s ease-in-out 1.8s both;
 }
 #splash.exit {
-  animation: splashExit 0.35s ease-in forwards;
+  animation: splashExit 0.4s ease-in forwards;
 }
 @keyframes splashUp {
   to { transform: translateY(0); }
 }
-@keyframes splashFaceIn {
+@keyframes splashFadeIn {
   to { opacity: 1; }
 }
 @keyframes splashDraw {
   to { stroke-dashoffset: 0; }
 }
 @keyframes splashBlink {
-  0% { transform: scaleY(1); }
-  40% { transform: scaleY(1); }
-  55% { transform: scaleY(0.08); }
-  70% { transform: scaleY(1); }
-  100% { transform: scaleY(1); }
+  0%, 30% { transform: scaleY(1); }
+  50% { transform: scaleY(0.08); }
+  70%, 100% { transform: scaleY(1); }
+}
+@keyframes splashDPoint {
+  0% { transform: translateY(0); }
+  45% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+@keyframes splashUndulate {
+  0% { transform: scaleY(1) translateY(0); }
+  30% { transform: scaleY(1.18) translateY(-2px); }
+  60% { transform: scaleY(0.88) translateY(2px); }
+  100% { transform: scaleY(1) translateY(0); }
 }
 @keyframes splashExit {
   to { opacity: 0; }
@@ -737,16 +748,18 @@ input[type=number] { -moz-appearance: textfield; }
 <div id="splash">
   <div id="splash-sky"></div>
   <svg id="splash-face" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
-    <path id="splash-wave" d="M15 48 Q50 18, 82 48 Q114 78, 148 48 Q180 18, 195 40" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="5.5" stroke-linecap="round"/>
-    <g id="splash-eyes">
+    <path id="splash-wave" d="M15 48 Q50 18, 82 48 Q114 78, 148 48 Q180 18, 195 40" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="5.5" stroke-linecap="round" style="transform-origin:center 48px;"/>
+    <g id="splash-eyes" style="transform-origin:100px 84px;">
       <circle cx="62" cy="82" r="14" fill="rgba(255,255,255,0.92)"/>
       <circle cx="138" cy="82" r="14" fill="rgba(255,255,255,0.92)"/>
       <circle cx="64" cy="84" r="6" fill="rgba(50,40,35,0.55)"/>
       <circle cx="140" cy="84" r="6" fill="rgba(50,40,35,0.55)"/>
     </g>
-    <circle cx="170" cy="108" r="10.5" fill="none" stroke="rgba(255,255,255,0.72)" stroke-width="4"/>
-    <line x1="180" y1="116" x2="180" y2="78" stroke="rgba(255,255,255,0.72)" stroke-width="4" stroke-linecap="round"/>
-    <circle cx="180" cy="73" r="3.5" fill="rgba(255,255,255,0.75)"/>
+    <g id="splash-d-group" style="transform-origin:175px 95px;">
+      <circle cx="170" cy="108" r="10.5" fill="none" stroke="rgba(255,255,255,0.72)" stroke-width="4"/>
+      <line x1="180" y1="116" x2="180" y2="78" stroke="rgba(255,255,255,0.72)" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="180" cy="73" r="3.5" fill="rgba(255,255,255,0.75)"/>
+    </g>
   </svg>
 </div>
 
@@ -2848,7 +2861,7 @@ document.getElementById('toggle-view').innerHTML = viewMode === 'monster' ? VIEW
     splash.addEventListener('animationend', () => {
       splash.remove();
     });
-  }, 1200);
+  }, 2500);
 })();
 
 // ===== DYNAMIC CELL HEIGHT =====
@@ -2864,7 +2877,7 @@ function updateCellHeight() {
   const bottomReserved = 90;
   const calWrapBorder = 2;
   const available = window.innerHeight - topbarH - weekdaysH - contentPadTop - bottomReserved - calWrapBorder - 16;
-  const h = Math.max(66, Math.min(110, Math.floor(available / rows)));
+  const h = Math.max(66, Math.min(88, Math.floor(available / rows)));
   document.documentElement.style.setProperty('--cell-h', h + 'px');
 }
 
