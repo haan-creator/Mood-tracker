@@ -676,9 +676,326 @@ input[type=number] { -moz-appearance: textfield; }
   font-family: var(--mono); font-size: 10px;
   letter-spacing: 2px; text-transform: uppercase;
 }
+/* ===== SKY PAGE ===== */
+.sky-page { position: relative; min-height: 100dvh; overflow: hidden; }
+.sky-bg {
+  position: fixed; inset: 0; z-index: 0;
+  transition: background 1.2s ease;
+  background: linear-gradient(180deg, #ecd898 0%, #f2dda0 35%, #e8dcc0 65%, #c8dce8 100%);
+}
+.sky-content {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center;
+  padding-top: calc(8px + env(safe-area-inset-top));
+  padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  min-height: 100dvh;
+}
+.sky-topbar { flex-shrink: 0; }
+.sky-topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  width: 100%; padding: 8px 20px;
+}
+.sky-date {
+  font-family: var(--display); font-size: 22px; font-weight: 700;
+  color: rgba(255,255,255,0.95); letter-spacing: 0.5px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.sky-weekday {
+  font-family: var(--ff); font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.75); margin-left: 6px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.sky-cal-btn {
+  width: 38px; height: 38px; border: none;
+  background: rgba(255,255,255,0.13); border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.2s;
+}
+.sky-cal-btn:active { background: rgba(255,255,255,0.22); }
+
+/* Blob */
+.blob-area {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  width: 100%;
+  transition: transform 0.8s ease;
+}
+.blob-wrap { position: relative; width: 130px; height: 130px; }
+.blob-svg {
+  width: 100%; height: 100%;
+  animation: blobBreathe 4s ease-in-out infinite;
+}
+.blob-svg.idle { animation-duration: 6s; opacity: 0.3; }
+.blob-svg.still { animation: none; opacity: 0.45; }
+.blob-eyes {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -42%);
+  animation: blobBlink 6s ease-in-out infinite;
+}
+@keyframes blobBreathe {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  35% { transform: scale(1.05) rotate(0.5deg); }
+  65% { transform: scale(0.96) rotate(-0.3deg); }
+}
+@keyframes blobBlink {
+  0%, 44%, 48%, 100% { transform: translate(-50%, -42%) scaleY(1); }
+  46% { transform: translate(-50%, -42%) scaleY(0.08); }
+}
+
+/* Monster message */
+.sky-monster-msg {
+  text-align: center; padding: 4px 20px 0;
+  font-family: var(--ff); font-size: 13px; font-weight: 400;
+  color: rgba(255,255,255,0.78);
+  letter-spacing: 0.3px; line-height: 1.5;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  min-height: 20px;
+}
+
+/* Tagline */
+.sky-tagline {
+  font-family: var(--ff); font-size: 11px;
+  color: rgba(255,255,255,0.4); letter-spacing: 2.5px;
+  padding: 4px 0 0; text-align: center;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* Wave */
+.wave-area { width: 100%; height: 30px; margin: 12px 0 4px; overflow: visible; }
+.wave-svg {
+  width: 100%; height: 30px;
+  animation: waveFloat 6s ease-in-out infinite;
+}
+@keyframes waveFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+/* Periods */
+.sky-periods {
+  display: flex; justify-content: center; gap: 12px;
+  padding: 8px 20px 8px; width: 100%;
+}
+.sky-period-btn {
+  flex: 1; max-width: 110px;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 5px; padding: 14px 6px 12px;
+  border: 1.5px solid rgba(255,255,255,0.35);
+  border-radius: 16px;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  cursor: pointer; transition: all 0.3s;
+  font-family: var(--ff);
+}
+.sky-period-btn:active { transform: scale(0.96); }
+.sky-period-btn.filled {
+  border-color: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.2);
+}
+.sky-period-label {
+  font-size: 12px; font-weight: 600;
+  color: rgba(255,255,255,0.85); letter-spacing: 0.8px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.sky-period-btn.filled .sky-period-label { color: rgba(255,255,255,0.98); }
+.sky-period-score {
+  font-family: var(--display); font-size: 18px; font-weight: 700;
+  color: rgba(255,255,255,0.95);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.sky-period-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+}
+.sky-period-btn.filled .sky-period-dot { display: none; }
+.sky-period-icon {
+  width: 18px; height: 18px; opacity: 0.7;
+}
+.sky-period-btn.filled .sky-period-icon { opacity: 0.95; }
+
+/* ===== ENTRY SHEET (sky page) ===== */
+.entry-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0);
+  transition: background 0.3s;
+  display: none; pointer-events: none;
+}
+.entry-overlay.open { display: block; background: rgba(0,0,0,0.18); pointer-events: auto; }
+.entry-sheet {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 101;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px 20px 0 0;
+  padding: 16px 22px calc(20px + env(safe-area-inset-bottom));
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+.entry-sheet.open { transform: translateY(0); }
+.entry-sheet-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: #ddd; margin: 0 auto 14px;
+}
+.entry-sheet-title {
+  font-family: var(--ff); font-size: 15px; font-weight: 600;
+  color: var(--text-dark); text-align: center; margin-bottom: 16px;
+}
+.entry-seg {
+  display: flex; border-radius: 10px;
+  background: #f0eeec; padding: 3px; margin-bottom: 16px;
+}
+.entry-seg-btn {
+  flex: 1; padding: 8px 0; border: none; border-radius: 8px;
+  font-family: var(--ff); font-size: 13px; font-weight: 500;
+  color: #999; background: transparent;
+  cursor: pointer; transition: all 0.2s;
+}
+.entry-seg-btn.active {
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.entry-seg-btn.active[data-t="positive"] { color: rgb(220,80,40); }
+.entry-seg-btn.active[data-t="negative"] { color: rgb(50,130,180); }
+.entry-seg-btn.active[data-t="unclear"] { color: #a8a4a0; }
+.entry-score-area { padding: 4px 0 12px; }
+.entry-score-num {
+  font-family: var(--display); font-size: 42px; font-weight: 800;
+  text-align: center; margin-bottom: 10px;
+  color: rgb(240,180,60);
+}
+.entry-score-num.neg { color: rgb(90,160,200); }
+.entry-slider {
+  width: 100%; height: 6px; border-radius: 3px;
+  background: #eae6e2; outline: none;
+  -webkit-appearance: none; appearance: none;
+}
+.entry-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 26px; height: 26px;
+  border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+.entry-note {
+  width: 100%; border: 1px solid #e8e4e0; border-radius: 12px;
+  padding: 12px 14px; font-family: var(--ff); font-size: 14px;
+  color: var(--text-dark); resize: none; outline: none;
+  min-height: 48px; margin: 12px 0;
+  transition: border-color 0.2s;
+}
+.entry-note:focus { border-color: #ccc; }
+.entry-note::placeholder { color: var(--text-faint); }
+.entry-save {
+  display: block; margin: 0 auto;
+  padding: 11px 48px; border: none; border-radius: 12px;
+  font-family: var(--ff); font-size: 14px; font-weight: 600;
+  color: #fff; cursor: pointer; transition: opacity 0.2s;
+  background: rgb(240,180,60);
+}
+.entry-save.neg { background: rgb(90,160,200); }
+.entry-save.unc { background: #b8b4b0; }
+.entry-save:active { opacity: 0.8; }
+.entry-cycle {
+  display: flex; gap: 6px; justify-content: center; margin-bottom: 14px;
+}
+.entry-cycle-btn {
+  display: flex; align-items: center; gap: 3px;
+  padding: 4px 10px; border: 1px solid #e0dcd8; border-radius: 14px;
+  background: transparent; font-family: var(--ff); font-size: 11px;
+  font-weight: 500; color: var(--text-light); cursor: pointer;
+  transition: all 0.2s;
+}
+.entry-cycle-btn.pms-on {
+  border-color: #4090d0; background: rgba(64,144,208,0.08); color: #4090d0;
+}
+.entry-cycle-btn.period-on {
+  border-color: #d44060; background: rgba(212,64,96,0.08); color: #d44060;
+}
+.entry-score-hidden { display: none; }
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 80;
+  display: flex; justify-content: center; gap: 36px;
+  padding: 12px 0 calc(10px + env(safe-area-inset-bottom));
+  background: transparent;
+}
+.bottom-nav.on-page {
+  background: rgba(244,245,247,0.92);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(0,0,0,0.04);
+}
+.bnav-item {
+  font-family: var(--ff); font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  border: none; background: none; cursor: pointer;
+  padding: 6px 14px; position: relative;
+  letter-spacing: 0.8px; transition: color 0.2s;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.bnav-item.active { color: rgba(255,255,255,0.98); font-weight: 700; }
+.bnav-item.active::after {
+  content: ''; position: absolute;
+  bottom: 2px; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 4px; border-radius: 50%;
+  background: rgba(255,255,255,0.55);
+}
+.bottom-nav.on-page .bnav-item { color: var(--text-light); }
+.bottom-nav.on-page .bnav-item.active { color: var(--text-dark); }
+.bottom-nav.on-page .bnav-item.active::after { background: var(--text-mid); }
+
+/* ===== CALENDAR OVERLAY ===== */
+.cal-overlay {
+  position: fixed; inset: 0; z-index: 90;
+  background: var(--bg);
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+  overflow-y: auto;
+}
+.cal-overlay.open { transform: translateY(0); }
+.cal-overlay .grid-bg-inner {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+.cal-close-bar {
+  position: relative; z-index: 2;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 6px;
+}
+.cal-close-bar h2 {
+  font-family: var(--ff); font-size: 17px; font-weight: 600;
+  color: var(--text-dark);
+}
+.cal-close-btn {
+  width: 32px; height: 32px; border: none; border-radius: 50%;
+  background: rgba(0,0,0,0.05); display: flex;
+  align-items: center; justify-content: center;
+  cursor: pointer; font-size: 14px; color: var(--text-mid);
+}
+.cal-close-btn:active { background: rgba(0,0,0,0.1); }
+
 /* Dynamic cell height */
 .day-cell { min-height: var(--cell-h, 66px); }
 .empty-cell { min-height: var(--cell-h, 66px); }
+
+/* Journal watermark below calendar */
+.cal-whisper {
+  text-align: center; padding: 14px 20px 0;
+  cursor: pointer; transition: opacity 0.2s;
+}
+.cal-whisper:active { opacity: 0.5; }
+.cal-whisper-text {
+  font-family: var(--ff); font-size: 12px;
+  color: #c8c0b8; letter-spacing: 0.3px;
+  line-height: 1.6;
+  overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; max-width: 280px;
+  margin: 0 auto;
+}
+.cal-whisper-hint {
+  font-family: var(--mono); font-size: 9px;
+  color: #d8d0c8; letter-spacing: 1px;
+  margin-top: 2px;
+}
 
 /* ===== SPLASH SCREEN ===== */
 #splash {
@@ -763,11 +1080,89 @@ input[type=number] { -moz-appearance: textfield; }
   </svg>
 </div>
 
-<div class="grid-bg"></div>
-<div id="app">
-  <!-- MAIN PAGE -->
-  <div id="page-main" class="page active">
-    <div class="content">
+<!-- Sky Page (default) -->
+<div id="page-sky" class="page active">
+  <div class="sky-bg" id="sky-bg"></div>
+  <div class="sky-content">
+    <div class="sky-topbar">
+      <div>
+        <span class="sky-date" id="sky-date"></span>
+        <span class="sky-weekday" id="sky-weekday"></span>
+      </div>
+      <button class="sky-cal-btn" id="open-cal-overlay" aria-label="月曆">
+        <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.3" stroke-linecap="round">
+          <rect x="2" y="3" width="14" height="13" rx="2"/><line x1="2" y1="7.5" x2="16" y2="7.5"/>
+          <line x1="6" y1="1.5" x2="6" y2="4.5"/><line x1="12" y1="1.5" x2="12" y2="4.5"/>
+        </svg>
+      </button>
+    </div>
+    <div class="blob-area" id="blob-area">
+      <div class="blob-wrap">
+        <svg class="blob-svg idle" id="blob-svg" viewBox="0 0 130 130">
+          <defs>
+            <radialGradient id="blobG" cx="40%" cy="35%">
+              <stop offset="0%" stop-color="rgba(255,255,255,0.85)"/>
+              <stop offset="100%" stop-color="rgba(255,255,255,0.45)"/>
+            </radialGradient>
+          </defs>
+          <path d="M65 18 C90 18, 112 38, 110 62 C112 86, 95 112, 65 112 C35 112, 18 90, 20 65 C18 38, 40 18, 65 18Z" fill="url(#blobG)"/>
+        </svg>
+        <svg class="blob-eyes" width="36" height="18" viewBox="0 0 36 18">
+          <circle cx="10" cy="9" r="3.5" fill="rgba(255,255,255,0.9)"/>
+          <circle cx="26" cy="9" r="3.5" fill="rgba(255,255,255,0.9)"/>
+          <circle cx="10.8" cy="9.5" r="1.6" fill="rgba(80,70,60,0.4)"/>
+          <circle cx="26.8" cy="9.5" r="1.6" fill="rgba(80,70,60,0.4)"/>
+        </svg>
+      </div>
+    </div>
+    <div class="sky-monster-msg" id="sky-monster-msg"></div>
+    <div class="sky-tagline">今天的天空</div>
+    <div class="wave-area">
+      <svg class="wave-svg" viewBox="0 0 400 30" preserveAspectRatio="none">
+        <path d="M0 18 Q50 8, 100 16 Q150 24, 200 14 Q250 4, 300 16 Q350 26, 400 12" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="sky-periods" id="sky-periods">
+      <button class="sky-period-btn" data-p="morning" id="sky-p-morning">
+        <svg class="sky-period-icon" viewBox="0 0 20 20" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.3">
+          <circle cx="10" cy="11" r="4.5"/>
+          <line x1="10" y1="3" x2="10" y2="5"/><line x1="10" y1="17" x2="10" y2="19"/>
+          <line x1="4" y1="5" x2="5.5" y2="6.5"/><line x1="14.5" y1="15.5" x2="16" y2="17"/>
+          <line x1="2" y1="11" x2="4" y2="11"/><line x1="16" y1="11" x2="18" y2="11"/>
+        </svg>
+        <span class="sky-period-label">早上</span>
+        <span class="sky-period-score" id="sky-sc-morning" style="display:none"></span>
+        <div class="sky-period-dot" id="sky-dot-morning"></div>
+      </button>
+      <button class="sky-period-btn" data-p="afternoon" id="sky-p-afternoon">
+        <svg class="sky-period-icon" viewBox="0 0 20 20" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.3">
+          <path d="M10 3 Q14 8, 10 13 Q6 8, 10 3Z"/><line x1="10" y1="13" x2="10" y2="18"/>
+        </svg>
+        <span class="sky-period-label">下午</span>
+        <span class="sky-period-score" id="sky-sc-afternoon" style="display:none"></span>
+        <div class="sky-period-dot" id="sky-dot-afternoon"></div>
+      </button>
+      <button class="sky-period-btn" data-p="evening" id="sky-p-evening">
+        <svg class="sky-period-icon" viewBox="0 0 20 20" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.3">
+          <path d="M12 4 A7 7 0 1 0 12 18 A5 5 0 1 1 12 4Z"/>
+        </svg>
+        <span class="sky-period-label">晚上</span>
+        <span class="sky-period-score" id="sky-sc-evening" style="display:none"></span>
+        <div class="sky-period-dot" id="sky-dot-evening"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Calendar Overlay (from sky page) -->
+<div class="cal-overlay" id="cal-overlay">
+  <div class="grid-bg-inner"></div>
+  <div class="cal-close-bar">
+    <h2 id="cal-overlay-title">月曆</h2>
+    <button class="cal-close-btn" id="close-cal-overlay">✕</button>
+  </div>
+  <div id="page-main" style="position:relative;z-index:1;padding:6px 8px 20px;">
+    <div class="content" style="padding-bottom:20px;">
       <div class="topbar">
         <div class="month-nav">
           <span class="year" id="display-year"></span>
@@ -786,30 +1181,15 @@ input[type=number] { -moz-appearance: textfield; }
         </div>
         <div class="controls">
           <button id="toggle-view" class="view-toggle-btn" aria-label="切換顯示樣式" title="切換怪獸/漸層"></button>
-          <div class="controls-divider"></div>
-          <button id="open-journal" class="nav-page-btn">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M10.5 1.5l2 2L4.5 11.5l-2.5.5.5-2.5L10.5 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span>日誌</span>
-          </button>
-          <button id="open-stats" class="nav-page-btn">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="2" y="7" width="2.5" height="5" rx="0.5" stroke="currentColor" stroke-width="1.2"/>
-              <rect x="5.75" y="4" width="2.5" height="8" rx="0.5" stroke="currentColor" stroke-width="1.2"/>
-              <rect x="9.5" y="2" width="2.5" height="10" rx="0.5" stroke="currentColor" stroke-width="1.2"/>
-            </svg>
-            <span>月貌</span>
-          </button>
         </div>
       </div>
-      <div class="cal-wrap">
+      <div class="cal-wrap" id="cal-wrap">
         <div class="cal-weekdays">
           <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
         </div>
         <div class="cal-grid" id="cal-grid"></div>
       </div>
-      <div class="legend">
+      <div class="legend" style="position:relative;bottom:auto;padding:10px 16px;">
         <div class="legend-item">
           <div class="legend-dots" id="legend-warm"></div>
           <span>正向</span>
@@ -827,18 +1207,46 @@ input[type=number] { -moz-appearance: textfield; }
           <span>月經</span>
         </div>
       </div>
-      <div class="footer">MOOD · TRACKER <svg viewBox="0 0 16 12" width="16" height="12" style="vertical-align:middle;margin-left:4px;"><circle cx="5" cy="4" r="1.3" fill="#c0b8b0"/><circle cx="11" cy="4" r="1.3" fill="#c0b8b0"/><line x1="6" y1="9" x2="10" y2="9" stroke="#c0b8b0" stroke-width="1.2" stroke-linecap="round"/></svg></div>
     </div>
   </div>
+</div>
 
-  <!-- DAY MODAL (injected dynamically) -->
-  <div id="day-modal"></div>
+<!-- DAY MODAL -->
+<div id="day-modal"></div>
 
-  <!-- STATS PAGE -->
-  <div id="page-stats" class="page"></div>
+<!-- STATS PAGE -->
+<div id="page-stats" class="page"></div>
 
-  <!-- JOURNAL PAGE -->
-  <div id="page-journal" class="page"></div>
+<!-- JOURNAL PAGE -->
+<div id="page-journal" class="page"></div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav" id="bottom-nav">
+  <button class="bnav-item active" data-page="sky">天空</button>
+  <button class="bnav-item" data-page="journal">日誌</button>
+  <button class="bnav-item" data-page="stats">月貌</button>
+</div>
+
+<!-- ENTRY SHEET (sky page quick entry) -->
+<div class="entry-overlay" id="entry-overlay"></div>
+<div class="entry-sheet" id="entry-sheet">
+  <div class="entry-sheet-handle"></div>
+  <div class="entry-sheet-title" id="entry-title">早上</div>
+  <div class="entry-seg" id="entry-seg">
+    <button class="entry-seg-btn active" data-t="positive" onclick="setEntryType('positive')">正向</button>
+    <button class="entry-seg-btn" data-t="negative" onclick="setEntryType('negative')">負向</button>
+    <button class="entry-seg-btn" data-t="unclear" onclick="setEntryType('unclear')">說不清</button>
+  </div>
+  <div class="entry-score-area" id="entry-score-area">
+    <div class="entry-score-num" id="entry-score-num">50</div>
+    <input type="range" class="entry-slider" id="entry-slider" min="0" max="100" value="50" oninput="onEntrySlider(this.value)">
+  </div>
+  <textarea class="entry-note" id="entry-note" placeholder="寫下來你的感受" rows="2" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
+  <div class="entry-cycle">
+    <button class="entry-cycle-btn" id="entry-pms" onclick="toggleEntryCycle('pms')"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M7.5 2C5.5 2.5 4 4.3 4 6.5S5.5 10.5 7.5 11c-3 0-5-2.2-5-4.5S4.5 2 7.5 2z" fill="currentColor"/></svg>經前</button>
+    <button class="entry-cycle-btn" id="entry-period" onclick="toggleEntryCycle('period')"><svg width="8" height="8" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>月經</button>
+  </div>
+  <button class="entry-save" id="entry-save" onclick="saveEntry()">記下來</button>
 </div>
 
 <script>
@@ -1663,6 +2071,12 @@ function closeDayModal() {
   document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f4f5f7');
   document.getElementById('day-modal').innerHTML = '';
   renderCalendar();
+  // Refresh sky page
+  if (document.getElementById('page-sky').classList.contains('active')) {
+    updateSkyPeriods();
+    updateSkyGradient();
+    updateBlobState();
+  }
 }
 
 // ===== MONTHLY MONSTER ALGORITHM =====
@@ -1796,7 +2210,7 @@ function renderMonthlyMonsterHero() {
 
 // ===== STATS PAGE =====
 function openStats() {
-  document.getElementById('page-main').classList.remove('active');
+  document.getElementById('page-sky').classList.remove('active');
   const statsPage = document.getElementById('page-stats');
   statsPage.classList.add('active');
 
@@ -2183,7 +2597,8 @@ function openStats() {
 function closeStats() {
   document.getElementById('page-stats').classList.remove('active');
   document.getElementById('page-stats').innerHTML = '';
-  document.getElementById('page-main').classList.add('active');
+  document.getElementById('page-sky').classList.add('active');
+  updateNavState('sky');
 }
 
 // ===== JOURNAL PAGE =====
@@ -2351,7 +2766,7 @@ function renderJournalItems(append = false) {
 }
 
 function openJournal() {
-  document.getElementById('page-main').classList.remove('active');
+  document.getElementById('page-sky').classList.remove('active');
   const page = document.getElementById('page-journal');
   page.classList.add('active');
 
@@ -2473,8 +2888,8 @@ function closeJournal() {
   }
   page.classList.remove('active');
   page.innerHTML = '';
-  document.getElementById('page-main').classList.add('active');
-  // Scroll back to top
+  document.getElementById('page-sky').classList.add('active');
+  updateNavState('sky');
   window.scrollTo(0, 0);
 }
 
@@ -2830,8 +3245,7 @@ document.getElementById('next-month').addEventListener('click', () => {
   if (curMonth > 11) { curMonth = 0; curYear++; }
   renderCalendar();
 });
-document.getElementById('open-stats').addEventListener('click', openStats);
-document.getElementById('open-journal').addEventListener('click', openJournal);
+// Nav handled by bottom-nav
 const VIEW_ICON_GRADIENT = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect x="1.5" y="1.5" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.1"/>
   <rect x="2.1" y="2.1" width="9.8" height="3.1" fill="currentColor" opacity="0.15"/>
@@ -2864,6 +3278,154 @@ document.getElementById('toggle-view').innerHTML = viewMode === 'monster' ? VIEW
   }, 2500);
 })();
 
+// ===== SKY PAGE =====
+const WEEKDAYS_TW = ['日','一','二','三','四','五','六'];
+
+function initSkyPage() {
+  const d = new Date();
+  document.getElementById('sky-date').textContent = (d.getMonth()+1) + '/' + d.getDate();
+  document.getElementById('sky-weekday').textContent = '週' + WEEKDAYS_TW[d.getDay()];
+  updateSkyPeriods();
+  updateSkyGradient();
+  updateBlobState();
+}
+
+function updateSkyPeriods() {
+  const d = today.getDate();
+  const todayY = today.getFullYear(), todayM = today.getMonth();
+  let todayData = {};
+  try {
+    const raw = JSON.parse(localStorage.getItem(sKey(todayY, todayM)));
+    const clean = sanitizeMonthData(raw);
+    if (clean && clean[String(d)]) todayData = clean[String(d)];
+  } catch {}
+
+  PERIOD_KEYS.forEach(pk => {
+    const btn = document.getElementById('sky-p-' + pk);
+    const scoreEl = document.getElementById('sky-sc-' + pk);
+    const dotEl = document.getElementById('sky-dot-' + pk);
+    const entry = todayData[pk];
+    if (entry?.score != null || entry?.type === 'unclear') {
+      btn.classList.add('filled');
+      scoreEl.style.display = 'block';
+      scoreEl.textContent = entry.type === 'unclear' ? '·' : entry.score;
+      if (dotEl) dotEl.style.display = 'none';
+    } else {
+      btn.classList.remove('filled');
+      scoreEl.style.display = 'none';
+      if (dotEl) dotEl.style.display = '';
+    }
+  });
+}
+
+function updateSkyGradient() {
+  const d = today.getDate();
+  const todayY = today.getFullYear(), todayM = today.getMonth();
+  let todayData = {};
+  try {
+    const raw = JSON.parse(localStorage.getItem(sKey(todayY, todayM)));
+    const clean = sanitizeMonthData(raw);
+    if (clean && clean[String(d)]) todayData = clean[String(d)];
+  } catch {}
+
+  const filled = PERIOD_KEYS.map(pk => todayData[pk]).filter(e => e?.score != null);
+  const bg = document.getElementById('sky-bg');
+  if (filled.length === 0) {
+    bg.style.background = 'linear-gradient(180deg, #ecd898 0%, #f2dda0 35%, #e8dcc0 65%, #c8dce8 100%)';
+    return;
+  }
+  const pos = filled.filter(e => e.type === 'positive');
+  const neg = filled.filter(e => e.type === 'negative');
+  const avgScore = filled.reduce((s,e) => s + e.score, 0) / filled.length;
+  const intensity = avgScore / 100;
+
+  if (pos.length >= neg.length && pos.length > 0) {
+    const top = lerp(WARM, intensity * 0.5);
+    const mid = lerp(WARM, intensity * 0.3);
+    bg.style.background = `linear-gradient(180deg, ${top} 0%, ${mid} 45%, #d8dcc8 75%, #b8ccd8 100%)`;
+  } else {
+    const top = lerp(COOL, intensity * 0.5);
+    const mid = lerp(COOL, intensity * 0.35);
+    bg.style.background = `linear-gradient(180deg, #c0c8cc 0%, ${mid} 35%, ${top} 65%, #406880 100%)`;
+  }
+}
+
+function updateBlobState() {
+  const d = today.getDate();
+  const todayY = today.getFullYear(), todayM = today.getMonth();
+  let todayData = {};
+  try {
+    const raw = JSON.parse(localStorage.getItem(sKey(todayY, todayM)));
+    const clean = sanitizeMonthData(raw);
+    if (clean && clean[String(d)]) todayData = clean[String(d)];
+  } catch {}
+
+  const filled = PERIOD_KEYS.map(pk => todayData[pk]).filter(e => e?.score != null);
+  const blob = document.getElementById('blob-svg');
+  const area = document.getElementById('blob-area');
+  const msgEl = document.getElementById('sky-monster-msg');
+
+  // Monster message
+  const msg = getMonsterMessage(todayData);
+  if (msgEl) msgEl.textContent = msg || '';
+
+  if (filled.length === 0) {
+    blob.className = 'blob-svg idle';
+    area.style.transform = '';
+  } else {
+    const hasUnclear = PERIOD_KEYS.some(pk => todayData[pk]?.type === 'unclear');
+    if (hasUnclear && filled.length === 0) {
+      blob.className = 'blob-svg still';
+    } else {
+      blob.className = 'blob-svg';
+      const avgScore = filled.reduce((s,e) => s + e.score, 0) / filled.length;
+      blob.style.animationDuration = (5 - avgScore/100 * 2) + 's';
+      const lift = -((avgScore / 100) * 15);
+      area.style.transform = `translateY(${lift}px)`;
+    }
+  }
+}
+
+// ===== NAVIGATION =====
+function updateNavState(page) {
+  const nav = document.getElementById('bottom-nav');
+  nav.querySelectorAll('.bnav-item').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === page);
+  });
+  nav.classList.toggle('on-page', page !== 'sky');
+}
+
+function switchPage(page) {
+  // Hide all pages
+  document.getElementById('page-sky').classList.remove('active');
+  document.getElementById('page-stats').classList.remove('active');
+  document.getElementById('page-journal').classList.remove('active');
+  document.getElementById('page-stats').innerHTML = '';
+
+  updateNavState(page);
+
+  if (page === 'sky') {
+    document.getElementById('page-sky').classList.add('active');
+    updateSkyPeriods();
+    updateSkyGradient();
+    updateBlobState();
+    window.scrollTo(0, 0);
+  } else if (page === 'journal') {
+    openJournal();
+  } else if (page === 'stats') {
+    openStats();
+  }
+}
+
+// ===== CALENDAR OVERLAY =====
+function openCalOverlay() {
+  document.getElementById('cal-overlay').classList.add('open');
+  renderCalendar();
+}
+function closeCalOverlay() {
+  document.getElementById('cal-overlay').classList.remove('open');
+}
+
 // ===== DYNAMIC CELL HEIGHT =====
 function updateCellHeight() {
   const grid = document.getElementById('cal-grid');
@@ -2885,7 +3447,172 @@ function updateCellHeight() {
 renderLegend();
 renderCalendar();
 updateCellHeight();
+initSkyPage();
+
+// Bottom nav
+document.getElementById('bottom-nav').addEventListener('click', e => {
+  const btn = e.target.closest('.bnav-item');
+  if (!btn || btn.classList.contains('active')) return;
+  switchPage(btn.dataset.page);
+});
+
+// Calendar overlay
+document.getElementById('open-cal-overlay').addEventListener('click', openCalOverlay);
+document.getElementById('close-cal-overlay').addEventListener('click', closeCalOverlay);
+
+// Sky period taps — open entry sheet
+document.getElementById('sky-periods').addEventListener('click', e => {
+  const btn = e.target.closest('.sky-period-btn');
+  if (!btn) return;
+  openEntrySheet(btn.dataset.p);
+});
+
+// Entry overlay tap to close
+document.getElementById('entry-overlay').addEventListener('click', closeEntrySheet);
+
 window.addEventListener('resize', updateCellHeight);
+
+// ===== ENTRY SHEET =====
+let entryPeriod = null;
+let entryType = 'positive';
+let entryScore = 50;
+
+function openEntrySheet(period) {
+  entryPeriod = period;
+  const idx = PERIOD_KEYS.indexOf(period);
+  document.getElementById('entry-title').textContent = PERIOD_NAMES[idx];
+
+  // Load existing data
+  const todayD = String(today.getDate());
+  const todayY = today.getFullYear(), todayM = today.getMonth();
+  let todayData = {};
+  let todayCycle = {};
+  try {
+    const raw = JSON.parse(localStorage.getItem(sKey(todayY, todayM)));
+    const clean = sanitizeMonthData(raw);
+    if (clean && clean[todayD]) todayData = clean[todayD];
+  } catch {}
+  try {
+    const rawC = JSON.parse(localStorage.getItem(cKey(todayY, todayM)));
+    const cleanC = sanitizeCycleData(rawC);
+    if (cleanC && cleanC[todayD]) todayCycle = cleanC[todayD];
+  } catch {}
+
+  const existing = todayData[period];
+  if (existing?.score != null || existing?.type === 'unclear') {
+    setEntryType(existing.type);
+    if (existing.type !== 'unclear') {
+      entryScore = existing.score;
+      document.getElementById('entry-slider').value = entryScore;
+      onEntrySlider(entryScore);
+    }
+    document.getElementById('entry-note').value = existing.note || '';
+  } else {
+    setEntryType('positive');
+    entryScore = 50;
+    document.getElementById('entry-slider').value = 50;
+    onEntrySlider(50);
+    document.getElementById('entry-note').value = '';
+  }
+
+  // Cycle state
+  const pmsBtn = document.getElementById('entry-pms');
+  const perBtn = document.getElementById('entry-period');
+  pmsBtn.className = 'entry-cycle-btn' + (todayCycle.pms ? ' pms-on' : '');
+  perBtn.className = 'entry-cycle-btn' + (todayCycle.period ? ' period-on' : '');
+
+  document.getElementById('entry-overlay').classList.add('open');
+  document.getElementById('entry-sheet').classList.add('open');
+}
+
+function closeEntrySheet() {
+  document.getElementById('entry-overlay').classList.remove('open');
+  document.getElementById('entry-sheet').classList.remove('open');
+}
+
+function setEntryType(type) {
+  entryType = type;
+  document.querySelectorAll('.entry-seg-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.entry-seg-btn[data-t="${type}"]`).classList.add('active');
+
+  const scoreArea = document.getElementById('entry-score-area');
+  const saveBtn = document.getElementById('entry-save');
+  const numEl = document.getElementById('entry-score-num');
+
+  if (type === 'unclear') {
+    scoreArea.classList.add('entry-score-hidden');
+    saveBtn.className = 'entry-save unc';
+  } else {
+    scoreArea.classList.remove('entry-score-hidden');
+    numEl.className = 'entry-score-num' + (type === 'negative' ? ' neg' : '');
+    saveBtn.className = 'entry-save' + (type === 'negative' ? ' neg' : '');
+    if (typeof updateSliderFill === 'function') updateSliderFill();
+  }
+}
+
+function onEntrySlider(val) {
+  entryScore = parseInt(val);
+  document.getElementById('entry-score-num').textContent = entryScore;
+  updateSliderFill();
+}
+
+function updateSliderFill() {
+  const slider = document.getElementById('entry-slider');
+  const pct = entryScore;
+  const color = entryType === 'positive' ? 'rgb(240,180,60)' : 'rgb(90,160,200)';
+  slider.style.background = `linear-gradient(90deg, ${color} 0%, ${color} ${pct}%, #eae6e2 ${pct}%, #eae6e2 100%)`;
+}
+
+function toggleEntryCycle(which) {
+  const pmsBtn = document.getElementById('entry-pms');
+  const perBtn = document.getElementById('entry-period');
+  if (which === 'pms') {
+    const isOn = pmsBtn.classList.contains('pms-on');
+    pmsBtn.className = 'entry-cycle-btn' + (isOn ? '' : ' pms-on');
+    perBtn.className = 'entry-cycle-btn'; // mutual exclusion
+  } else {
+    const isOn = perBtn.classList.contains('period-on');
+    perBtn.className = 'entry-cycle-btn' + (isOn ? '' : ' period-on');
+    pmsBtn.className = 'entry-cycle-btn'; // mutual exclusion
+  }
+}
+
+function saveEntry() {
+  const todayD = String(today.getDate());
+  const todayY = today.getFullYear(), todayM = today.getMonth();
+
+  curYear = todayY;
+  curMonth = todayM;
+  loadData();
+
+  if (!monthData[todayD]) monthData[todayD] = {};
+  const note = document.getElementById('entry-note').value.trim();
+
+  if (entryType === 'unclear') {
+    monthData[todayD][entryPeriod] = { type: 'unclear', score: null, note: note || undefined };
+  } else {
+    monthData[todayD][entryPeriod] = { type: entryType, score: entryScore, note: note || undefined };
+  }
+
+  // Save cycle data
+  const pmsOn = document.getElementById('entry-pms').classList.contains('pms-on');
+  const perOn = document.getElementById('entry-period').classList.contains('period-on');
+  if (pmsOn || perOn) {
+    if (!cycleData[todayD]) cycleData[todayD] = {};
+    cycleData[todayD].pms = pmsOn;
+    cycleData[todayD].period = perOn;
+  } else {
+    delete cycleData[todayD];
+  }
+
+  saveData();
+  closeEntrySheet();
+
+  updateSkyPeriods();
+  updateSkyGradient();
+  updateBlobState();
+  renderCalendar();
+}
 </script>
 </body>
 </html>
