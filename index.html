@@ -361,8 +361,9 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* Stats page */
 .stats-page {
-  position: fixed; inset: 0; z-index: 100; background: var(--bg);
+  position: fixed; inset: 0; z-index: 70; background: var(--bg);
   overflow-y: auto; animation: fadeIn 0.2s ease;
+  padding-top: calc(48px + env(safe-area-inset-top));
 }
 .stats-inner { max-width: 440px; margin: 0 auto; padding: 16px 14px 40px; }
 .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -686,8 +687,8 @@ input[type=number] { -moz-appearance: textfield; }
 .sky-content {
   position: relative; z-index: 1;
   display: flex; flex-direction: column; align-items: center;
-  padding-top: calc(8px + env(safe-area-inset-top));
-  padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  padding-top: calc(68px + env(safe-area-inset-top));
+  padding-bottom: 20px;
   min-height: 100dvh;
 }
 .sky-topbar { flex-shrink: 0; }
@@ -697,21 +698,20 @@ input[type=number] { -moz-appearance: textfield; }
 }
 .sky-date {
   font-family: var(--display); font-size: 22px; font-weight: 700;
-  color: rgba(255,255,255,0.95); letter-spacing: 0.5px;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  color: rgba(40,35,30,0.7); letter-spacing: 0.5px;
 }
 .sky-weekday {
   font-family: var(--ff); font-size: 13px; font-weight: 500;
-  color: rgba(255,255,255,0.75); margin-left: 6px;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  color: rgba(40,35,30,0.45); margin-left: 6px;
 }
 .sky-cal-btn {
   width: 38px; height: 38px; border: none;
-  background: rgba(255,255,255,0.13); border-radius: 11px;
+  background: rgba(0,0,0,0.06); border-radius: 11px;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: background 0.2s;
 }
-.sky-cal-btn:active { background: rgba(255,255,255,0.22); }
+.sky-cal-btn:active { background: rgba(0,0,0,0.1); }
+.sky-cal-btn svg { stroke: rgba(40,35,30,0.5); }
 
 /* Blob */
 .blob-area {
@@ -743,20 +743,18 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* Monster message */
 .sky-monster-msg {
-  text-align: center; padding: 4px 20px 0;
-  font-family: var(--ff); font-size: 13px; font-weight: 400;
-  color: rgba(255,255,255,0.78);
-  letter-spacing: 0.3px; line-height: 1.5;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  min-height: 20px;
+  text-align: center; padding: 6px 20px 0;
+  font-family: var(--ff); font-size: 17px; font-weight: 600;
+  color: rgba(40,35,30,0.6);
+  letter-spacing: 0.5px; line-height: 1.4;
+  min-height: 24px;
 }
 
 /* Tagline */
 .sky-tagline {
   font-family: var(--ff); font-size: 11px;
-  color: rgba(255,255,255,0.4); letter-spacing: 2.5px;
+  color: rgba(40,35,30,0.22); letter-spacing: 2.5px;
   padding: 4px 0 0; text-align: center;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 /* Wave */
@@ -779,38 +777,57 @@ input[type=number] { -moz-appearance: textfield; }
   flex: 1; max-width: 110px;
   display: flex; flex-direction: column; align-items: center;
   gap: 5px; padding: 14px 6px 12px;
-  border: 1.5px solid rgba(255,255,255,0.35);
+  border: 1.5px solid rgba(40,35,30,0.12);
   border-radius: 16px;
-  background: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.25);
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   cursor: pointer; transition: all 0.3s;
   font-family: var(--ff);
 }
 .sky-period-btn:active { transform: scale(0.96); }
 .sky-period-btn.filled {
-  border-color: rgba(255,255,255,0.55);
-  background: rgba(255,255,255,0.2);
+  border-color: rgba(40,35,30,0.18);
+  background: rgba(255,255,255,0.35);
 }
 .sky-period-label {
   font-size: 12px; font-weight: 600;
-  color: rgba(255,255,255,0.85); letter-spacing: 0.8px;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  color: rgba(40,35,30,0.55); letter-spacing: 0.8px;
 }
-.sky-period-btn.filled .sky-period-label { color: rgba(255,255,255,0.98); }
+.sky-period-btn.filled .sky-period-label { color: rgba(40,35,30,0.75); }
 .sky-period-score {
   font-family: var(--display); font-size: 18px; font-weight: 700;
-  color: rgba(255,255,255,0.95);
-  text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  color: rgba(40,35,30,0.7);
 }
 .sky-period-dot {
   width: 5px; height: 5px; border-radius: 50%;
-  background: rgba(255,255,255,0.25);
+  background: rgba(40,35,30,0.15);
 }
 .sky-period-btn.filled .sky-period-dot { display: none; }
 .sky-period-icon {
-  width: 18px; height: 18px; opacity: 0.7;
+  width: 18px; height: 18px; opacity: 0.45;
 }
-.sky-period-btn.filled .sky-period-icon { opacity: 0.95; }
+.sky-period-btn.filled .sky-period-icon { opacity: 0.65; }
+
+/* Adaptive colors for dark sky */
+.sky-dark .sky-date,
+.sky-dark .sky-monster-msg { color: rgba(255,255,255,0.9); }
+.sky-dark .sky-weekday { color: rgba(255,255,255,0.6); }
+.sky-dark .sky-tagline { color: rgba(255,255,255,0.25); }
+.sky-dark .sky-period-label { color: rgba(255,255,255,0.8); }
+.sky-dark .sky-period-btn.filled .sky-period-label { color: rgba(255,255,255,0.95); }
+.sky-dark .sky-period-score { color: rgba(255,255,255,0.9); }
+.sky-dark .sky-period-btn {
+  border-color: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
+}
+.sky-dark .sky-period-btn.filled {
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.15);
+}
+.sky-dark .sky-period-dot { background: rgba(255,255,255,0.2); }
+.sky-dark .sky-period-icon { opacity: 0.6; }
+.sky-dark .sky-cal-btn { background: rgba(255,255,255,0.1); }
+.sky-dark .sky-cal-btn svg { stroke: rgba(255,255,255,0.7); }
 
 /* ===== ENTRY SHEET (sky page) ===== */
 .entry-overlay {
@@ -832,72 +849,23 @@ input[type=number] { -moz-appearance: textfield; }
 .entry-sheet.open { transform: translateY(0); }
 .entry-sheet-handle {
   width: 36px; height: 4px; border-radius: 2px;
-  background: #ddd; margin: 0 auto 14px;
+  background: #ddd; margin: 0 auto 10px;
+}
+.entry-sheet-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 10px;
 }
 .entry-sheet-title {
   font-family: var(--ff); font-size: 15px; font-weight: 600;
-  color: var(--text-dark); text-align: center; margin-bottom: 16px;
+  color: var(--text-dark); text-align: center; flex: 1;
 }
-.entry-seg {
-  display: flex; border-radius: 10px;
-  background: #f0eeec; padding: 3px; margin-bottom: 16px;
-}
-.entry-seg-btn {
-  flex: 1; padding: 8px 0; border: none; border-radius: 8px;
-  font-family: var(--ff); font-size: 13px; font-weight: 500;
-  color: #999; background: transparent;
-  cursor: pointer; transition: all 0.2s;
-}
-.entry-seg-btn.active {
-  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-}
-.entry-seg-btn.active[data-t="positive"] { color: rgb(220,80,40); }
-.entry-seg-btn.active[data-t="negative"] { color: rgb(50,130,180); }
-.entry-seg-btn.active[data-t="unclear"] { color: #a8a4a0; }
-.entry-score-area { padding: 4px 0 12px; }
-.entry-score-num {
-  font-family: var(--display); font-size: 42px; font-weight: 800;
-  text-align: center; margin-bottom: 10px;
-  color: rgb(240,180,60);
-}
-.entry-score-num.neg { color: rgb(90,160,200); }
-.entry-slider {
-  width: 100%; height: 6px; border-radius: 3px;
-  background: #eae6e2; outline: none;
-  -webkit-appearance: none; appearance: none;
-}
-.entry-slider::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 26px; height: 26px;
-  border-radius: 50%; background: #fff;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.15);
-  cursor: pointer;
-}
-.entry-note {
-  width: 100%; border: 1px solid #e8e4e0; border-radius: 12px;
-  padding: 12px 14px; font-family: var(--ff); font-size: 14px;
-  color: var(--text-dark); resize: none; outline: none;
-  min-height: 48px; margin: 12px 0;
-  transition: border-color 0.2s;
-}
-.entry-note:focus { border-color: #ccc; }
-.entry-note::placeholder { color: var(--text-faint); }
-.entry-save {
-  display: block; margin: 0 auto;
-  padding: 11px 48px; border: none; border-radius: 12px;
-  font-family: var(--ff); font-size: 14px; font-weight: 600;
-  color: #fff; cursor: pointer; transition: opacity 0.2s;
-  background: rgb(240,180,60);
-}
-.entry-save.neg { background: rgb(90,160,200); }
-.entry-save.unc { background: #b8b4b0; }
-.entry-save:active { opacity: 0.8; }
 .entry-cycle {
-  display: flex; gap: 6px; justify-content: center; margin-bottom: 14px;
+  display: flex; gap: 4px; position: absolute; right: 22px;
 }
 .entry-cycle-btn {
-  display: flex; align-items: center; gap: 3px;
-  padding: 4px 10px; border: 1px solid #e0dcd8; border-radius: 14px;
-  background: transparent; font-family: var(--ff); font-size: 11px;
+  display: flex; align-items: center; gap: 2px;
+  padding: 3px 8px; border: 1px solid #e0dcd8; border-radius: 12px;
+  background: transparent; font-family: var(--ff); font-size: 10px;
   font-weight: 500; color: var(--text-light); cursor: pointer;
   transition: all 0.2s;
 }
@@ -907,38 +875,112 @@ input[type=number] { -moz-appearance: textfield; }
 .entry-cycle-btn.period-on {
   border-color: #d44060; background: rgba(212,64,96,0.08); color: #d44060;
 }
-.entry-score-hidden { display: none; }
+/* Bidirectional score */
+.entry-score-area { padding: 4px 0 8px; }
+.entry-score-num {
+  font-family: var(--display); font-size: 42px; font-weight: 800;
+  text-align: center; margin-bottom: 8px;
+  color: rgb(200,190,180);
+}
+.entry-score-num.pos { color: rgb(230,160,50); }
+.entry-score-num.neg { color: rgb(80,150,190); }
+.entry-slider {
+  width: 100%; height: 6px; border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none; appearance: none;
+  background: linear-gradient(90deg, #1e648c 0%, #5aaad2 25%, #c8c3be 50%, #f0b43c 75%, #c83828 100%);
+}
+.entry-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 28px; height: 28px;
+  border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+.entry-labels {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 2px 0; font-family: var(--ff); font-size: 12px; font-weight: 600;
+}
+.entry-label-neg { color: #2080a0; }
+.entry-label-mid { color: #b0a8a0; }
+.entry-label-pos { color: #c85030; }
+/* Collapsible note */
+.entry-note-toggle {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 0; cursor: pointer; transition: opacity 0.2s;
+}
+.entry-note-toggle svg { flex-shrink: 0; }
+.entry-note-toggle span {
+  font-family: var(--ff); font-size: 13px; color: #c0b8b0;
+}
+.entry-note-toggle:active { opacity: 0.6; }
+.entry-note-wrap { display: none; }
+.entry-note-wrap.open { display: block; }
+.entry-note {
+  width: 100%; border: 1px solid #e8e4e0; border-radius: 12px;
+  padding: 12px 14px; font-family: var(--ff); font-size: 14px;
+  color: var(--text-dark); resize: none; outline: none;
+  min-height: 48px; margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+.entry-note:focus { border-color: #ccc; }
+.entry-note::placeholder { color: var(--text-faint); }
+.entry-note-indicator {
+  display: none; color: #b0a8a0; font-size: 11px;
+  padding: 2px 0;
+}
+/* Save button */
+.entry-save {
+  display: block; margin: 8px auto 0;
+  padding: 11px 48px; border: none; border-radius: 12px;
+  font-family: var(--ff); font-size: 14px; font-weight: 600;
+  color: #fff; cursor: pointer; transition: opacity 0.2s;
+  background: #c0b8b0;
+}
+.entry-save.pos { background: rgb(230,160,50); }
+.entry-save.neg { background: rgb(80,150,190); }
+.entry-save:active { opacity: 0.8; }
 
-/* ===== BOTTOM NAV ===== */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 80;
-  display: flex; justify-content: center; gap: 36px;
-  padding: 12px 0 calc(10px + env(safe-area-inset-bottom));
+/* ===== TOP NAV ===== */
+.top-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 80;
+  display: flex; justify-content: center; gap: 28px;
+  padding: calc(10px + env(safe-area-inset-top)) 0 0;
   background: transparent;
 }
-.bottom-nav.on-page {
+.top-nav.on-page {
   background: rgba(244,245,247,0.92);
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(0,0,0,0.04);
+  border-bottom: 1px solid rgba(0,0,0,0.04);
 }
 .bnav-item {
   font-family: var(--ff); font-size: 13px; font-weight: 500;
-  color: rgba(255,255,255,0.7);
+  color: rgba(40,35,30,0.5);
   border: none; background: none; cursor: pointer;
-  padding: 6px 14px; position: relative;
+  padding: 8px 14px; position: relative;
   letter-spacing: 0.8px; transition: color 0.2s;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
-.bnav-item.active { color: rgba(255,255,255,0.98); font-weight: 700; }
+.bnav-item.active { color: rgba(40,35,30,0.85); font-weight: 700; }
 .bnav-item.active::after {
   content: ''; position: absolute;
-  bottom: 2px; left: 50%; transform: translateX(-50%);
+  bottom: 4px; left: 50%; transform: translateX(-50%);
   width: 4px; height: 4px; border-radius: 50%;
-  background: rgba(255,255,255,0.55);
+  background: rgba(40,35,30,0.4);
 }
-.bottom-nav.on-page .bnav-item { color: var(--text-light); }
-.bottom-nav.on-page .bnav-item.active { color: var(--text-dark); }
-.bottom-nav.on-page .bnav-item.active::after { background: var(--text-mid); }
+.top-nav.on-page .bnav-item { color: var(--text-light); }
+.top-nav.on-page .bnav-item.active { color: var(--text-dark); }
+.top-nav.on-page .bnav-item.active::after { background: var(--text-mid); }
+
+/* Sky dome arc */
+.sky-arc {
+  position: fixed; top: calc(38px + env(safe-area-inset-top)); left: 0; right: 0;
+  z-index: 79; height: 30px; pointer-events: none;
+}
+.sky-arc svg { width: 100%; height: 100%; }
+
+/* Adaptive nav for dark sky */
+.sky-dark .bnav-item { color: rgba(255,255,255,0.55); }
+.sky-dark .bnav-item.active { color: rgba(255,255,255,0.95); }
+.sky-dark .bnav-item.active::after { background: rgba(255,255,255,0.6); }
 
 /* ===== CALENDAR OVERLAY ===== */
 .cal-overlay {
@@ -972,6 +1014,11 @@ input[type=number] { -moz-appearance: textfield; }
   cursor: pointer; font-size: 14px; color: var(--text-mid);
 }
 .cal-close-btn:active { background: rgba(0,0,0,0.1); }
+
+/* Stats & Journal page top padding for nav clearance */
+#page-stats.active, #page-journal.active {
+  padding-top: calc(48px + env(safe-area-inset-top));
+}
 
 /* Dynamic cell height */
 .day-cell { min-height: var(--cell-h, 66px); }
@@ -1008,6 +1055,14 @@ input[type=number] { -moz-appearance: textfield; }
   transform: translateY(100%);
   animation: splashUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
+#splash-tagline {
+  position: absolute; top: 42%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--ff); font-size: 16px; font-weight: 500;
+  color: rgba(40,35,30,0.5); letter-spacing: 3px;
+  opacity: 0; white-space: nowrap;
+  animation: splashTagIn 0.4s ease-out 0.5s forwards, splashTagOut 0.3s ease-in 1.1s forwards;
+}
 #splash-face {
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -55%);
@@ -1015,16 +1070,16 @@ input[type=number] { -moz-appearance: textfield; }
 }
 #splash-d-group {
   opacity: 0;
-  animation: splashFadeIn 0.35s ease-out 0.5s forwards, splashDPoint 0.4s ease-in-out 1.6s both;
+  animation: splashFadeIn 0.35s ease-out 1.2s forwards, splashDPoint 0.4s ease-in-out 2.2s both;
 }
 #splash-eyes {
   opacity: 0;
-  animation: splashFadeIn 0.35s ease-out 0.5s forwards, splashBlink 0.45s ease-in-out 0.9s both;
+  animation: splashFadeIn 0.35s ease-out 1.2s forwards, splashBlink 0.45s ease-in-out 1.6s both;
 }
 #splash-wave {
   stroke-dasharray: 320;
   stroke-dashoffset: 320;
-  animation: splashDraw 0.55s ease-out 1.0s forwards, splashUndulate 0.5s ease-in-out 1.8s both;
+  animation: splashDraw 0.55s ease-out 1.6s forwards, splashUndulate 0.5s ease-in-out 2.4s both;
 }
 #splash.exit {
   animation: splashExit 0.4s ease-in forwards;
@@ -1034,6 +1089,12 @@ input[type=number] { -moz-appearance: textfield; }
 }
 @keyframes splashFadeIn {
   to { opacity: 1; }
+}
+@keyframes splashTagIn {
+  to { opacity: 1; }
+}
+@keyframes splashTagOut {
+  to { opacity: 0; }
 }
 @keyframes splashDraw {
   to { stroke-dashoffset: 0; }
@@ -1064,6 +1125,7 @@ input[type=number] { -moz-appearance: textfield; }
 <!-- Splash screen -->
 <div id="splash">
   <div id="splash-sky"></div>
+  <div id="splash-tagline">此刻的心情天空</div>
   <svg id="splash-face" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
     <path id="splash-wave" d="M15 48 Q50 18, 82 48 Q114 78, 148 48 Q180 18, 195 40" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="5.5" stroke-linecap="round" style="transform-origin:center 48px;"/>
     <g id="splash-eyes" style="transform-origin:100px 84px;">
@@ -1220,31 +1282,46 @@ input[type=number] { -moz-appearance: textfield; }
 <!-- JOURNAL PAGE -->
 <div id="page-journal" class="page"></div>
 
-<!-- BOTTOM NAV -->
-<div class="bottom-nav" id="bottom-nav">
+<!-- TOP NAV + ARC -->
+<div class="top-nav" id="top-nav">
   <button class="bnav-item active" data-page="sky">天空</button>
   <button class="bnav-item" data-page="journal">日誌</button>
   <button class="bnav-item" data-page="stats">月貌</button>
+</div>
+<div class="sky-arc" id="sky-arc">
+  <svg viewBox="0 0 400 30" preserveAspectRatio="none">
+    <path d="M0 0 L0 2 Q200 30, 400 2 L400 0 Z" fill="rgba(255,255,255,0.12)"/>
+  </svg>
 </div>
 
 <!-- ENTRY SHEET (sky page quick entry) -->
 <div class="entry-overlay" id="entry-overlay"></div>
 <div class="entry-sheet" id="entry-sheet">
   <div class="entry-sheet-handle"></div>
-  <div class="entry-sheet-title" id="entry-title">早上</div>
-  <div class="entry-seg" id="entry-seg">
-    <button class="entry-seg-btn active" data-t="positive" onclick="setEntryType('positive')">正向</button>
-    <button class="entry-seg-btn" data-t="negative" onclick="setEntryType('negative')">負向</button>
-    <button class="entry-seg-btn" data-t="unclear" onclick="setEntryType('unclear')">說不清</button>
+  <div class="entry-sheet-header" style="position:relative;">
+    <div class="entry-sheet-title" id="entry-title">早上</div>
+    <div class="entry-cycle">
+      <button class="entry-cycle-btn" id="entry-pms" onclick="toggleEntryCycle('pms')"><svg width="8" height="8" viewBox="0 0 10 10"><path d="M7 1C5 1.5 3.5 3.3 3.5 5.5S5 9.5 7 10c-3 0-5-2-5-4.5S4 1 7 1z" fill="currentColor"/></svg>經前</button>
+      <button class="entry-cycle-btn" id="entry-period" onclick="toggleEntryCycle('period')"><svg width="7" height="7" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>月經</button>
+    </div>
   </div>
   <div class="entry-score-area" id="entry-score-area">
-    <div class="entry-score-num" id="entry-score-num">50</div>
+    <div class="entry-score-num" id="entry-score-num">0</div>
     <input type="range" class="entry-slider" id="entry-slider" min="0" max="100" value="50" oninput="onEntrySlider(this.value)">
+    <div class="entry-labels">
+      <span class="entry-label-neg">負向</span>
+      <span class="entry-label-mid">平靜</span>
+      <span class="entry-label-pos">正向</span>
+    </div>
   </div>
-  <textarea class="entry-note" id="entry-note" placeholder="寫下來你的感受" rows="2" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
-  <div class="entry-cycle">
-    <button class="entry-cycle-btn" id="entry-pms" onclick="toggleEntryCycle('pms')"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M7.5 2C5.5 2.5 4 4.3 4 6.5S5.5 10.5 7.5 11c-3 0-5-2.2-5-4.5S4.5 2 7.5 2z" fill="currentColor"/></svg>經前</button>
-    <button class="entry-cycle-btn" id="entry-period" onclick="toggleEntryCycle('period')"><svg width="8" height="8" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>月經</button>
+  <div class="entry-note-toggle" id="entry-note-toggle" onclick="toggleEntryNote()">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#c0b8b0" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M11.5 1.5l3 3L5.5 13.5l-3.5.5.5-3.5L11.5 1.5z"/>
+    </svg>
+    <span>說說你的感受</span>
+  </div>
+  <div class="entry-note-wrap" id="entry-note-wrap">
+    <textarea class="entry-note" id="entry-note" placeholder="說說你的感受" rows="2" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
   </div>
   <button class="entry-save" id="entry-save" onclick="saveEntry()">記下來</button>
 </div>
@@ -3275,7 +3352,7 @@ document.getElementById('toggle-view').innerHTML = viewMode === 'monster' ? VIEW
     splash.addEventListener('animationend', () => {
       splash.remove();
     });
-  }, 2500);
+  }, 3200);
 })();
 
 // ===== SKY PAGE =====
@@ -3305,10 +3382,16 @@ function updateSkyPeriods() {
     const scoreEl = document.getElementById('sky-sc-' + pk);
     const dotEl = document.getElementById('sky-dot-' + pk);
     const entry = todayData[pk];
-    if (entry?.score != null || entry?.type === 'unclear') {
+    if (entry?.score != null) {
       btn.classList.add('filled');
       scoreEl.style.display = 'block';
-      scoreEl.textContent = entry.type === 'unclear' ? '·' : entry.score;
+      const prefix = entry.type === 'negative' ? '負' : '正';
+      scoreEl.textContent = entry.score === 0 ? '平靜' : prefix + entry.score;
+      if (dotEl) dotEl.style.display = 'none';
+    } else if (entry?.type === 'unclear') {
+      btn.classList.add('filled');
+      scoreEl.style.display = 'block';
+      scoreEl.textContent = '·';
       if (dotEl) dotEl.style.display = 'none';
     } else {
       btn.classList.remove('filled');
@@ -3328,26 +3411,26 @@ function updateSkyGradient() {
     if (clean && clean[String(d)]) todayData = clean[String(d)];
   } catch {}
 
-  const filled = PERIOD_KEYS.map(pk => todayData[pk]).filter(e => e?.score != null);
   const bg = document.getElementById('sky-bg');
-  if (filled.length === 0) {
-    bg.style.background = 'linear-gradient(180deg, #ecd898 0%, #f2dda0 35%, #e8dcc0 65%, #c8dce8 100%)';
-    return;
-  }
-  const pos = filled.filter(e => e.type === 'positive');
-  const neg = filled.filter(e => e.type === 'negative');
-  const avgScore = filled.reduce((s,e) => s + e.score, 0) / filled.length;
-  const intensity = avgScore / 100;
+  const neutral = '#ddd8d0';
 
-  if (pos.length >= neg.length && pos.length > 0) {
-    const top = lerp(WARM, intensity * 0.5);
-    const mid = lerp(WARM, intensity * 0.3);
-    bg.style.background = `linear-gradient(180deg, ${top} 0%, ${mid} 45%, #d8dcc8 75%, #b8ccd8 100%)`;
-  } else {
-    const top = lerp(COOL, intensity * 0.5);
-    const mid = lerp(COOL, intensity * 0.35);
-    bg.style.background = `linear-gradient(180deg, #c0c8cc 0%, ${mid} 35%, ${top} 65%, #406880 100%)`;
+  function periodColor(pk) {
+    const e = todayData[pk];
+    if (!e || e.score == null) return neutral;
+    const t = e.score / 100;
+    if (e.type === 'positive') return lerp(WARM, t * 0.7);
+    return lerp(COOL, t * 0.6);
   }
+
+  const top = periodColor('morning');
+  const mid = periodColor('afternoon');
+  const bot = periodColor('evening');
+  bg.style.background = `linear-gradient(180deg, ${top} 0%, ${top} 20%, ${mid} 45%, ${mid} 55%, ${bot} 80%, ${bot} 100%)`;
+
+  // Adaptive text: dark sky when any period has strong negative
+  const skyEl = document.getElementById('page-sky');
+  const hasDeepNeg = PERIOD_KEYS.some(pk => todayData[pk]?.type === 'negative' && todayData[pk]?.score > 35);
+  skyEl.classList.toggle('sky-dark', hasDeepNeg);
 }
 
 function updateBlobState() {
@@ -3388,11 +3471,13 @@ function updateBlobState() {
 
 // ===== NAVIGATION =====
 function updateNavState(page) {
-  const nav = document.getElementById('bottom-nav');
+  const nav = document.getElementById('top-nav');
   nav.querySelectorAll('.bnav-item').forEach(b => {
     b.classList.toggle('active', b.dataset.page === page);
   });
   nav.classList.toggle('on-page', page !== 'sky');
+  const arc = document.getElementById('sky-arc');
+  if (arc) arc.style.display = page === 'sky' ? '' : 'none';
 }
 
 function switchPage(page) {
@@ -3450,7 +3535,7 @@ updateCellHeight();
 initSkyPage();
 
 // Bottom nav
-document.getElementById('bottom-nav').addEventListener('click', e => {
+document.getElementById('top-nav').addEventListener('click', e => {
   const btn = e.target.closest('.bnav-item');
   if (!btn || btn.classList.contains('active')) return;
   switchPage(btn.dataset.page);
@@ -3474,15 +3559,27 @@ window.addEventListener('resize', updateCellHeight);
 
 // ===== ENTRY SHEET =====
 let entryPeriod = null;
-let entryType = 'positive';
-let entryScore = 50;
+let entrySliderVal = 50;
+
+function sliderToMood(val) {
+  const v = parseInt(val);
+  const mapped = (v - 50) * 2; // -100 to +100
+  if (mapped > 0) return { type: 'positive', score: mapped };
+  if (mapped < 0) return { type: 'negative', score: Math.abs(mapped) };
+  return { type: 'positive', score: 0 };
+}
+
+function moodToSlider(type, score) {
+  if (type === 'positive') return 50 + Math.round(score / 2);
+  if (type === 'negative') return 50 - Math.round(score / 2);
+  return 50;
+}
 
 function openEntrySheet(period) {
   entryPeriod = period;
   const idx = PERIOD_KEYS.indexOf(period);
   document.getElementById('entry-title').textContent = PERIOD_NAMES[idx];
 
-  // Load existing data
   const todayD = String(today.getDate());
   const todayY = today.getFullYear(), todayM = today.getMonth();
   let todayData = {};
@@ -3499,23 +3596,32 @@ function openEntrySheet(period) {
   } catch {}
 
   const existing = todayData[period];
-  if (existing?.score != null || existing?.type === 'unclear') {
-    setEntryType(existing.type);
-    if (existing.type !== 'unclear') {
-      entryScore = existing.score;
-      document.getElementById('entry-slider').value = entryScore;
-      onEntrySlider(entryScore);
-    }
-    document.getElementById('entry-note').value = existing.note || '';
+  if (existing?.score != null) {
+    entrySliderVal = moodToSlider(existing.type, existing.score);
   } else {
-    setEntryType('positive');
-    entryScore = 50;
-    document.getElementById('entry-slider').value = 50;
-    onEntrySlider(50);
-    document.getElementById('entry-note').value = '';
+    entrySliderVal = 50;
+  }
+  document.getElementById('entry-slider').value = entrySliderVal;
+  onEntrySlider(entrySliderVal);
+
+  // Note — always start collapsed
+  const noteVal = existing?.note || '';
+  document.getElementById('entry-note').value = noteVal;
+  const noteToggle = document.getElementById('entry-note-toggle');
+  const noteWrap = document.getElementById('entry-note-wrap');
+  noteWrap.classList.remove('open');
+  noteToggle.style.display = '';
+  const toggleText = noteToggle.querySelector('span');
+  if (noteVal) {
+    const preview = noteVal.length > 20 ? noteVal.slice(0, 20) + '...' : noteVal;
+    toggleText.textContent = preview;
+    toggleText.style.color = 'var(--text-mid)';
+  } else {
+    toggleText.textContent = '說說你的感受';
+    toggleText.style.color = '#c0b8b0';
   }
 
-  // Cycle state
+  // Cycle
   const pmsBtn = document.getElementById('entry-pms');
   const perBtn = document.getElementById('entry-period');
   pmsBtn.className = 'entry-cycle-btn' + (todayCycle.pms ? ' pms-on' : '');
@@ -3530,37 +3636,28 @@ function closeEntrySheet() {
   document.getElementById('entry-sheet').classList.remove('open');
 }
 
-function setEntryType(type) {
-  entryType = type;
-  document.querySelectorAll('.entry-seg-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`.entry-seg-btn[data-t="${type}"]`).classList.add('active');
-
-  const scoreArea = document.getElementById('entry-score-area');
-  const saveBtn = document.getElementById('entry-save');
+function onEntrySlider(val) {
+  entrySliderVal = parseInt(val);
+  const mood = sliderToMood(entrySliderVal);
   const numEl = document.getElementById('entry-score-num');
-
-  if (type === 'unclear') {
-    scoreArea.classList.add('entry-score-hidden');
-    saveBtn.className = 'entry-save unc';
+  const saveBtn = document.getElementById('entry-save');
+  numEl.textContent = mood.score;
+  if (mood.score === 0) {
+    numEl.className = 'entry-score-num';
+    saveBtn.className = 'entry-save';
+  } else if (mood.type === 'positive') {
+    numEl.className = 'entry-score-num pos';
+    saveBtn.className = 'entry-save pos';
   } else {
-    scoreArea.classList.remove('entry-score-hidden');
-    numEl.className = 'entry-score-num' + (type === 'negative' ? ' neg' : '');
-    saveBtn.className = 'entry-save' + (type === 'negative' ? ' neg' : '');
-    if (typeof updateSliderFill === 'function') updateSliderFill();
+    numEl.className = 'entry-score-num neg';
+    saveBtn.className = 'entry-save neg';
   }
 }
 
-function onEntrySlider(val) {
-  entryScore = parseInt(val);
-  document.getElementById('entry-score-num').textContent = entryScore;
-  updateSliderFill();
-}
-
-function updateSliderFill() {
-  const slider = document.getElementById('entry-slider');
-  const pct = entryScore;
-  const color = entryType === 'positive' ? 'rgb(240,180,60)' : 'rgb(90,160,200)';
-  slider.style.background = `linear-gradient(90deg, ${color} 0%, ${color} ${pct}%, #eae6e2 ${pct}%, #eae6e2 100%)`;
+function toggleEntryNote() {
+  document.getElementById('entry-note-wrap').classList.add('open');
+  document.getElementById('entry-note-toggle').style.display = 'none';
+  setTimeout(() => document.getElementById('entry-note').focus(), 100);
 }
 
 function toggleEntryCycle(which) {
@@ -3569,49 +3666,33 @@ function toggleEntryCycle(which) {
   if (which === 'pms') {
     const isOn = pmsBtn.classList.contains('pms-on');
     pmsBtn.className = 'entry-cycle-btn' + (isOn ? '' : ' pms-on');
-    perBtn.className = 'entry-cycle-btn'; // mutual exclusion
+    perBtn.className = 'entry-cycle-btn';
   } else {
     const isOn = perBtn.classList.contains('period-on');
     perBtn.className = 'entry-cycle-btn' + (isOn ? '' : ' period-on');
-    pmsBtn.className = 'entry-cycle-btn'; // mutual exclusion
+    pmsBtn.className = 'entry-cycle-btn';
   }
 }
 
 function saveEntry() {
   const todayD = String(today.getDate());
   const todayY = today.getFullYear(), todayM = today.getMonth();
-
-  curYear = todayY;
-  curMonth = todayM;
-  loadData();
-
+  curYear = todayY; curMonth = todayM; loadData();
   if (!monthData[todayD]) monthData[todayD] = {};
+
+  const mood = sliderToMood(entrySliderVal);
   const note = document.getElementById('entry-note').value.trim();
+  monthData[todayD][entryPeriod] = { type: mood.type, score: mood.score, note: note || undefined };
 
-  if (entryType === 'unclear') {
-    monthData[todayD][entryPeriod] = { type: 'unclear', score: null, note: note || undefined };
-  } else {
-    monthData[todayD][entryPeriod] = { type: entryType, score: entryScore, note: note || undefined };
-  }
-
-  // Save cycle data
   const pmsOn = document.getElementById('entry-pms').classList.contains('pms-on');
   const perOn = document.getElementById('entry-period').classList.contains('period-on');
   if (pmsOn || perOn) {
     if (!cycleData[todayD]) cycleData[todayD] = {};
-    cycleData[todayD].pms = pmsOn;
-    cycleData[todayD].period = perOn;
-  } else {
-    delete cycleData[todayD];
-  }
+    cycleData[todayD].pms = pmsOn; cycleData[todayD].period = perOn;
+  } else { delete cycleData[todayD]; }
 
-  saveData();
-  closeEntrySheet();
-
-  updateSkyPeriods();
-  updateSkyGradient();
-  updateBlobState();
-  renderCalendar();
+  saveData(); closeEntrySheet();
+  updateSkyPeriods(); updateSkyGradient(); updateBlobState(); renderCalendar();
 }
 </script>
 </body>
