@@ -361,9 +361,10 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* Stats page */
 .stats-page {
-  position: fixed; inset: 0; z-index: 70; background: var(--bg);
+  position: fixed; inset: 0; z-index: 70;
   overflow-y: auto; animation: fadeIn 0.2s ease;
   padding-top: calc(48px + env(safe-area-inset-top));
+  transition: background 0.3s;
 }
 .stats-inner { max-width: 440px; margin: 0 auto; padding: 16px 14px 40px; }
 .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -2675,44 +2676,81 @@ function openStats() {
     skyCardColor = posRatio >= 0.5 ? getColor('positive', avgMood) : getColor('negative', avgMood);
   }
 
+  // ===== STATS PAGE BACKGROUND =====
+  let statsBg = '#ddd8d0';
+  let statsBgEnd = '#c8c4be';
+  let statsTextColor = 'rgba(40,35,30,0.7)';
+  let statsTextSub = 'rgba(40,35,30,0.45)';
+  let statsTextFaint = 'rgba(40,35,30,0.25)';
+  if (totalEntries >= 3) {
+    if (posRatio >= 0.55) {
+      const t = posRatio * 0.6;
+      statsBg = lerp(WARM, t);
+      statsBgEnd = lerp(WARM, t * 0.4);
+    } else if (posRatio <= 0.45) {
+      const t = (1 - posRatio) * 0.5;
+      statsBg = lerp(COOL, t * 0.6);
+      statsBgEnd = lerp(COOL, t);
+      statsTextColor = 'rgba(255,255,255,0.85)';
+      statsTextSub = 'rgba(255,255,255,0.55)';
+      statsTextFaint = 'rgba(255,255,255,0.25)';
+    }
+  }
+
   statsPage.innerHTML = `
-    <div class="stats-page">
+    <div class="stats-page" style="background:linear-gradient(180deg, ${statsBg} 0%, ${statsBgEnd} 100%);">
       <div class="stats-inner">
         <div class="stats-header">
           <div style="width:30px"></div>
-          <h2 class="stats-title" style="display:flex;align-items:center;gap:8px;">
-            <button class="sky-arrow" id="stats-prev" style="width:26px;height:26px;">
+          <h2 class="stats-title" style="display:flex;align-items:center;gap:8px;color:${statsTextColor}">
+            <button class="sky-arrow" id="stats-prev" style="width:26px;height:26px;color:${statsTextColor}">
               <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M9 2L3.5 7L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
             ${MONTHS_TW[curMonth]}
-            <button class="sky-arrow" id="stats-next" style="width:26px;height:26px;">
+            <button class="sky-arrow" id="stats-next" style="width:26px;height:26px;color:${statsTextColor}">
               <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 2L10.5 7L5 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </h2>
           <div style="width:30px"></div>
         </div>
 
-        <div class="month-summary-card">
-          <div style="width:60px;height:60px;border-radius:14px;background:${skyCardColor};margin:0 auto 10px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></div>
-          <div class="summary-verdict" style="color:${verdictColor}">${summaryVerdict}</div>
-          ${posRatioPct !== null ? `<div class="summary-pct" style="color:${verdictColor}">正面情緒佔 ${posRatioPct}%</div>` : ''}
-          <div class="summary-meta">記錄了 ${filledDays} 天・共 ${totalEntries} 筆</div>
+        <!-- Blob in this month's sky -->
+        <div style="display:flex;justify-content:center;padding:20px 0 8px;">
+          <svg width="100" height="100" viewBox="0 0 130 130" style="opacity:0.5;filter:blur(0.3px);">
+            <defs><radialGradient id="statsBlobG" cx="40%" cy="35%">
+              <stop offset="0%" stop-color="rgba(255,255,255,0.8)"/>
+              <stop offset="100%" stop-color="rgba(255,255,255,0.35)"/>
+            </radialGradient></defs>
+            <path d="M65 18 C90 18, 112 38, 110 62 C112 86, 95 112, 65 112 C35 112, 18 90, 20 65 C18 38, 40 18, 65 18Z" fill="url(#statsBlobG)"/>
+          </svg>
         </div>
 
-        <div class="section-box" style="margin-bottom:16px">
-          <div class="section-title" style="margin-bottom:8px">天空紀錄</div>
-          <div style="height:28px;border-radius:8px;overflow:hidden;background:linear-gradient(90deg, ${stripGrad});"></div>
-          <div class="chart-labels" style="margin-top:4px"><span>1</span><span>${Math.ceil(dim / 2)}</span><span>${dim}</span></div>
+        <!-- Summary -->
+        <div style="text-align:center;padding:0 10px 24px;">
+          <div style="font-family:var(--ff);font-size:18px;font-weight:700;color:${statsTextColor};margin-bottom:6px;">${summaryVerdict}</div>
+          ${posRatioPct !== null ? `<div style="font-family:var(--mono);font-size:13px;color:${statsTextSub};margin-bottom:4px;">正面情緒佔 ${posRatioPct}%</div>` : ''}
+          <div style="font-family:var(--mono);font-size:11px;color:${statsTextFaint};">記錄了 ${filledDays} 天・共 ${totalEntries} 筆</div>
         </div>
 
-        <div class="section-box">
-          <div class="section-title">本月發現</div>
-          <div class="discovery-list" style="margin-top:10px">
-            ${discoveries.map(d => `<div class="discovery-item"><span class="discovery-icon">${d.icon}</span><span>${d.text}</span></div>`).join('')}
+        <!-- Sky strip -->
+        <div style="padding:0 4px 24px;">
+          <div style="height:24px;border-radius:12px;overflow:hidden;background:linear-gradient(90deg, ${stripGrad});box-shadow:0 1px 6px rgba(0,0,0,0.08);"></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 2px 0;font-family:var(--mono);font-size:10px;color:${statsTextFaint};">
+            <span>1</span><span>${Math.ceil(dim / 2)}</span><span>${dim}</span>
           </div>
         </div>
 
-        ${cycleHTML}
+        <!-- Discoveries as floating text -->
+        <div style="padding:0 8px;">
+          ${discoveries.map(d => `
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.12);">
+              <span style="flex-shrink:0;color:${statsTextSub};margin-top:1px;">${d.icon}</span>
+              <span style="font-family:var(--ff);font-size:13px;line-height:1.6;color:${statsTextColor};">${d.text}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        ${cycleHTML ? `<div style="padding:16px 8px 0;">${cycleHTML.replace(/class="section-box"/g, 'style="padding:0"').replace(/class="section-title"/g, `style="font-size:13px;font-weight:700;color:${statsTextColor};margin-bottom:8px"`)}</div>` : ''}
 
       </div>
     </div>
