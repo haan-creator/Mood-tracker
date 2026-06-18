@@ -1268,7 +1268,6 @@ input[type=number] { -moz-appearance: textfield; }
           </button>
         </div>
         <div class="controls">
-          <button id="toggle-view" class="view-toggle-btn" aria-label="切換顯示樣式" title="切換怪獸/漸層"></button>
         </div>
       </div>
       <div class="cal-wrap" id="cal-wrap">
@@ -1379,7 +1378,7 @@ const PERIOD_NAMES = ['早上','下午','晚上'];
 const today = new Date();
 let curYear = today.getFullYear(), curMonth = today.getMonth();
 let monthData = {}, cycleData = {};
-let viewMode = 'gradient'; // 'gradient' or 'monster'
+let viewMode = 'gradient'; // monster mode removed
 
 // ===== STORAGE =====
 function sKey(y,m) { return `mood:${y}-${String(m+1).padStart(2,'0')}`; }
@@ -2045,97 +2044,64 @@ function openDayModal(day, initialDirty = false) {
 
 function buildEditorHTML(pk, idx, entry, hasExisting) {
   const type = entry.type || 'positive';
-  const score = hasExisting ? entry.score : 50;
+  const score = hasExisting ? entry.score : 0;
   const note = entry.note || '';
-  const color = hasExisting ? getColor(type, score) : '#ccc';
-  const gradStr = hasExisting
-    ? (type === 'positive'
-      ? `linear-gradient(to right, rgb(${WARM[0]}), rgb(${WARM[2]}), rgb(${WARM[4]}))`
-      : `linear-gradient(to right, rgb(${COOL[0]}), rgb(${COOL[2]}), rgb(${COOL[4]}))`)
-    : 'linear-gradient(to right, #e8e4e0, #ccc)';
-
-  const saveBtnBg = type === 'positive' ? `rgb(${WARM[2]})` : `rgb(${COOL[3]})`;
+  const sliderVal = hasExisting ? moodToSlider(type, score) : 50;
+  const mood = hasExisting ? { type, score } : { type: 'positive', score: 0 };
+  const saveBtnBg = mood.score === 0 ? '#c0b8b0' : (mood.type === 'positive' ? 'rgb(230,160,50)' : 'rgb(80,150,190)');
+  const numColor = mood.score === 0 ? '#c0b8b0' : (mood.type === 'positive' ? 'rgb(230,160,50)' : 'rgb(80,150,190)');
 
   return `
-    <div class="type-row">
-      <div class="seg-ctrl ${type==='negative' ? 'neg-active' : ''}">
-        <div class="seg-bg"></div>
-        <button class="seg-btn ${type==='positive' ? 'active' : 'inactive'}" data-type="positive">正向</button>
-        <button class="seg-btn ${type==='negative' ? 'active' : 'inactive'}" data-type="negative">負向</button>
-      </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span class="editor-score-num" style="font-family:var(--display);font-size:32px;font-weight:800;color:${numColor}">${hasExisting ? score : '0'}</span>
       <button class="editor-save-btn" style="background:${saveBtnBg}">儲存</button>
     </div>
-    <div class="slider-wrap">
-      <div class="slider-track">
-        <div class="slider-bg" style="background:${gradStr}"></div>
-        <input type="range" class="slider-input" min="0" max="100" value="${score}">
-      </div>
-      <span class="score-display" style="color:${color}">${hasExisting ? score : '—'}</span>
+    <div style="margin-bottom:4px;">
+      <input type="range" class="entry-slider" style="width:100%" min="0" max="100" value="${sliderVal}">
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:2px 2px 6px;font-family:var(--ff);font-size:11px;font-weight:600;">
+      <span style="color:#2080a0">負向</span>
+      <span style="color:#b0a8a0">平靜</span>
+      <span style="color:#c85030">正向</span>
     </div>
     <div class="note-area">
-      <span class="note-display ${note ? 'filled' : 'empty'}"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;opacity:0.5"><path d="M10.5 1.5l2 2L4.5 11.5l-2.5.5.5-2.5L10.5 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>${note ? note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;') : '有什麼事想說呢'}</span></span>
-      <textarea class="note-input" placeholder="有什麼事想說呢" style="display:none" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" rows="1">${note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+      <span class="note-display ${note ? 'filled' : 'empty'}"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;opacity:0.5"><path d="M10.5 1.5l2 2L4.5 11.5l-2.5.5.5-2.5L10.5 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>${note ? note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;') : '說說你的感受'}</span></span>
+      <textarea class="note-input" placeholder="說說你的感受" style="display:none" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" rows="1">${note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
     </div>
   `;
 }
 
 function attachEditorEvents(div, pk, day, initialEntry, onTypeChange) {
-  let type = initialEntry.type || 'positive';
-  let score = initialEntry.score ?? 50;
-  const dk = String(day);
   const hadExisting = initialEntry.score != null;
+  let sliderVal = hadExisting ? moodToSlider(initialEntry.type || 'positive', initialEntry.score) : 50;
   let touched = hadExisting;
 
   function markTouched() { touched = true; }
 
-  // Type toggle
-  div._currentType = type;
-  div.querySelectorAll('.seg-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      type = btn.dataset.type === 'negative' ? 'negative' : 'positive';
-      div.className = `entry-editor ${type}`;
-      div._currentType = type;
-      const ctrl = div.querySelector('.seg-ctrl');
-      if (type === 'negative') ctrl.classList.add('neg-active');
-      else ctrl.classList.remove('neg-active');
-      div.querySelectorAll('.seg-btn').forEach(b => {
-        if (b.dataset.type === type) {
-          b.className = 'seg-btn active';
-        } else {
-          b.className = 'seg-btn inactive';
-        }
-      });
-      markTouched();
-      updateColors();
-      if (onTypeChange) onTypeChange();
-    });
-  });
+  // Bidirectional slider
+  const slider = div.querySelector('.entry-slider');
+  const numEl = div.querySelector('.editor-score-num');
+  const saveBtn = div.querySelector('.editor-save-btn');
 
-  function updateColors() {
-    const color = touched ? getColor(type, score) : '#ccc';
-    const gradStr = touched
-      ? (type === 'positive'
-        ? `linear-gradient(to right, rgb(${WARM[0]}), rgb(${WARM[2]}), rgb(${WARM[4]}))`
-        : `linear-gradient(to right, rgb(${COOL[0]}), rgb(${COOL[2]}), rgb(${COOL[4]}))`)
-      : 'linear-gradient(to right, #e8e4e0, #ccc)';
-    div.querySelector('.slider-bg').style.background = gradStr;
-    div.querySelector('.score-display').style.color = color;
-    div.querySelector('.score-display').textContent = touched ? score : '—';
-    const si = div.querySelector('.slider-input');
-    si.style.color = color;
-    // Save button follows type color
-    const saveBtn = div.querySelector('.editor-save-btn');
-    if (saveBtn) {
-      saveBtn.style.background = type === 'positive' ? `rgb(${WARM[2]})` : `rgb(${COOL[3]})`;
-    }
-  }
+  div._currentType = hadExisting ? (initialEntry.type || 'positive') : 'positive';
 
-  // Slider
-  const slider = div.querySelector('.slider-input');
   slider.addEventListener('input', (e) => {
-    score = Math.max(0, Math.min(100, parseInt(e.target.value) || 0));
+    sliderVal = parseInt(e.target.value);
     markTouched();
-    updateColors();
+    const mood = sliderToMood(sliderVal);
+    numEl.textContent = mood.score;
+    if (mood.score === 0) {
+      numEl.style.color = '#c0b8b0';
+      saveBtn.style.background = '#c0b8b0';
+    } else if (mood.type === 'positive') {
+      numEl.style.color = 'rgb(230,160,50)';
+      saveBtn.style.background = 'rgb(230,160,50)';
+    } else {
+      numEl.style.color = 'rgb(80,150,190)';
+      saveBtn.style.background = 'rgb(80,150,190)';
+    }
+    div._currentType = mood.type;
+    if (onTypeChange) onTypeChange();
   });
 
   // Note: click-to-edit toggle
@@ -2155,19 +2121,19 @@ function attachEditorEvents(div, pk, day, initialEntry, onTypeChange) {
   noteInput.addEventListener('blur', () => {
     const val = noteInput.value.trim();
     const textSpan = noteDisplay.querySelector('span');
-    if (textSpan) textSpan.textContent = val || '有什麼事想說呢';
+    if (textSpan) textSpan.textContent = val || '說說你的感受';
     noteDisplay.className = `note-display ${val ? 'filled' : 'empty'}`;
     noteDisplay.style.display = '';
     noteInput.style.display = 'none';
     if (val) markTouched();
   });
 
-  // State getter
-  div._getState = () => ({ type, score, note: div.querySelector('.note-input').value.trim(), touched });
+  // State getter — returns mood from slider
+  div._getState = () => {
+    const mood = sliderToMood(sliderVal);
+    return { type: mood.type, score: mood.score, note: div.querySelector('.note-input').value.trim(), touched };
+  };
   div._periodKey = pk;
-
-  // Init thumb color
-  slider.style.color = hadExisting ? getColor(type, score) : '#ccc';
 }
 
 function closeDayModal() {
@@ -2661,8 +2627,6 @@ function openStats() {
           </h2>
           <div style="width:30px"></div>
         </div>
-
-        ${renderMonthlyMonsterHero()}
 
         <div class="month-summary-card">
           <div class="summary-verdict" style="color:${verdictColor}">${summaryVerdict}</div>
@@ -3392,26 +3356,7 @@ document.getElementById('next-month').addEventListener('click', () => {
   if (curMonth > 11) { curMonth = 0; curYear++; }
   renderCalendar();
 });
-// Nav handled by bottom-nav
-const VIEW_ICON_GRADIENT = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="1.5" y="1.5" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.1"/>
-  <rect x="2.1" y="2.1" width="9.8" height="3.1" fill="currentColor" opacity="0.15"/>
-  <rect x="2.1" y="5.45" width="9.8" height="3.1" fill="currentColor" opacity="0.38"/>
-  <rect x="2.1" y="8.8" width="9.8" height="3.1" fill="currentColor" opacity="0.65"/>
-</svg>`;
-const VIEW_ICON_MONSTER = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.1"/>
-  <circle cx="5.2" cy="6.3" r="0.95" fill="currentColor"/>
-  <circle cx="8.8" cy="6.3" r="0.95" fill="currentColor"/>
-  <line x1="5.4" y1="9.3" x2="8.6" y2="9.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-</svg>`;
-document.getElementById('toggle-view').addEventListener('click', () => {
-  viewMode = viewMode === 'monster' ? 'gradient' : 'monster';
-  document.getElementById('toggle-view').innerHTML = viewMode === 'monster' ? VIEW_ICON_MONSTER : VIEW_ICON_GRADIENT;
-  renderCalendar();
-});
-// Initial icon state
-document.getElementById('toggle-view').innerHTML = viewMode === 'monster' ? VIEW_ICON_MONSTER : VIEW_ICON_GRADIENT;
+// Nav handled by top-nav
 
 // ===== SPLASH SCREEN =====
 (function() {
