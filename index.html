@@ -1294,11 +1294,20 @@ input[type=number] { -moz-appearance: textfield; }
           <span>月經</span>
         </div>
       </div>
+      <div class="section-box backup-section" style="margin:16px 14px;position:relative;z-index:1;">
+        <div class="section-title">資料備份</div>
+        <p style="font-size:11px;color:#a09888;margin-bottom:10px;line-height:1.6">
+          匯出加密備份 / 匯入還原資料
+        </p>
+        <div class="backup-btns">
+          <button class="backup-btn export-btn" id="cal-btn-export">匯出備份</button>
+          <button class="backup-btn import-btn" id="cal-btn-import">匯入備份</button>
+          <input type="file" id="cal-import-file" accept=".json" style="display:none">
+        </div>
+      </div>
     </div>
   </div>
 </div>
-
-<!-- DAY MODAL -->
 <div id="day-modal"></div>
 
 <!-- STATS PAGE -->
@@ -2480,11 +2489,11 @@ function openStats() {
         <div class="section-title">週期與情緒</div>
         <div style="font-size:11px;color:var(--text-faint);margin-bottom:10px">這個月有 ${cycleDaysDesc}</div>
         ${correlationText ? `<div class="discovery-item"${worstCycleTimeText ? ' style="margin-bottom:8px"' : ''}>
-          <span class="discovery-icon">🔄</span>
+          <span class="discovery-icon"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M2 8a6 6 0 0111.3-2.8M14 8a6 6 0 01-11.3 2.8"/><path d="M13.3 2v3.2h-3.2M2.7 14v-3.2h3.2"/></svg></span>
           <span>${correlationText}</span>
         </div>` : ''}
         ${worstCycleTimeText ? `<div class="discovery-item">
-          <span class="discovery-icon">🕐</span>
+          <span class="discovery-icon"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5"/></svg></span>
           <span>${worstCycleTimeText}</span>
         </div>` : ''}
       </div>
@@ -2611,6 +2620,61 @@ function openStats() {
     }
   }
 
+  // ===== SVG ICONS (replace emoji) =====
+  const IC = {
+    alert: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M8 1.5L1.5 13.5h13L8 1.5z"/><line x1="8" y1="6" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r="0.5" fill="currentColor"/></svg>',
+    clock: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5"/></svg>',
+    cal: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2" y="3" width="12" height="11" rx="1.5"/><line x1="2" y1="7" x2="14" y2="7"/><line x1="5.5" y1="1.5" x2="5.5" y2="4.5"/><line x1="10.5" y1="1.5" x2="10.5" y2="4.5"/></svg>',
+    up: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 11L8 4l5 7"/></svg>',
+    down: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 5L8 12l5-7"/></svg>',
+    star: '<svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5l2 4.5 5 .5-3.8 3.3 1.2 4.7L8 12l-4.4 2.5 1.2-4.7L1 6.5l5-.5z"/></svg>',
+    dot: '<svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="4"/></svg>',
+    leaf: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M4 13C4 8 8 3 13 3c0 5-4 9-9 10"/><path d="M4 13C6 10 8 8 13 3"/></svg>',
+    note: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M11 1.5l3 3L5 13.5l-3.5.5.5-3.5L11 1.5z"/></svg>',
+    cycle: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M2 8a6 6 0 0111.3-2.8M14 8a6 6 0 01-11.3 2.8"/><path d="M13.3 2v3.2h-3.2M2.7 14v-3.2h3.2"/></svg>'
+  };
+
+  // Map old emoji to SVG
+  discoveries.forEach(d => {
+    if (d.icon === '⚠️') d.icon = IC.alert;
+    else if (d.icon === '🕐') d.icon = IC.clock;
+    else if (d.icon === '📅') d.icon = IC.cal;
+    else if (d.icon === '📈') d.icon = IC.up;
+    else if (d.icon === '📉') d.icon = IC.down;
+    else if (d.icon === '✨') d.icon = IC.star;
+    else if (d.icon === '💙') d.icon = IC.dot;
+    else if (d.icon === '🌱') d.icon = IC.leaf;
+    else if (d.icon === '📝') d.icon = IC.note;
+    else if (d.icon === '🔄') d.icon = IC.cycle;
+  });
+
+  // ===== SKY STRIP (replaces bar chart) =====
+  let stripSegments = [];
+  for (let i = 0; i < dailyAvgs.length; i++) {
+    const dk = String(i + 1);
+    const dayD = monthData[dk];
+    if (dailyAvgs[i] === null) {
+      stripSegments.push('#e0ddd8');
+    } else {
+      let pCnt = 0, nCnt = 0;
+      if (dayD) PERIOD_KEYS.forEach(pk => { if (dayD[pk]?.type === 'positive') pCnt++; else if (dayD[pk]?.type === 'negative') nCnt++; });
+      const domType = pCnt >= nCnt ? 'positive' : 'negative';
+      stripSegments.push(getColor(domType, dailyAvgs[i]));
+    }
+  }
+  const stripGrad = stripSegments.map((c, i) => {
+    const pct1 = (i / stripSegments.length * 100).toFixed(1);
+    const pct2 = ((i + 1) / stripSegments.length * 100).toFixed(1);
+    return `${c} ${pct1}%, ${c} ${pct2}%`;
+  }).join(', ');
+
+  // ===== SKY COLOR CARD =====
+  let skyCardColor = '#ddd8d0';
+  if (totalEntries >= 3) {
+    const avgMood = posRatio >= 0.5 ? posAvg || 40 : negAvg || 40;
+    skyCardColor = posRatio >= 0.5 ? getColor('positive', avgMood) : getColor('negative', avgMood);
+  }
+
   statsPage.innerHTML = `
     <div class="stats-page">
       <div class="stats-inner">
@@ -2629,14 +2693,16 @@ function openStats() {
         </div>
 
         <div class="month-summary-card">
+          <div style="width:60px;height:60px;border-radius:14px;background:${skyCardColor};margin:0 auto 10px;box-shadow:0 2px 8px rgba(0,0,0,0.08);"></div>
           <div class="summary-verdict" style="color:${verdictColor}">${summaryVerdict}</div>
           ${posRatioPct !== null ? `<div class="summary-pct" style="color:${verdictColor}">正面情緒佔 ${posRatioPct}%</div>` : ''}
           <div class="summary-meta">記錄了 ${filledDays} 天・共 ${totalEntries} 筆</div>
         </div>
 
         <div class="section-box" style="margin-bottom:16px">
-          <div class="bar-chart">${barsHTML}</div>
-          <div class="chart-labels"><span>1</span><span>${Math.ceil(dim / 2)}</span><span>${dim}</span></div>
+          <div class="section-title" style="margin-bottom:8px">天空紀錄</div>
+          <div style="height:28px;border-radius:8px;overflow:hidden;background:linear-gradient(90deg, ${stripGrad});"></div>
+          <div class="chart-labels" style="margin-top:4px"><span>1</span><span>${Math.ceil(dim / 2)}</span><span>${dim}</span></div>
         </div>
 
         <div class="section-box">
@@ -2648,17 +2714,6 @@ function openStats() {
 
         ${cycleHTML}
 
-        <div class="section-box backup-section">
-          <div class="section-title">資料備份</div>
-          <p style="font-size:11px;color:#a09888;margin-bottom:10px;line-height:1.6">
-            匯出時會要求設定密碼，以加密方式保護備份內容。匯入時需輸入同一組密碼才能還原。建議定期備份並妥善保管密碼。
-          </p>
-          <div class="backup-btns">
-            <button class="backup-btn export-btn" id="btn-export">📤 匯出備份</button>
-            <button class="backup-btn import-btn" id="btn-import">📥 匯入備份</button>
-            <input type="file" id="import-file" accept=".json">
-          </div>
-        </div>
       </div>
     </div>
   `;
@@ -2671,9 +2726,6 @@ function openStats() {
     curMonth++; if (curMonth > 11) { curMonth = 0; curYear++; }
     loadData(); document.getElementById('page-stats').innerHTML = ''; openStats();
   });
-  document.getElementById('btn-export').addEventListener('click', exportData);
-  document.getElementById('btn-import').addEventListener('click', () => document.getElementById('import-file').click());
-  document.getElementById('import-file').addEventListener('change', importData);
 }
 
 function closeStats() {
@@ -3538,6 +3590,13 @@ function switchPage(page) {
 function openCalOverlay() {
   document.getElementById('cal-overlay').classList.add('open');
   renderCalendar();
+  // Backup listeners
+  document.getElementById('cal-btn-export').onclick = exportData;
+  document.getElementById('cal-btn-import').onclick = () => document.getElementById('cal-import-file').click();
+  document.getElementById('cal-import-file').onchange = function(e) {
+    importData(e);
+    this.value = '';
+  };
 }
 function closeCalOverlay() {
   document.getElementById('cal-overlay').classList.remove('open');
