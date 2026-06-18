@@ -713,6 +713,21 @@ input[type=number] { -moz-appearance: textfield; }
 .sky-cal-btn:active { background: rgba(0,0,0,0.1); }
 .sky-cal-btn svg { stroke: rgba(40,35,30,0.5); }
 
+/* Sky day arrows */
+.sky-arrow {
+  width: 30px; height: 30px; border: none;
+  background: rgba(0,0,0,0.04); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: rgba(40,35,30,0.45);
+  transition: all 0.2s;
+}
+.sky-arrow:active { background: rgba(0,0,0,0.08); }
+.sky-arrow:disabled { opacity: 0.2; pointer-events: none; }
+.sky-dark .sky-arrow { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
+
+/* Read-only past day */
+.sky-period-btn.readonly { opacity: 0.7; pointer-events: none; }
+
 /* Blob */
 .blob-area {
   flex: 1; display: flex; align-items: center; justify-content: center;
@@ -1147,9 +1162,17 @@ input[type=number] { -moz-appearance: textfield; }
   <div class="sky-bg" id="sky-bg"></div>
   <div class="sky-content">
     <div class="sky-topbar">
-      <div>
-        <span class="sky-date" id="sky-date"></span>
-        <span class="sky-weekday" id="sky-weekday"></span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button class="sky-arrow" id="sky-prev" aria-label="前一天">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L3.5 7L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div>
+          <span class="sky-date" id="sky-date"></span>
+          <span class="sky-weekday" id="sky-weekday"></span>
+        </div>
+        <button class="sky-arrow" id="sky-next" aria-label="後一天">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2L10.5 7L5 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
       </div>
       <button class="sky-cal-btn" id="open-cal-overlay" aria-label="月曆">
         <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.3" stroke-linecap="round">
@@ -2623,9 +2646,17 @@ function openStats() {
     <div class="stats-page">
       <div class="stats-inner">
         <div class="stats-header">
-          <button class="back-btn" id="stats-back">← 返回</button>
-          <h2 class="stats-title">${MONTHS_TW[curMonth]}</h2>
-          <div style="width:40px"></div>
+          <div style="width:30px"></div>
+          <h2 class="stats-title" style="display:flex;align-items:center;gap:8px;">
+            <button class="sky-arrow" id="stats-prev" style="width:26px;height:26px;">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M9 2L3.5 7L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            ${MONTHS_TW[curMonth]}
+            <button class="sky-arrow" id="stats-next" style="width:26px;height:26px;">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 2L10.5 7L5 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </h2>
+          <div style="width:30px"></div>
         </div>
 
         ${renderMonthlyMonsterHero()}
@@ -2665,7 +2696,14 @@ function openStats() {
     </div>
   `;
 
-  document.getElementById('stats-back').addEventListener('click', closeStats);
+  document.getElementById('stats-prev').addEventListener('click', () => {
+    curMonth--; if (curMonth < 0) { curMonth = 11; curYear--; }
+    loadData(); document.getElementById('page-stats').innerHTML = ''; openStats();
+  });
+  document.getElementById('stats-next').addEventListener('click', () => {
+    curMonth++; if (curMonth > 11) { curMonth = 0; curYear++; }
+    loadData(); document.getElementById('page-stats').innerHTML = ''; openStats();
+  });
   document.getElementById('btn-export').addEventListener('click', exportData);
   document.getElementById('btn-import').addEventListener('click', () => document.getElementById('import-file').click());
   document.getElementById('import-file').addEventListener('change', importData);
@@ -2842,10 +2880,19 @@ function renderJournalItems(append = false) {
   }
 }
 
-function openJournal() {
+function openJournal(year, month) {
   document.getElementById('page-sky').classList.remove('active');
   const page = document.getElementById('page-journal');
   page.classList.add('active');
+
+  const jY = year != null ? year : curYear;
+  const jM = month != null ? month : curMonth;
+  page._jYear = jY;
+  page._jMonth = jM;
+
+  // Load data for this month
+  const prevCurY = curYear, prevCurM = curMonth;
+  curYear = jY; curMonth = jM; loadData();
 
   journalState = {
     filter: 'all',
@@ -2854,14 +2901,23 @@ function openJournal() {
     allEntries: collectAllEntries()
   };
 
+  curYear = prevCurY; curMonth = prevCurM; loadData();
+
   page.innerHTML = `
     <div class="journal-wrap">
       <div class="journal-header">
         <div class="journal-title-wrap">
           <div class="journal-title">日誌</div>
-          <div class="journal-subtitle">${curYear} ${MONTHS_TW[curMonth]}</div>
+          <div class="journal-subtitle" style="display:flex;align-items:center;gap:6px;">
+            <button class="sky-arrow" id="journal-prev" style="width:24px;height:24px;">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M9 2L3.5 7L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <span>${jY} ${MONTHS_TW[jM]}</span>
+            <button class="sky-arrow" id="journal-next" style="width:24px;height:24px;">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 2L10.5 7L5 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
         </div>
-        <button class="journal-back" id="journal-back">← 返回</button>
       </div>
       <div class="journal-tabs">
         <button class="journal-tab active" data-filter="all">全部</button>
@@ -2889,8 +2945,19 @@ function openJournal() {
 
   renderJournalItems();
 
-  // Back button
-  document.getElementById('journal-back').addEventListener('click', closeJournal);
+  // Month navigation
+  document.getElementById('journal-prev').addEventListener('click', () => {
+    let y = page._jYear, m = page._jMonth - 1;
+    if (m < 0) { m = 11; y--; }
+    page.innerHTML = '';
+    openJournal(y, m);
+  });
+  document.getElementById('journal-next').addEventListener('click', () => {
+    let y = page._jYear, m = page._jMonth + 1;
+    if (m > 11) { m = 0; y++; }
+    page.innerHTML = '';
+    openJournal(y, m);
+  });
 
   // Tab switching
   page.querySelectorAll('.journal-tab').forEach(btn => {
@@ -3357,31 +3424,66 @@ document.getElementById('toggle-view').innerHTML = viewMode === 'monster' ? VIEW
 
 // ===== SKY PAGE =====
 const WEEKDAYS_TW = ['日','一','二','三','四','五','六'];
+let skyDate = new Date(); // independent from curYear/curMonth
+
+function isSkyToday() {
+  return skyDate.toDateString() === today.toDateString();
+}
 
 function initSkyPage() {
-  const d = new Date();
-  document.getElementById('sky-date').textContent = (d.getMonth()+1) + '/' + d.getDate();
-  document.getElementById('sky-weekday').textContent = '週' + WEEKDAYS_TW[d.getDay()];
+  updateSkyDate();
   updateSkyPeriods();
   updateSkyGradient();
   updateBlobState();
 }
 
-function updateSkyPeriods() {
-  const d = today.getDate();
-  const todayY = today.getFullYear(), todayM = today.getMonth();
-  let todayData = {};
+function updateSkyDate() {
+  document.getElementById('sky-date').textContent = (skyDate.getMonth()+1) + '/' + skyDate.getDate();
+  document.getElementById('sky-weekday').textContent = '週' + WEEKDAYS_TW[skyDate.getDay()];
+  document.getElementById('sky-next').disabled = isSkyToday();
+}
+
+function skyPrev() {
+  skyDate.setDate(skyDate.getDate() - 1);
+  refreshSky();
+}
+
+function skyNext() {
+  if (isSkyToday()) return;
+  skyDate.setDate(skyDate.getDate() + 1);
+  refreshSky();
+}
+
+function refreshSky() {
+  updateSkyDate();
+  updateSkyPeriods();
+  updateSkyGradient();
+  updateBlobState();
+}
+
+function getSkyDayData() {
+  const y = skyDate.getFullYear(), m = skyDate.getMonth(), d = String(skyDate.getDate());
+  let data = {};
   try {
-    const raw = JSON.parse(localStorage.getItem(sKey(todayY, todayM)));
+    const raw = JSON.parse(localStorage.getItem(sKey(y, m)));
     const clean = sanitizeMonthData(raw);
-    if (clean && clean[String(d)]) todayData = clean[String(d)];
+    if (clean && clean[d]) data = clean[d];
   } catch {}
+  return data;
+}
+
+function updateSkyPeriods() {
+  const todayData = getSkyDayData();
+  const isToday = isSkyToday();
 
   PERIOD_KEYS.forEach(pk => {
     const btn = document.getElementById('sky-p-' + pk);
     const scoreEl = document.getElementById('sky-sc-' + pk);
     const dotEl = document.getElementById('sky-dot-' + pk);
     const entry = todayData[pk];
+
+    btn.classList.toggle('readonly', !isToday);
+
     if (entry?.score != null) {
       btn.classList.add('filled');
       scoreEl.style.display = 'block';
@@ -3402,15 +3504,7 @@ function updateSkyPeriods() {
 }
 
 function updateSkyGradient() {
-  const d = today.getDate();
-  const todayY = today.getFullYear(), todayM = today.getMonth();
-  let todayData = {};
-  try {
-    const raw = JSON.parse(localStorage.getItem(sKey(todayY, todayM)));
-    const clean = sanitizeMonthData(raw);
-    if (clean && clean[String(d)]) todayData = clean[String(d)];
-  } catch {}
-
+  const todayData = getSkyDayData();
   const bg = document.getElementById('sky-bg');
   const neutral = '#ddd8d0';
 
@@ -3427,28 +3521,19 @@ function updateSkyGradient() {
   const bot = periodColor('evening');
   bg.style.background = `linear-gradient(180deg, ${top} 0%, ${top} 20%, ${mid} 45%, ${mid} 55%, ${bot} 80%, ${bot} 100%)`;
 
-  // Adaptive text: dark sky when any period has strong negative
+  // Adaptive text
   const skyEl = document.getElementById('page-sky');
   const hasDeepNeg = PERIOD_KEYS.some(pk => todayData[pk]?.type === 'negative' && todayData[pk]?.score > 35);
   skyEl.classList.toggle('sky-dark', hasDeepNeg);
 }
 
 function updateBlobState() {
-  const d = today.getDate();
-  const todayY = today.getFullYear(), todayM = today.getMonth();
-  let todayData = {};
-  try {
-    const raw = JSON.parse(localStorage.getItem(sKey(todayY, todayM)));
-    const clean = sanitizeMonthData(raw);
-    if (clean && clean[String(d)]) todayData = clean[String(d)];
-  } catch {}
-
+  const todayData = getSkyDayData();
   const filled = PERIOD_KEYS.map(pk => todayData[pk]).filter(e => e?.score != null);
   const blob = document.getElementById('blob-svg');
   const area = document.getElementById('blob-area');
   const msgEl = document.getElementById('sky-monster-msg');
 
-  // Monster message
   const msg = getMonsterMessage(todayData);
   if (msgEl) msgEl.textContent = msg || '';
 
@@ -3491,9 +3576,8 @@ function switchPage(page) {
 
   if (page === 'sky') {
     document.getElementById('page-sky').classList.add('active');
-    updateSkyPeriods();
-    updateSkyGradient();
-    updateBlobState();
+    skyDate = new Date(); // reset to today
+    refreshSky();
     window.scrollTo(0, 0);
   } else if (page === 'journal') {
     openJournal();
@@ -3545,10 +3629,14 @@ document.getElementById('top-nav').addEventListener('click', e => {
 document.getElementById('open-cal-overlay').addEventListener('click', openCalOverlay);
 document.getElementById('close-cal-overlay').addEventListener('click', closeCalOverlay);
 
-// Sky period taps — open entry sheet
+// Sky day navigation
+document.getElementById('sky-prev').addEventListener('click', skyPrev);
+document.getElementById('sky-next').addEventListener('click', skyNext);
+
+// Sky period taps — open entry sheet (today only)
 document.getElementById('sky-periods').addEventListener('click', e => {
   const btn = e.target.closest('.sky-period-btn');
-  if (!btn) return;
+  if (!btn || btn.classList.contains('readonly')) return;
   openEntrySheet(btn.dataset.p);
 });
 
