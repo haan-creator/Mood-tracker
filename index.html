@@ -962,12 +962,13 @@ input[type=number] { -moz-appearance: textfield; }
   position: fixed; top: 0; left: 0; right: 0; z-index: 80;
   display: flex; justify-content: center; gap: 28px;
   padding: calc(10px + env(safe-area-inset-top)) 0 0;
-  background: transparent;
+  background: linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.12) 80%, transparent 100%);
 }
 .top-nav.on-page {
-  background: rgba(244,245,247,0.92);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(0,0,0,0.04);
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 1px 8px rgba(0,0,0,0.04);
 }
 .bnav-item {
   font-family: var(--ff); font-size: 15px; font-weight: 500;
@@ -1315,7 +1316,7 @@ input[type=number] { -moz-appearance: textfield; }
 </div>
 <div class="sky-arc" id="sky-arc">
   <svg viewBox="0 0 400 30" preserveAspectRatio="none">
-    <path d="M0 0 L0 2 Q200 30, 400 2 L400 0 Z" fill="rgba(255,255,255,0.12)"/>
+    <path d="M0 0 L0 2 Q200 30, 400 2 L400 0 Z" fill="rgba(255,255,255,0.18)"/>
   </svg>
 </div>
 
