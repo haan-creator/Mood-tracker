@@ -759,23 +759,13 @@ input[type=number] { -moz-appearance: textfield; }
   100% { transform: translateY(var(--rain-dist, 120px)); opacity: 0; }
 }
 
-/* Stars */
-.stars-container {
-  position: absolute; top: 12%; left: 5%; width: 90%; height: 35%;
+/* Moon */
+.moon-container {
+  position: absolute; top: 10%; right: 10%;
   pointer-events: none;
   opacity: 0; transition: opacity 1.5s ease;
 }
-.stars-container.active { opacity: 1; }
-.star {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.6);
-  animation: starTwinkle ease-in-out infinite;
-}
-@keyframes starTwinkle {
-  0%, 100% { opacity: 0.25; transform: scale(1); }
-  50% { opacity: 0.75; transform: scale(1.3); }
-}
+.moon-container.active { opacity: 1; }
 @keyframes cloudFloat {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-5px) scale(1.015); }
@@ -950,7 +940,7 @@ input[type=number] { -moz-appearance: textfield; }
 }
 .entry-labels {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 4px 2px 0; font-family: var(--ff); font-size: 12px; font-weight: 600;
+  padding: 14px 2px 0; font-family: var(--ff); font-size: 12px; font-weight: 600;
 }
 .entry-label-neg { color: #2080a0; }
 .entry-label-mid { color: #b0a8a0; }
@@ -987,12 +977,24 @@ input[type=number] { -moz-appearance: textfield; }
   display: block; margin: 8px auto 0;
   padding: 11px 48px; border: none; border-radius: 12px;
   font-family: var(--ff); font-size: 14px; font-weight: 600;
-  color: #fff; cursor: pointer; transition: opacity 0.2s;
+  color: #fff; cursor: pointer; transition: all 0.3s;
   background: #c0b8b0;
 }
 .entry-save.pos { background: rgb(230,160,50); }
 .entry-save.neg { background: rgb(80,150,190); }
 .entry-save:active { opacity: 0.8; }
+.entry-save.saved {
+  background: rgba(255,255,255,0.85); color: #8a8480;
+  pointer-events: none;
+}
+.entry-save.saved.pos { color: rgb(200,130,30); }
+.entry-save.saved.neg { color: rgb(60,130,170); }
+.entry-close {
+  position: absolute; top: 0; left: -4px;
+  width: 32px; height: 32px; border: none; background: none;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.entry-close svg { stroke: #b0a8a0; }
 
 /* ===== TOP NAV ===== */
 .top-nav {
@@ -1246,7 +1248,7 @@ input[type=number] { -moz-appearance: textfield; }
       <div class="cloud-wrap idle" id="cloud-wrap"></div>
     </div>
     <div class="rain-container" id="rain-container"></div>
-    <div class="stars-container" id="stars-container"></div>
+    <div class="moon-container" id="moon-container"></div>
     <div class="sky-monster-msg" id="sky-monster-msg"></div>
     <div class="sky-tagline">今天的天空</div>
     <div class="wave-area">
@@ -1366,6 +1368,11 @@ input[type=number] { -moz-appearance: textfield; }
 <div class="entry-sheet" id="entry-sheet">
   <div class="entry-sheet-handle"></div>
   <div class="entry-sheet-header" style="position:relative;">
+    <button class="entry-close" onclick="closeEntrySheet()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round">
+        <line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/>
+      </svg>
+    </button>
     <div class="entry-sheet-title" id="entry-title">早上</div>
     <div class="entry-cycle">
       <button class="entry-cycle-btn" id="entry-pms" onclick="toggleEntryCycle('pms')"><svg width="8" height="8" viewBox="0 0 10 10"><path d="M7 1C5 1.5 3.5 3.3 3.5 5.5S5 9.5 7 10c-3 0-5-2-5-4.5S4 1 7 1z" fill="currentColor"/></svg>經前</button>
@@ -3774,19 +3781,35 @@ function _buildRainDrops() {
   return html;
 }
 
-function _buildStars(seed) {
-  const rng = _cRng(seed + 99999);
-  let html = '';
-  const count = 4 + Math.round(rng());
-  for (let i = 0; i < count; i++) {
-    const left = 5 + rng() * 90;
-    const top = 5 + rng() * 80;
-    const size = 2 + rng() * 2.5;
-    const dur = 2.5 + rng() * 3;
-    const delay = rng() * 2;
-    html += `<div class="star" style="left:${left}%;top:${top}%;width:${size}px;height:${size}px;animation-duration:${dur}s;animation-delay:${delay}s"></div>`;
+function _getMoonPhase(date) {
+  // Reference new moon: Jan 6, 2000
+  const ref = new Date(2000, 0, 6).getTime();
+  const diff = date.getTime() - ref;
+  const days = diff / (1000 * 60 * 60 * 24);
+  return ((days % 29.53) + 29.53) % 29.53; // 0-29.53
+}
+
+function _buildMoonSVG(date) {
+  const phase = _getMoonPhase(date);
+  const r = 14, cx = 18, cy = 18;
+
+  // Waxing (0-14.76): shadow moves left, reveals right
+  // Waning (14.76-29.53): shadow returns from right
+  const waxing = phase <= 14.765;
+  let shadowOff;
+  if (waxing) {
+    shadowOff = -(phase / 14.765) * 2 * r;
+  } else {
+    const p = (phase - 14.765) / 14.765;
+    shadowOff = (1 - p) * 2 * r;
   }
-  return html;
+  const sCx = cx + shadowOff;
+
+  return `<svg viewBox="0 0 36 36" width="30" height="30">` +
+    `<defs><mask id="mm"><circle cx="${cx}" cy="${cy}" r="${r}" fill="white"/></mask></defs>` +
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(255,255,255,0.6)"/>` +
+    `<circle cx="${sCx}" cy="${cy}" r="${r + 0.5}" fill="rgba(30,40,60,0.55)" mask="url(#mm)"/>` +
+    `</svg>`;
 }
 
 function updateCloudState() {
@@ -3831,15 +3854,16 @@ function updateCloudState() {
     }
   }
 
-  // Stars: evening period filled
-  const starsEl = document.getElementById('stars-container');
-  if (starsEl) {
+  // Moon: only on today, when evening is filled
+  const moonEl = document.getElementById('moon-container');
+  if (moonEl) {
+    const isToday = skyDate.toDateString() === new Date().toDateString();
     const hasEvening = todayData['evening']?.score != null;
-    if (hasEvening && !starsEl.classList.contains('active')) {
-      starsEl.innerHTML = _buildStars(seed);
-      starsEl.classList.add('active');
-    } else if (!hasEvening) {
-      starsEl.classList.remove('active');
+    if (isToday && hasEvening && !moonEl.classList.contains('active')) {
+      moonEl.innerHTML = _buildMoonSVG(skyDate);
+      moonEl.classList.add('active');
+    } else if (!isToday || !hasEvening) {
+      moonEl.classList.remove('active');
     }
   }
 
@@ -4098,8 +4122,18 @@ function saveEntry() {
     cycleData[todayD].pms = pmsOn; cycleData[todayD].period = perOn;
   } else { delete cycleData[todayD]; }
 
-  saveData(); closeEntrySheet();
+  saveData();
   updateSkyPeriods(); updateSkyGradient(); updateCloudState(); triggerCloudWind(); renderCalendar();
+
+  // Show confirmed state
+  const saveBtn = document.getElementById('entry-save');
+  saveBtn.classList.add('saved');
+  saveBtn.textContent = '已記錄 ✓';
+  if (window._saveRevertTimer) clearTimeout(window._saveRevertTimer);
+  window._saveRevertTimer = setTimeout(() => {
+    saveBtn.textContent = '記下來';
+    onEntrySlider(entrySliderVal);
+  }, 2000);
 }
 </script>
 </body>
