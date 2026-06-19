@@ -729,32 +729,18 @@ input[type=number] { -moz-appearance: textfield; }
 /* Read-only past day */
 .sky-period-btn.readonly { opacity: 0.7; pointer-events: none; }
 
-/* Blob */
-.blob-area {
+/* Cloud */
+.cloud-area {
   flex: 1; display: flex; align-items: center; justify-content: center;
   width: 100%;
-  transition: transform 0.8s ease;
 }
-.blob-wrap { position: relative; width: 130px; height: 130px; }
-.blob-svg {
-  width: 100%; height: 100%;
-  animation: blobBreathe 4s ease-in-out infinite;
+.cloud-wrap {
+  animation: cloudFloat 6s ease-in-out infinite;
 }
-.blob-svg.idle { animation-duration: 6s; opacity: 0.3; }
-.blob-svg.still { animation: none; opacity: 0.45; }
-.blob-eyes {
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -42%);
-  animation: blobBlink 6s ease-in-out infinite;
-}
-@keyframes blobBreathe {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  35% { transform: scale(1.05) rotate(0.5deg); }
-  65% { transform: scale(0.96) rotate(-0.3deg); }
-}
-@keyframes blobBlink {
-  0%, 44%, 48%, 100% { transform: translate(-50%, -42%) scaleY(1); }
-  46% { transform: translate(-50%, -42%) scaleY(0.08); }
+.cloud-wrap.idle { animation-duration: 8s; }
+@keyframes cloudFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.015); }
 }
 
 /* Monster message */
@@ -1193,24 +1179,8 @@ input[type=number] { -moz-appearance: textfield; }
         </button>
       </div>
     </div>
-    <div class="blob-area" id="blob-area">
-      <div class="blob-wrap">
-        <svg class="blob-svg idle" id="blob-svg" viewBox="0 0 130 130">
-          <defs>
-            <radialGradient id="blobG" cx="40%" cy="35%">
-              <stop offset="0%" stop-color="rgba(255,255,255,0.85)"/>
-              <stop offset="100%" stop-color="rgba(255,255,255,0.45)"/>
-            </radialGradient>
-          </defs>
-          <path d="M65 18 C90 18, 112 38, 110 62 C112 86, 95 112, 65 112 C35 112, 18 90, 20 65 C18 38, 40 18, 65 18Z" fill="url(#blobG)"/>
-        </svg>
-        <svg class="blob-eyes" width="36" height="18" viewBox="0 0 36 18">
-          <circle cx="10" cy="9" r="3.5" fill="rgba(255,255,255,0.9)"/>
-          <circle cx="26" cy="9" r="3.5" fill="rgba(255,255,255,0.9)"/>
-          <circle cx="10.8" cy="9.5" r="1.6" fill="rgba(80,70,60,0.4)"/>
-          <circle cx="26.8" cy="9.5" r="1.6" fill="rgba(80,70,60,0.4)"/>
-        </svg>
-      </div>
+    <div class="cloud-area" id="cloud-area">
+      <div class="cloud-wrap idle" id="cloud-wrap"></div>
     </div>
     <div class="sky-monster-msg" id="sky-monster-msg"></div>
     <div class="sky-tagline">今天的天空</div>
@@ -2167,7 +2137,7 @@ function closeDayModal() {
   if (document.getElementById('page-sky').classList.contains('active')) {
     updateSkyPeriods();
     updateSkyGradient();
-    updateBlobState();
+    updateCloudState();
   }
 }
 
@@ -3485,7 +3455,7 @@ function initSkyPage() {
   updateSkyDate();
   updateSkyPeriods();
   updateSkyGradient();
-  updateBlobState();
+  updateCloudState();
 }
 
 function updateSkyDate() {
@@ -3509,7 +3479,7 @@ function refreshSky() {
   updateSkyDate();
   updateSkyPeriods();
   updateSkyGradient();
-  updateBlobState();
+  updateCloudState();
 }
 
 function getSkyDayData() {
@@ -3578,31 +3548,169 @@ function updateSkyGradient() {
   skyEl.classList.toggle('sky-dark', hasDeepNeg);
 }
 
-function updateBlobState() {
+// ===== CLOUD SYSTEM =====
+function _cRng(seed) {
+  return function() {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function _bezAt(t, a, b, c, d) {
+  const u = 1 - t;
+  return u*u*u*a + 3*u*u*t*b + 3*u*t*t*c + t*t*t*d;
+}
+function _centroid(cc) {
+  let a=0,x=0,y=0;
+  cc.forEach(c=>{const w=c.r*c.r;x+=c.cx*w;y+=c.cy*w;a+=w;});
+  return {x:x/a,y:y/a};
+}
+
+function _genCumulus(rng) {
+  const circles=[], baseY=76, bc=3+Math.round(rng());
+  for(let i=0;i<bc;i++){
+    const t=bc<=1?0.5:i/(bc-1);
+    circles.push({cx:50+t*100+(rng()-0.5)*14, cy:baseY+(rng()-0.5)*5, r:20+rng()*10});
+  }
+  const bn=3+Math.round(rng()*2), ti=Math.floor(rng()*bn);
+  for(let i=0;i<bn;i++){
+    const p=circles[Math.floor(rng()*bc)], tall=i===ti;
+    circles.push({cx:p.cx+(rng()-0.5)*26, cy:baseY-16-rng()*(tall?32:18), r:(tall?20:13)+rng()*12});
+  }
+  const e=_centroid(circles);
+  return {type:'cumulus',circles,puffs:null,blur:9,threshold:true,tM:19,tS:-8,eyeScale:1,eyeX:e.x,eyeY:e.y-5,baseOpacity:0.75};
+}
+
+function _genCirrus(rng) {
+  const circles=[], tc=2+Math.round(rng()*2);
+  for(let t=0;t<tc;t++){
+    const sX=15+rng()*30, sY=48+t*22+(rng()-0.5)*12;
+    const eX=155+rng()*30, eY=sY+(rng()-0.5)*28;
+    const c1X=sX+35+rng()*20, c1Y=sY+(rng()-0.5)*35;
+    const c2X=eX-35-rng()*20, c2Y=eY+(rng()-0.5)*35;
+    const steps=14+Math.floor(rng()*6);
+    for(let i=0;i<steps;i++){
+      const p=i/(steps-1);
+      const x=_bezAt(p,sX,c1X,c2X,eX), y=_bezAt(p,sY,c1Y,c2Y,eY);
+      const thick=Math.sin(p*Math.PI)*(2.2+rng()*2.8)+0.8;
+      circles.push({cx:x+(rng()-0.5)*2, cy:y+(rng()-0.5)*2, r:thick});
+    }
+  }
+  const e=_centroid(circles);
+  return {type:'cirrus',circles,puffs:null,blur:3.5,threshold:true,tM:15,tS:-6,eyeScale:0.6,eyeX:e.x,eyeY:e.y,baseOpacity:0.55};
+}
+
+function _genAltostratus(rng) {
+  const circles=[], layers=2+Math.round(rng());
+  for(let l=0;l<layers;l++){
+    const y=50+l*18+(rng()-0.5)*5, cnt=6+Math.round(rng()*4);
+    for(let i=0;i<cnt;i++){
+      const t=cnt<=1?0.5:i/(cnt-1);
+      circles.push({cx:8+t*184+(rng()-0.5)*8, cy:y+(rng()-0.5)*6, r:9+rng()*7});
+    }
+  }
+  const e=_centroid(circles);
+  return {type:'altostratus',circles,puffs:null,blur:7,threshold:true,tM:16,tS:-6,eyeScale:0.65,eyeX:e.x,eyeY:e.y,baseOpacity:0.55};
+}
+
+function _genAltocumulus(rng) {
+  const allC=[], puffs=[], rows=2+Math.round(rng()), pr=3+Math.round(rng()*2);
+  for(let r=0;r<rows;r++){
+    const ro=r%2===1?20:0;
+    for(let c=0;c<pr;c++){
+      const bx=30+ro+(c/Math.max(1,pr-1))*(140-ro)+(rng()-0.5)*10;
+      const by=42+r*28+(rng()-0.5)*8, cnt=2+Math.round(rng()), pc=[];
+      for(let i=0;i<cnt;i++){
+        const ci={cx:bx+(rng()-0.5)*10,cy:by+(rng()-0.5)*7,r:6+rng()*5};
+        pc.push(ci); allC.push(ci);
+      }
+      puffs.push({cx:bx,cy:by,circles:pc,eyeOffX:(rng()-0.5)*6,eyeOffY:(rng()-0.5)*4,hasEyes:false});
+    }
+  }
+  const eyeN=Math.min(puffs.length,2+Math.round(rng()));
+  const idx=puffs.map((_,i)=>i);
+  for(let i=idx.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}
+  for(let i=0;i<eyeN;i++) puffs[idx[i]].hasEyes=true;
+  const e=_centroid(allC);
+  return {type:'altocumulus',circles:allC,puffs,blur:3,threshold:true,tM:18,tS:-7,eyeScale:0.55,eyeX:e.x,eyeY:e.y-2,baseOpacity:0.6};
+}
+
+function generateCloudForDate(date) {
+  const seed=date.getFullYear()*10000+(date.getMonth()+1)*100+date.getDate();
+  const rng=_cRng(seed), roll=rng();
+  if(roll<0.35) return _genCumulus(rng);
+  if(roll<0.60) return _genCirrus(rng);
+  if(roll<0.75) return _genAltostratus(rng);
+  return _genAltocumulus(rng);
+}
+
+function _eyePairSVG(ex,ey,s) {
+  const R=3.2*s, pR=1.5*s, g=8*s, sw=Math.max(0.6,0.9*s);
+  const ec='rgba(40,35,30,0.7)', pc='rgba(40,35,30,0.8)';
+  return `<circle cx="${ex-g}" cy="${ey}" r="${R}" fill="none" stroke="${ec}" stroke-width="${sw}"/>` +
+    `<circle cx="${ex-g+0.4*s}" cy="${ey+0.3*s}" r="${pR}" fill="${pc}"/>` +
+    `<circle cx="${ex+g}" cy="${ey}" r="${R}" fill="none" stroke="${ec}" stroke-width="${sw}"/>` +
+    `<circle cx="${ex+g+0.4*s}" cy="${ey+0.3*s}" r="${pR}" fill="${pc}"/>`;
+}
+
+function renderCloudSVG(cloud, fillCount) {
+  const opacityScale = fillCount===0 ? 0.2 : (0.4 + (fillCount/3)*0.6);
+  const opacity = cloud.baseOpacity * opacityScale;
+  const fid = 'cf';
+  const threshVal = cloud.threshold
+    ? `<feColorMatrix in="b" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 ${cloud.tM} ${cloud.tS}"/>`
+    : '';
+  const filterDef = `<filter id="${fid}" x="-40%" y="-40%" width="180%" height="180%">` +
+    `<feGaussianBlur in="SourceGraphic" stdDeviation="${cloud.blur}" result="b"/>` +
+    threshVal + `</filter>`;
+
+  let shapes = '';
+  if (cloud.puffs) {
+    cloud.puffs.forEach(puff => {
+      shapes += `<g filter="url(#${fid})">`;
+      puff.circles.forEach(c => { shapes += `<circle cx="${c.cx}" cy="${c.cy}" r="${c.r}" fill="white"/>`; });
+      shapes += '</g>';
+    });
+  } else {
+    shapes = `<g filter="url(#${fid})">`;
+    cloud.circles.forEach(c => { shapes += `<circle cx="${c.cx}" cy="${c.cy}" r="${c.r}" fill="white"/>`; });
+    shapes += '</g>';
+  }
+
+  let eyes = '';
+  if (cloud.puffs) {
+    cloud.puffs.forEach(p => {
+      if (p.hasEyes) eyes += _eyePairSVG(p.cx + p.eyeOffX, p.cy + p.eyeOffY, cloud.eyeScale);
+    });
+  } else {
+    eyes = _eyePairSVG(cloud.eyeX, cloud.eyeY, cloud.eyeScale);
+  }
+
+  return `<svg viewBox="0 0 200 130" width="260" style="display:block;opacity:${opacity};transition:opacity 0.5s">` +
+    `<defs>${filterDef}</defs>${shapes}<g>${eyes}</g></svg>`;
+}
+
+let _lastCloudSeed = null;
+let _cachedCloud = null;
+
+function updateCloudState() {
   const todayData = getSkyDayData();
   const filled = PERIOD_KEYS.map(pk => todayData[pk]).filter(e => e?.score != null);
-  const blob = document.getElementById('blob-svg');
-  const area = document.getElementById('blob-area');
+  const wrap = document.getElementById('cloud-wrap');
   const msgEl = document.getElementById('sky-monster-msg');
+
+  const seed = skyDate.getFullYear()*10000 + (skyDate.getMonth()+1)*100 + skyDate.getDate();
+  if (seed !== _lastCloudSeed) {
+    _cachedCloud = generateCloudForDate(skyDate);
+    _lastCloudSeed = seed;
+  }
+
+  wrap.innerHTML = renderCloudSVG(_cachedCloud, filled.length);
+  wrap.className = 'cloud-wrap' + (filled.length === 0 ? ' idle' : '');
 
   const msg = getMonsterMessage(todayData);
   if (msgEl) msgEl.textContent = msg || '';
-
-  if (filled.length === 0) {
-    blob.className = 'blob-svg idle';
-    area.style.transform = '';
-  } else {
-    const hasUnclear = PERIOD_KEYS.some(pk => todayData[pk]?.type === 'unclear');
-    if (hasUnclear && filled.length === 0) {
-      blob.className = 'blob-svg still';
-    } else {
-      blob.className = 'blob-svg';
-      const avgScore = filled.reduce((s,e) => s + e.score, 0) / filled.length;
-      blob.style.animationDuration = (5 - avgScore/100 * 2) + 's';
-      const lift = -((avgScore / 100) * 15);
-      area.style.transform = `translateY(${lift}px)`;
-    }
-  }
 }
 
 // ===== NAVIGATION =====
@@ -3849,7 +3957,7 @@ function saveEntry() {
   } else { delete cycleData[todayD]; }
 
   saveData(); closeEntrySheet();
-  updateSkyPeriods(); updateSkyGradient(); updateBlobState(); renderCalendar();
+  updateSkyPeriods(); updateSkyGradient(); updateCloudState(); renderCalendar();
 }
 </script>
 </body>
