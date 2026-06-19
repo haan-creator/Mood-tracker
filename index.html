@@ -732,15 +732,63 @@ input[type=number] { -moz-appearance: textfield; }
 /* Cloud */
 .cloud-area {
   flex: 1; display: flex; align-items: center; justify-content: center;
-  width: 100%;
+  width: 100%; transition: transform 1.8s ease;
 }
 .cloud-wrap {
   animation: cloudFloat 6s ease-in-out infinite;
 }
 .cloud-wrap.idle { animation-duration: 8s; }
+
+/* Rain */
+.rain-container {
+  position: absolute; top: 50%; left: 8%; width: 84%; height: 35%;
+  pointer-events: none; overflow: hidden;
+  opacity: 0; transition: opacity 1.2s ease;
+}
+.rain-container.active { opacity: 1; }
+.raindrop {
+  position: absolute; top: -8px;
+  width: 1.5px; border-radius: 1px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.25));
+  animation: rainFall linear infinite;
+}
+@keyframes rainFall {
+  0% { transform: translateY(0); opacity: 0; }
+  8% { opacity: 1; }
+  85% { opacity: 0.6; }
+  100% { transform: translateY(var(--rain-dist, 120px)); opacity: 0; }
+}
+
+/* Stars */
+.stars-container {
+  position: absolute; top: 12%; left: 5%; width: 90%; height: 35%;
+  pointer-events: none;
+  opacity: 0; transition: opacity 1.5s ease;
+}
+.stars-container.active { opacity: 1; }
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.6);
+  animation: starTwinkle ease-in-out infinite;
+}
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.3); }
+}
 @keyframes cloudFloat {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-5px) scale(1.015); }
+}
+@keyframes cloudWind {
+  0% { transform: translateX(0) scale(1); }
+  25% { transform: translateX(22px) scale(1.025, 0.975); }
+  50% { transform: translateX(30px) scale(1.02, 0.98); }
+  75% { transform: translateX(14px) scale(1.008, 0.995); }
+  100% { transform: translateX(0) scale(1); }
+}
+.cloud-wrap.wind {
+  animation: cloudWind 2.8s ease-in-out forwards;
 }
 
 /* Monster message */
@@ -915,6 +963,8 @@ input[type=number] { -moz-appearance: textfield; }
 .entry-note-toggle svg { flex-shrink: 0; }
 .entry-note-toggle span {
   font-family: var(--ff); font-size: 13px; color: #c0b8b0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  flex: 1; min-width: 0;
 }
 .entry-note-toggle:active { opacity: 0.6; }
 .entry-note-wrap { display: none; }
@@ -1195,6 +1245,8 @@ input[type=number] { -moz-appearance: textfield; }
     <div class="cloud-area" id="cloud-area">
       <div class="cloud-wrap idle" id="cloud-wrap"></div>
     </div>
+    <div class="rain-container" id="rain-container"></div>
+    <div class="stars-container" id="stars-container"></div>
     <div class="sky-monster-msg" id="sky-monster-msg"></div>
     <div class="sky-tagline">今天的天空</div>
     <div class="wave-area">
@@ -1402,8 +1454,8 @@ function saveData() {
 function getMonsterMessage(dayData) {
   const entries = PERIOD_KEYS.map(pk => dayData?.[pk]).filter(e => e?.score != null);
   if (entries.length === 0) return '';
-  if (entries.length === 1) return '還在長......';
-  if (entries.length === 2) return '慢慢成形了！';
+  if (entries.length === 1) return '天空有了第一抹色';
+  if (entries.length === 2) return '今天的顏色漸漸浮現';
 
   // ── 每段獨立判讀 ──
   const types  = entries.map(e => e.type);
@@ -2151,6 +2203,7 @@ function closeDayModal() {
     updateSkyPeriods();
     updateSkyGradient();
     updateCloudState();
+    triggerCloudWind();
   }
 }
 
@@ -3707,10 +3760,40 @@ function renderCloudSVG(cloud, fillCount) {
 let _lastCloudSeed = null;
 let _cachedCloud = null;
 
+function _buildRainDrops() {
+  let html = '';
+  const count = 14;
+  for (let i = 0; i < count; i++) {
+    const left = 8 + Math.random() * 84;
+    const h = 12 + Math.random() * 18;
+    const dur = 1.8 + Math.random() * 1.4;
+    const delay = Math.random() * 2.5;
+    const dist = 80 + Math.random() * 60;
+    html += `<div class="raindrop" style="left:${left}%;height:${h}px;animation-duration:${dur}s;animation-delay:${delay}s;--rain-dist:${dist}px"></div>`;
+  }
+  return html;
+}
+
+function _buildStars(seed) {
+  const rng = _cRng(seed + 99999);
+  let html = '';
+  const count = 4 + Math.round(rng());
+  for (let i = 0; i < count; i++) {
+    const left = 5 + rng() * 90;
+    const top = 5 + rng() * 80;
+    const size = 2 + rng() * 2.5;
+    const dur = 2.5 + rng() * 3;
+    const delay = rng() * 2;
+    html += `<div class="star" style="left:${left}%;top:${top}%;width:${size}px;height:${size}px;animation-duration:${dur}s;animation-delay:${delay}s"></div>`;
+  }
+  return html;
+}
+
 function updateCloudState() {
   const todayData = getSkyDayData();
   const filled = PERIOD_KEYS.map(pk => todayData[pk]).filter(e => e?.score != null);
   const wrap = document.getElementById('cloud-wrap');
+  const area = document.getElementById('cloud-area');
   const msgEl = document.getElementById('sky-monster-msg');
 
   const seed = skyDate.getFullYear()*10000 + (skyDate.getMonth()+1)*100 + skyDate.getDate();
@@ -3722,8 +3805,55 @@ function updateCloudState() {
   wrap.innerHTML = renderCloudSVG(_cachedCloud, filled.length);
   wrap.className = 'cloud-wrap' + (filled.length === 0 ? ' idle' : '');
 
+  // Cloud vertical position: positive → float up, negative → sink down
+  if (filled.length > 0) {
+    let total = 0;
+    filled.forEach(e => {
+      const sign = e.type === 'positive' ? 1 : -1;
+      total += sign * e.score;
+    });
+    const avg = total / filled.length; // -100 to +100
+    const offset = -(avg / 100) * 18; // -18 (up) to +18 (down)
+    area.style.transform = `translateY(${offset}px)`;
+  } else {
+    area.style.transform = '';
+  }
+
+  // Rain: all 3 periods negative
+  const rainEl = document.getElementById('rain-container');
+  if (rainEl) {
+    const allNeg = filled.length === 3 && filled.every(e => e.type === 'negative');
+    if (allNeg && !rainEl.classList.contains('active')) {
+      rainEl.innerHTML = _buildRainDrops();
+      rainEl.classList.add('active');
+    } else if (!allNeg) {
+      rainEl.classList.remove('active');
+    }
+  }
+
+  // Stars: evening period filled
+  const starsEl = document.getElementById('stars-container');
+  if (starsEl) {
+    const hasEvening = todayData['evening']?.score != null;
+    if (hasEvening && !starsEl.classList.contains('active')) {
+      starsEl.innerHTML = _buildStars(seed);
+      starsEl.classList.add('active');
+    } else if (!hasEvening) {
+      starsEl.classList.remove('active');
+    }
+  }
+
   const msg = getMonsterMessage(todayData);
   if (msgEl) msgEl.textContent = msg || '';
+}
+
+function triggerCloudWind() {
+  const wrap = document.getElementById('cloud-wrap');
+  if (!wrap) return;
+  wrap.classList.remove('wind');
+  void wrap.offsetWidth; // force reflow to restart animation
+  wrap.classList.add('wind');
+  wrap.addEventListener('animationend', () => wrap.classList.remove('wind'), { once: true });
 }
 
 // ===== NAVIGATION =====
@@ -3891,8 +4021,7 @@ function openEntrySheet(period) {
   noteToggle.style.display = '';
   const toggleText = noteToggle.querySelector('span');
   if (noteVal) {
-    const preview = noteVal.length > 20 ? noteVal.slice(0, 20) + '...' : noteVal;
-    toggleText.textContent = preview;
+    toggleText.textContent = noteVal;
     toggleText.style.color = 'var(--text-mid)';
   } else {
     toggleText.textContent = '說說你的感受';
@@ -3970,7 +4099,7 @@ function saveEntry() {
   } else { delete cycleData[todayD]; }
 
   saveData(); closeEntrySheet();
-  updateSkyPeriods(); updateSkyGradient(); updateCloudState(); renderCalendar();
+  updateSkyPeriods(); updateSkyGradient(); updateCloudState(); triggerCloudWind(); renderCalendar();
 }
 </script>
 </body>
