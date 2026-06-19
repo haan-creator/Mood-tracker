@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="心情紀錄">
 <meta name="theme-color" content="#f4f5f7">
-<title>心情紀錄</title>
+<title>mood sky</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
@@ -1064,13 +1064,16 @@ input[type=number] { -moz-appearance: textfield; }
   position: absolute; top: 42%; left: 50%;
   transform: translate(-50%, -50%);
   font-family: var(--ff); font-size: 16px; font-weight: 500;
-  color: rgba(40,35,30,0.5); letter-spacing: 3px;
+  color: rgba(40,35,30,0.5); letter-spacing: 3px; text-indent: 3px;
   opacity: 0; white-space: nowrap;
   animation: splashTagIn 0.4s ease-out 0.5s forwards, splashTagOut 0.3s ease-in 1.1s forwards;
 }
-#splash-face {
+#splash-logo {
   position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -55%);
+  transform: translate(-50%, -52%);
+  display: flex; flex-direction: column; align-items: center;
+}
+#splash-face {
   width: 180px; height: auto;
 }
 #splash-d-group {
@@ -1085,6 +1088,13 @@ input[type=number] { -moz-appearance: textfield; }
   stroke-dasharray: 320;
   stroke-dashoffset: 320;
   animation: splashDraw 0.55s ease-out 1.6s forwards, splashUndulate 0.5s ease-in-out 2.4s both;
+}
+#splash-brand {
+  margin-top: 10px;
+  font-family: var(--display); font-size: 15px; font-weight: 600;
+  color: rgba(40,35,30,0.4); letter-spacing: 4px; text-indent: 4px;
+  opacity: 0; white-space: nowrap;
+  animation: splashFadeIn 0.35s ease-out 1.4s forwards;
 }
 #splash.exit {
   animation: splashExit 0.4s ease-in forwards;
@@ -1130,7 +1140,8 @@ input[type=number] { -moz-appearance: textfield; }
 <!-- Splash screen -->
 <div id="splash">
   <div id="splash-sky"></div>
-  <div id="splash-tagline">此刻的心情天空</div>
+  <div id="splash-tagline">為你的天空填色</div>
+  <div id="splash-logo">
   <svg id="splash-face" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
     <path id="splash-wave" d="M15 48 Q50 18, 82 48 Q114 78, 148 48 Q180 18, 195 40" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="5.5" stroke-linecap="round" style="transform-origin:center 48px;"/>
     <g id="splash-eyes" style="transform-origin:100px 84px;">
@@ -1145,6 +1156,8 @@ input[type=number] { -moz-appearance: textfield; }
       <circle cx="180" cy="73" r="3.5" fill="rgba(255,255,255,0.75)"/>
     </g>
   </svg>
+  <div id="splash-brand">mood sky</div>
+  </div>
 </div>
 
 <!-- Sky Page (default) -->
@@ -3585,44 +3598,44 @@ function _genCumulus(rng) {
 function _genCirrus(rng) {
   const circles=[], tc=2+Math.round(rng()*2);
   for(let t=0;t<tc;t++){
-    const sX=15+rng()*30, sY=48+t*22+(rng()-0.5)*12;
-    const eX=155+rng()*30, eY=sY+(rng()-0.5)*28;
-    const c1X=sX+35+rng()*20, c1Y=sY+(rng()-0.5)*35;
-    const c2X=eX-35-rng()*20, c2Y=eY+(rng()-0.5)*35;
-    const steps=14+Math.floor(rng()*6);
+    const sX=5+rng()*20, sY=42+t*24+(rng()-0.5)*14;
+    const eX=170+rng()*25, eY=sY+(rng()-0.5)*30;
+    const c1X=sX+40+rng()*25, c1Y=sY+(rng()-0.5)*40;
+    const c2X=eX-40-rng()*25, c2Y=eY+(rng()-0.5)*40;
+    const steps=16+Math.floor(rng()*6);
     for(let i=0;i<steps;i++){
       const p=i/(steps-1);
       const x=_bezAt(p,sX,c1X,c2X,eX), y=_bezAt(p,sY,c1Y,c2Y,eY);
-      const thick=Math.sin(p*Math.PI)*(2.2+rng()*2.8)+0.8;
-      circles.push({cx:x+(rng()-0.5)*2, cy:y+(rng()-0.5)*2, r:thick});
+      const thick=Math.sin(p*Math.PI)*(4.5+rng()*4)+1.5;
+      circles.push({cx:x+(rng()-0.5)*3, cy:y+(rng()-0.5)*3, r:thick});
     }
   }
   const e=_centroid(circles);
-  return {type:'cirrus',circles,puffs:null,blur:3.5,threshold:true,tM:15,tS:-6,eyeScale:0.6,eyeX:e.x,eyeY:e.y,baseOpacity:0.55};
+  return {type:'cirrus',circles,puffs:null,blur:4.5,threshold:true,tM:15,tS:-6,eyeScale:0.7,eyeX:e.x,eyeY:e.y,baseOpacity:0.6};
 }
 
 function _genAltostratus(rng) {
   const circles=[], layers=2+Math.round(rng());
   for(let l=0;l<layers;l++){
-    const y=50+l*18+(rng()-0.5)*5, cnt=6+Math.round(rng()*4);
+    const y=46+l*22+(rng()-0.5)*6, cnt=6+Math.round(rng()*4);
     for(let i=0;i<cnt;i++){
       const t=cnt<=1?0.5:i/(cnt-1);
-      circles.push({cx:8+t*184+(rng()-0.5)*8, cy:y+(rng()-0.5)*6, r:9+rng()*7});
+      circles.push({cx:5+t*190+(rng()-0.5)*10, cy:y+(rng()-0.5)*8, r:14+rng()*10});
     }
   }
   const e=_centroid(circles);
-  return {type:'altostratus',circles,puffs:null,blur:7,threshold:true,tM:16,tS:-6,eyeScale:0.65,eyeX:e.x,eyeY:e.y,baseOpacity:0.55};
+  return {type:'altostratus',circles,puffs:null,blur:9,threshold:true,tM:16,tS:-6,eyeScale:0.7,eyeX:e.x,eyeY:e.y,baseOpacity:0.55};
 }
 
 function _genAltocumulus(rng) {
-  const allC=[], puffs=[], rows=2+Math.round(rng()), pr=3+Math.round(rng()*2);
+  const allC=[], puffs=[], rows=2+Math.round(rng()), pr=3+Math.round(rng());
   for(let r=0;r<rows;r++){
-    const ro=r%2===1?20:0;
+    const ro=r%2===1?22:0;
     for(let c=0;c<pr;c++){
-      const bx=30+ro+(c/Math.max(1,pr-1))*(140-ro)+(rng()-0.5)*10;
-      const by=42+r*28+(rng()-0.5)*8, cnt=2+Math.round(rng()), pc=[];
+      const bx=25+ro+(c/Math.max(1,pr-1))*(150-ro)+(rng()-0.5)*12;
+      const by=38+r*34+(rng()-0.5)*10, cnt=2+Math.round(rng()), pc=[];
       for(let i=0;i<cnt;i++){
-        const ci={cx:bx+(rng()-0.5)*10,cy:by+(rng()-0.5)*7,r:6+rng()*5};
+        const ci={cx:bx+(rng()-0.5)*14,cy:by+(rng()-0.5)*10,r:10+rng()*8};
         pc.push(ci); allC.push(ci);
       }
       puffs.push({cx:bx,cy:by,circles:pc,eyeOffX:(rng()-0.5)*6,eyeOffY:(rng()-0.5)*4,hasEyes:false});
@@ -3633,7 +3646,7 @@ function _genAltocumulus(rng) {
   for(let i=idx.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}
   for(let i=0;i<eyeN;i++) puffs[idx[i]].hasEyes=true;
   const e=_centroid(allC);
-  return {type:'altocumulus',circles:allC,puffs,blur:3,threshold:true,tM:18,tS:-7,eyeScale:0.55,eyeX:e.x,eyeY:e.y-2,baseOpacity:0.6};
+  return {type:'altocumulus',circles:allC,puffs,blur:4.5,threshold:true,tM:18,tS:-7,eyeScale:0.6,eyeX:e.x,eyeY:e.y-2,baseOpacity:0.6};
 }
 
 function generateCloudForDate(date) {

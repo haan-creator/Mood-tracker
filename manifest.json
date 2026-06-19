@@ -1,6 +1,6 @@
 {
-  "name": "心情紀錄",
-  "short_name": "心情",
+  "name": "mood sky",
+  "short_name": "mood sky",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f5f7",
