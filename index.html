@@ -13,15 +13,15 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
 @font-face {
-  font-family: 'Syne';
-  src: url('Syne-Variable.woff2') format('woff2');
-  font-weight: 400 800;
+  font-family: 'DM Sans';
+  src: url('DMSans-Variable.woff2') format('woff2');
+  font-weight: 400 900;
   font-display: swap;
 }
 :root {
   --ff: -apple-system, 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
   --mono: 'SF Mono', 'Menlo', 'Consolas', monospace;
-  --display: 'Syne', sans-serif;
+  --display: 'DM Sans', sans-serif;
   --bg: #f4f5f7;
   --grid-color: rgba(100,110,130,0.045);
   --border-light: rgba(100,110,130,0.08);
@@ -621,7 +621,7 @@ input[type=number] { -moz-appearance: textfield; }
   margin-bottom: 4px;
 }
 .journal-day-date {
-  font-family: 'Syne', var(--ff); font-size: 17px;
+  font-family: var(--display); font-size: 17px;
   font-weight: 700; color: #3a3530; letter-spacing: 1px;
   line-height: 1.2;
   display: inline-block;
@@ -658,7 +658,7 @@ input[type=number] { -moz-appearance: textfield; }
   font-weight: 500;
 }
 .journal-period-score {
-  font-family: 'Syne', var(--ff); font-size: 11px;
+  font-family: var(--display); font-size: 11px;
   font-weight: 600; letter-spacing: 1px;
   opacity: 0.7;
 }
@@ -945,7 +945,7 @@ input[type=number] { -moz-appearance: textfield; }
 }
 .entry-labels {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 14px 2px 0; font-family: var(--ff); font-size: 12px; font-weight: 600;
+  padding: 20px 2px 0; font-family: var(--ff); font-size: 12px; font-weight: 600;
 }
 .entry-label-neg { color: #2080a0; }
 .entry-label-mid { color: #b0a8a0; }
@@ -4076,6 +4076,8 @@ function openEntrySheet(period) {
 
 function closeEntrySheet() {
   if (window._saveRevertTimer) clearTimeout(window._saveRevertTimer);
+  const saveBtn = document.getElementById('entry-save');
+  if (saveBtn) { saveBtn.textContent = '記下來'; saveBtn.classList.remove('saved'); }
   document.getElementById('entry-overlay').classList.remove('open');
   document.getElementById('entry-sheet').classList.remove('open');
 }
@@ -4137,6 +4139,20 @@ function saveEntry() {
 
   saveData();
   updateSkyPeriods(); updateSkyGradient(); updateCloudState(); triggerCloudWind(); renderCalendar();
+
+  // Collapse note area back to toggle
+  const noteWrap = document.getElementById('entry-note-wrap');
+  const noteToggle = document.getElementById('entry-note-toggle');
+  noteWrap.classList.remove('open');
+  noteToggle.style.display = '';
+  const toggleText = noteToggle.querySelector('span');
+  if (note) {
+    toggleText.textContent = note;
+    toggleText.style.color = 'var(--text-mid)';
+  } else {
+    toggleText.textContent = '說說你的感受';
+    toggleText.style.color = '#c0b8b0';
+  }
 
   // Show confirmed state
   const saveBtn = document.getElementById('entry-save');
