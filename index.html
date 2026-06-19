@@ -3866,15 +3866,17 @@ function updateCloudState() {
     }
   }
 
-  // Moon: only on today, when evening is filled
+  // Moon: only today + evening filled + actually nighttime
   const moonEl = document.getElementById('moon-container');
   if (moonEl) {
     const isToday = isSkyToday();
     const hasEvening = todayData['evening']?.score != null;
-    if (isToday && hasEvening && !moonEl.classList.contains('active')) {
+    const hour = new Date().getHours();
+    const isNight = hour >= 18 || hour < 6;
+    if (isToday && hasEvening && isNight && !moonEl.classList.contains('active')) {
       moonEl.innerHTML = _buildMoonSVG(skyDate);
       moonEl.classList.add('active');
-    } else if (!isToday || !hasEvening) {
+    } else if (!isToday || !hasEvening || !isNight) {
       moonEl.classList.remove('active');
     }
   }
