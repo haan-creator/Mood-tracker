@@ -186,11 +186,6 @@ input[type=number] { -moz-appearance: textfield; }
   flex: 1; width: 85%; border-radius: 4px;
   min-height: 32px; transition: background 0.3s;
 }
-.monster-cell {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  min-height: 32px;
-}
-.monster-cell.empty { opacity: 0; }
 .empty-cell {
   border-right: 1px solid rgba(100,110,130,0.04);
   border-bottom: 1px solid rgba(100,110,130,0.04);
@@ -218,110 +213,34 @@ input[type=number] { -moz-appearance: textfield; }
 }
 
 /* Overlay / Modal */
-.overlay {
-  position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.45);
-  display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-  animation: fadeIn 0.2s ease;
-}
-.modal {
-  width: 100%; max-width: 440px; background: var(--bg);
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 -4px 30px rgba(0,0,0,0.12);
-  animation: slideUp 0.3s ease;
-  display: flex; flex-direction: column;
-  max-height: 80vh; max-height: 80dvh;
-}
-.modal-header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 18px 14px 10px; flex-shrink: 0;
-}
-.modal-header h2 { margin: 0; font-size: 18px; font-weight: 800; color: var(--text-dark); font-family: var(--mono); letter-spacing: 1px; }
-.close-btn {
-  border: none; background: #eee; border-radius: 50%;
-  width: 30px; height: 30px; cursor: pointer; font-size: 15px; color: #999;
-  display: flex; align-items: center; justify-content: center;
-}
-.modal-body {
-  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-  padding: 0 14px calc(28px + env(safe-area-inset-bottom));
-}
+/* Postcard modal */
+.pc-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
+.pc-wrap { perspective: 1000px; width: 90%; max-width: 340px; }
+.pc-inner { position: relative; width: 100%; aspect-ratio: 3/4.2; transform-style: preserve-3d; transition: transform 0.7s ease; }
+.pc-inner.flipped { transform: rotateY(180deg); }
+.pc-front, .pc-back { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
+.pc-front { cursor: pointer; }
+.pc-back { transform: rotateY(180deg); background: #f5f2ee; display: flex; flex-direction: column; }
+.pc-strip { display: flex; flex-shrink: 0; }
+.pc-strip-seg { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.2s; }
+.pc-strip-seg.active { color: #fff; }
+.pc-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px 8px; }
+.pc-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 13px; color: #b0a8a0; padding: 4px 8px; font-family: var(--ff); }
+.pc-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 18px 18px; }
+.pc-period-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.3); border: 1px solid rgba(0,0,0,0.04); transition: background 0.2s; }
+.pc-period-item.filled { background: rgba(255,255,255,0.7); }
+.pc-date-stamp { position: absolute; top: 20px; left: 22px; color: rgba(255,255,255,0.8); }
+.pc-date-num { font-family: var(--display); font-size: 32px; font-weight: 800; line-height: 1; }
+.pc-date-weekday { font-size: 12px; font-weight: 500; margin-top: 4px; letter-spacing: 1px; opacity: 0.7; }
+.pc-hint { position: absolute; bottom: 52px; left: 0; right: 0; text-align: center; font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
+.pc-cloud { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding-bottom: 40px; }
+.pc-rain, .pc-glow { position: absolute; left: 10%; width: 80%; overflow: hidden; pointer-events: none; }
+.pc-rain { top: 45%; height: 40%; }
+.pc-glow { top: 25%; height: 45%; }
 
 /* Cycle toggles — inline with header */
-.cycle-toggles { display: flex; gap: 4px; }
-.cycle-tag {
-  padding: 4px 8px; border-radius: 12px; cursor: pointer;
-  font-size: 10px; font-family: var(--ff); transition: all 0.2s;
-  border: none; white-space: nowrap;
-}
-.cycle-tag.off { background: #e8e9ec; color: #888; }
-.cycle-tag.pms-on { background: rgba(64,144,208,0.15); color: #1a5580; font-weight: 600; }
-.cycle-tag.period-on { background: rgba(200,60,90,0.1); color: #8a2040; font-weight: 600; }
 
 /* Entry editor */
-.entry-editor {
-  padding: 0; border-radius: 0;
-  display: flex; flex-direction: column; gap: 10px; transition: background 0.3s;
-}
-.entry-editor.positive { background: transparent; }
-.entry-editor.negative { background: transparent; }
-.entry-top { display: flex; justify-content: space-between; align-items: center; }
-.period-label { font-size: 14px; font-weight: 700; color: #554; }
-.mode-btns { display: flex; gap: 3px; }
-.mode-btn {
-  padding: 2px 9px; border-radius: 6px; border: none; font-size: 10px;
-  cursor: pointer; font-family: var(--ff);
-}
-.mode-btn.active { background: #555; color: #fff; }
-.mode-btn.inactive { background: #eee; color: #999; }
-.type-row { display: flex; gap: 6px; align-items: center; }
-.seg-ctrl {
-  display: flex; position: relative; background: #e8e9ec; border-radius: 7px;
-  padding: 2px; flex: 1;
-}
-.seg-ctrl .seg-bg {
-  position: absolute; top: 2px; bottom: 2px; width: calc(50% - 2px); border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease;
-  left: 2px; background: rgba(255,200,80,0.35);
-}
-.seg-ctrl.neg-active .seg-bg { left: calc(50%); background: rgba(140,200,220,0.35); }
-.seg-btn {
-  flex: 1; padding: 3px 0; border: none; background: transparent; font-size: 11px;
-  cursor: pointer; font-family: var(--ff); transition: color 0.25s, font-weight 0.2s;
-  position: relative; z-index: 1; -webkit-tap-highlight-color: transparent;
-}
-.seg-btn.active { font-weight: 600; }
-.seg-btn.active[data-type="positive"] { color: var(--warm-accent); }
-.seg-btn.active[data-type="negative"] { color: var(--cool-accent); }
-.seg-btn.inactive { color: #999; font-weight: 400; }
-.editor-save-btn {
-  padding: 4px 12px; border-radius: 7px; border: none;
-  background: rgb(240,130,50); color: #fff; font-size: 11px;
-  cursor: pointer; font-family: var(--ff); font-weight: 500;
-  transition: all 0.2s; white-space: nowrap;
-}
-
-.slider-wrap { display: flex; align-items: center; gap: 10px; width: 100%; }
-.slider-track {
-  position: relative; flex: 1; height: 36px; display: flex; align-items: center;
-}
-.slider-bg {
-  position: absolute; left: 0; right: 0; height: 8px; border-radius: 4px; opacity: 0.5;
-}
-.slider-input {
-  width: 100%; appearance: none; -webkit-appearance: none; background: transparent;
-  position: relative; z-index: 1; height: 36px; cursor: pointer;
-}
-.score-display {
-  font-family: var(--mono); font-size: 15px; font-weight: 700;
-  min-width: 32px; text-align: right;
-}
-.number-wrap { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
-.number-input {
-  width: 80px; padding: 7px 10px; border-radius: 10px; font-family: var(--mono);
-  font-size: 16px; text-align: center; outline: none; background: white;
-}
-.color-preview { width: 18px; height: 18px; border-radius: 50%; transition: all 0.3s; }
 .note-input {
   padding: 10px 14px; border-radius: 10px; border: none;
   font-family: var(--ff); font-size: 13px; color: #3a3530; outline: none;
@@ -341,23 +260,6 @@ input[type=number] { -moz-appearance: textfield; }
 .note-display.empty { color: #b0b0b0; }
 .note-display.filled { color: #3a3530; }
 .note-display:active { opacity: 0.6; }
-.save-row { display: flex; gap: 8px; }
-.save-btn {
-  flex: 1; padding: 7px 0; border-radius: 8px; border: none; cursor: pointer;
-  color: white; font-weight: 600; font-size: 12px; font-family: var(--ff);
-}
-.clear-btn {
-  padding: 7px 12px; border-radius: 8px; border: 1px solid #ddd;
-  background: white; color: #bbb; font-size: 11px; cursor: pointer; font-family: var(--ff);
-}
-.unified-save-btn {
-  display: block; width: fit-content; min-width: 140px; padding: 12px 32px;
-  border-radius: 12px; border: none; cursor: pointer; margin: 14px auto 0;
-  background: #4a4540; color: white; font-weight: 700; font-size: 15px;
-  font-family: var(--ff); letter-spacing: 1px;
-  transition: background 0.2s;
-}
-.unified-save-btn:active { background: #3a3530; }
 .clear-link {
   border: none; background: none; color: #ccc; font-size: 10px;
   cursor: pointer; font-family: var(--ff); text-decoration: underline;
@@ -448,29 +350,6 @@ input[type=number] { -moz-appearance: textfield; }
 
 .month-summary-card { background: rgba(255,255,255,0.7); border-radius: 14px; padding: 20px 16px; border: 1px solid var(--border-light); margin-bottom: 16px; text-align: center; }
 
-/* Monthly monster hero section */
-.monthly-monster-hero {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 10px 16px 22px; margin-bottom: 18px;
-}
-.monthly-monster-label {
-  font-size: 10px; color: #a09890; font-family: var(--mono);
-  letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 14px;
-}
-.monthly-monster-svg { margin-bottom: 16px; }
-.monthly-monster-desc {
-  font-family: var(--ff); font-size: 14px; color: #3a3530;
-  line-height: 1.7; text-align: center; max-width: 280px;
-  font-weight: 500;
-}
-.monthly-monster-count {
-  font-family: var(--mono); font-size: 10px; color: #8a8a90;
-  letter-spacing: 1.5px; margin-top: 10px;
-}
-.monthly-monster-none {
-  font-family: var(--ff); font-size: 13px; color: #a0a0a8;
-  text-align: center; padding: 10px 0 6px; line-height: 1.8;
-}
 .summary-verdict { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
 .summary-pct { font-size: 13px; font-weight: 600; margin-bottom: 6px; opacity: 0.85; }
 .summary-meta { font-size: 11px; color: var(--text-faint); font-family: var(--mono); }
@@ -480,19 +359,6 @@ input[type=number] { -moz-appearance: textfield; }
 
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 @keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
-@keyframes monsterSegIn {
-  0% { opacity: 0; transform: translateY(12px) scale(0.6); }
-  60% { opacity: 1; transform: translateY(-2px) scale(1.05); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes monsterFaceIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
-}
-@keyframes monsterMsgIn {
-  0% { opacity: 0; transform: translateX(-6px); }
-  100% { opacity: 1; transform: translateX(0); }
-}
 
 /* ===== JOURNAL PAGE — diary style ===== */
 .journal-wrap {
@@ -762,6 +628,26 @@ input[type=number] { -moz-appearance: textfield; }
   8% { opacity: 1; }
   85% { opacity: 0.6; }
   100% { transform: translateY(var(--rain-dist, 120px)); opacity: 0; }
+}
+
+/* Golden particles */
+.glow-container {
+  position: absolute; top: 30%; left: 8%; width: 84%; height: 40%;
+  pointer-events: none; overflow: hidden;
+  opacity: 0; transition: opacity 1.2s ease;
+}
+.glow-container.active { opacity: 1; }
+.glow-dot {
+  position: absolute; bottom: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,220,130,0.7), rgba(255,195,80,0.15));
+  animation: glowFloat linear infinite;
+}
+@keyframes glowFloat {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 0.8; }
+  80% { opacity: 0.5; }
+  100% { transform: translateY(var(--glow-dist, -110px)); opacity: 0; }
 }
 
 /* Moon */
@@ -1253,6 +1139,7 @@ input[type=number] { -moz-appearance: textfield; }
       <div class="cloud-wrap idle" id="cloud-wrap"></div>
     </div>
     <div class="rain-container" id="rain-container"></div>
+    <div class="glow-container" id="glow-container"></div>
     <div class="moon-container" id="moon-container"></div>
     <div class="sky-monster-msg" id="sky-monster-msg"></div>
     <div class="sky-tagline">今天的天空</div>
@@ -1590,191 +1477,6 @@ function getMonsterMessage(dayData) {
   return '今天就是這樣。';
 }
 
-function generateMonsterSVG(dayData, size = 120, animate = false) {
-  // dayData: { morning: {type, score}, afternoon: {type, score}, evening: {type, score} }
-  const periods = PERIOD_KEYS.map(pk => dayData?.[pk] || null);
-  const hasAny = periods.some(e => e?.score != null);
-  if (!hasAny && !periods.some(() => true)) return '';
-
-  const cx = size / 2;
-  const maxR = size * 0.22; // max radius for a single segment shape
-  const minR = size * 0.12; // min radius for score=0 — large enough to see face
-  const jellyR = size * 0.10; // unfilled jelly size
-  const gap = size * 0.01; // small gap between segments
-
-  // Calculate volatility: count direction changes
-  const filledTypes = periods.filter(e => e?.score != null).map(e => e.type);
-  let switches = 0;
-  for (let i = 1; i < filledTypes.length; i++) {
-    if (filledTypes[i] !== filledTypes[i - 1]) switches++;
-  }
-
-  // Offsets based on volatility
-  const offsetAmt = switches === 0 ? 0 : switches === 1 ? size * 0.025 : size * 0.05;
-
-  // Y positions for head(0), torso(1), feet(2)
-  const segmentYs = [
-    cx - size * 0.22,
-    cx,
-    cx + size * 0.22
-  ];
-
-  // X offsets per segment based on volatility
-  let offsets = [0, 0, 0];
-  if (switches >= 1) {
-    // Find where the switch happens and offset from there
-    let filledIdx = 0;
-    for (let i = 0; i < 3; i++) {
-      if (periods[i]?.score != null) {
-        if (filledIdx > 0 && periods[i].type !== filledTypes[filledIdx - 1]) {
-          offsets[i] = offsetAmt * (Math.random() > 0.5 ? 1 : -1);
-        }
-        filledIdx++;
-      }
-    }
-    // Use deterministic offsets based on score values for consistency
-    if (switches >= 1) {
-      const seed = periods.reduce((s, e, i) => s + (e?.score || 0) * (i + 1), 0);
-      offsets[0] = 0;
-      offsets[1] = (seed % 2 === 0 ? 1 : -1) * offsetAmt * 0.6;
-      offsets[2] = (seed % 3 === 0 ? 1 : -1) * offsetAmt;
-    }
-  }
-
-  let svgContent = '';
-  let defs = '';
-  let defCount = 0;
-
-  // Find topmost filled segment for face placement
-  let faceSegIdx = -1;
-  for (let i = 0; i < 3; i++) {
-    if (periods[i]?.score != null) { faceSegIdx = i; break; }
-  }
-
-  // Draw each segment
-  for (let i = 0; i < 3; i++) {
-    const entry = periods[i];
-    const segX = cx + offsets[i];
-    const segY = segmentYs[i];
-    const aDelay = animate ? `style="animation:monsterSegIn 0.3s ease-out ${i * 0.15}s both"` : '';
-
-    if (entry?.score != null) {
-      // Filled segment
-      const t = entry.score / 100;
-      const r = minR + (maxR - minR) * t;
-      const opacity = Math.max(0.3, 0.3 + t * 0.65);
-      const stops = entry.type === 'positive' ? WARM : COOL;
-      // Gradient: from a lighter shade to the score color
-      const lightIdx = Math.max(0, Math.floor(t * (stops.length - 1)) - 1);
-      const darkIdx = Math.min(stops.length - 1, Math.floor(t * (stops.length - 1)) + 1);
-      const c1 = `rgb(${stops[lightIdx].join(',')})`;
-      const c2 = `rgb(${stops[darkIdx].join(',')})`;
-      const gid = `g${defCount++}`;
-      defs += `<linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></linearGradient>`;
-
-      svgContent += `<g ${aDelay}>`;
-      if (entry.type === 'positive') {
-        // Circle for positive
-        svgContent += `<ellipse cx="${segX}" cy="${segY}" rx="${r}" ry="${r * 0.9}" fill="url(#${gid})" opacity="${opacity}"/>`;
-      } else {
-        // Triangle for negative
-        const h = r * 1.8;
-        const w = r * 1.6;
-        const x1 = segX, y1 = segY - h * 0.45;
-        const x2 = segX - w * 0.5, y2 = segY + h * 0.55;
-        const x3 = segX + w * 0.5, y3 = segY + h * 0.55;
-        svgContent += `<polygon points="${x1},${y1} ${x2},${y2} ${x3},${y3}" fill="url(#${gid})" opacity="${opacity}"/>`;
-      }
-      svgContent += `</g>`;
-
-      // Face on topmost filled segment
-      if (i === faceSegIdx) {
-        const eyeR = Math.max(1.8, r * 0.12);
-        const eyeSpacing = r * 0.32;
-        const eyeY = entry.type === 'negative' ? segY - r * 0.05 : segY - r * 0.15;
-        const mouthY = eyeY + r * 0.4;
-        const mouthW = r * 0.22;
-        const fDelay = animate ? `style="animation:monsterFaceIn 0.25s ease-out 0.55s both"` : '';
-        svgContent += `<g ${fDelay}>`;
-        svgContent += `<circle cx="${segX - eyeSpacing}" cy="${eyeY}" r="${eyeR}" fill="rgba(80,72,65,0.55)"/>`;
-        svgContent += `<circle cx="${segX + eyeSpacing}" cy="${eyeY}" r="${eyeR}" fill="rgba(80,72,65,0.55)"/>`;
-        svgContent += `<line x1="${segX - mouthW}" y1="${mouthY}" x2="${segX + mouthW}" y2="${mouthY}" stroke="rgba(80,72,65,0.4)" stroke-width="${Math.max(1, eyeR * 0.7)}" stroke-linecap="round"/>`;
-        svgContent += `</g>`;
-      }
-    } else {
-      // Unfilled: grey jelly square
-      const s = jellyR;
-      const rx = s * 0.25;
-      svgContent += `<g ${aDelay}><rect x="${segX - s}" y="${segY - s}" width="${s * 2}" height="${s * 2}" rx="${rx}" fill="#d0ccc8" opacity="0.2"/></g>`;
-    }
-  }
-
-  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;overflow:visible;"><defs>${defs}</defs>${svgContent}</svg>`;
-}
-
-function generateMiniMonster(dayData, size = 28) {
-  // Tiny version for calendar grid
-  const periods = PERIOD_KEYS.map(pk => dayData?.[pk] || null);
-  const hasAny = periods.some(e => e?.score != null);
-  if (!hasAny) return '';
-
-  const cx = size / 2;
-  const maxR = size * 0.28;
-  const minR = size * 0.12;
-  const jellyR = size * 0.10;
-
-  const filledTypes = periods.filter(e => e?.score != null).map(e => e.type);
-  let switches = 0;
-  for (let i = 1; i < filledTypes.length; i++) {
-    if (filledTypes[i] !== filledTypes[i - 1]) switches++;
-  }
-  const offsetAmt = switches === 0 ? 0 : switches === 1 ? size * 0.03 : size * 0.06;
-
-  const segmentYs = [cx - size * 0.22, cx, cx + size * 0.22];
-
-  let offsets = [0, 0, 0];
-  if (switches >= 1) {
-    const seed = periods.reduce((s, e, i) => s + (e?.score || 0) * (i + 1), 0);
-    offsets[1] = (seed % 2 === 0 ? 1 : -1) * offsetAmt * 0.6;
-    offsets[2] = (seed % 3 === 0 ? 1 : -1) * offsetAmt;
-  }
-
-  let svgContent = '';
-  let defs = '';
-  let dc = 0;
-
-  for (let i = 0; i < 3; i++) {
-    const entry = periods[i];
-    const segX = cx + offsets[i];
-    const segY = segmentYs[i];
-
-    if (entry?.score != null) {
-      const t = entry.score / 100;
-      const r = minR + (maxR - minR) * t;
-      const opacity = Math.max(0.3, 0.3 + t * 0.65);
-      const stops = entry.type === 'positive' ? WARM : COOL;
-      const lightIdx = Math.max(0, Math.floor(t * (stops.length - 1)) - 1);
-      const darkIdx = Math.min(stops.length - 1, Math.floor(t * (stops.length - 1)) + 1);
-      const c1 = `rgb(${stops[lightIdx].join(',')})`;
-      const c2 = `rgb(${stops[darkIdx].join(',')})`;
-      const gid = `m${dc++}`;
-      defs += `<linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></linearGradient>`;
-
-      if (entry.type === 'positive') {
-        svgContent += `<ellipse cx="${segX}" cy="${segY}" rx="${r}" ry="${r * 0.85}" fill="url(#${gid})" opacity="${opacity}"/>`;
-      } else {
-        const h = r * 1.6;
-        const w = r * 1.4;
-        svgContent += `<polygon points="${segX},${segY - h * 0.45} ${segX - w * 0.5},${segY + h * 0.55} ${segX + w * 0.5},${segY + h * 0.55}" fill="url(#${gid})" opacity="${opacity}"/>`;
-      }
-    } else {
-      const s = jellyR;
-      svgContent += `<rect x="${segX - s}" y="${segY - s}" width="${s * 2}" height="${s * 2}" rx="${s * 0.25}" fill="#d0ccc8" opacity="0.18"/>`;
-    }
-  }
-
-  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg"><defs>${defs}</defs>${svgContent}</svg>`;
-}
 
 // ===== RENDER CALENDAR =====
 function daysInMonth(y,m) { return new Date(y,m+1,0).getDate(); }
@@ -1828,14 +1530,6 @@ function renderCalendar() {
       } else {
         html += '<div class="gradient-fill" style="background:#ece8e4;opacity:0.3"></div>';
       }
-    } else {
-      // Monster mode: mini monster per day
-      const miniSvg = generateMiniMonster(dayD || {}, 32);
-      if (miniSvg) {
-        html += `<div class="monster-cell">${miniSvg}</div>`;
-      } else {
-        html += '<div class="monster-cell empty"></div>';
-      }
     }
 
     if (dayD && PERIOD_KEYS.some(pk => dayD[pk]?.note)) {
@@ -1877,475 +1571,267 @@ function renderLegend() {
 }
 
 // ===== DAY MODAL =====
-function openDayModal(day, initialDirty = false) {
+function openDayModal(day) {
   document.querySelector('meta[name="theme-color"]').setAttribute('content', '#8a8b8d');
   const dk = String(day);
   const dayD = monthData[dk] || {};
   const dayC = cycleData[dk] || {};
-
   const modal = document.getElementById('day-modal');
+  const date = new Date(curYear, curMonth, day);
+  const cloud = generateCloudForDate(date);
+  const entries = PERIOD_KEYS.map(pk => dayD[pk] || null);
+  const filled = entries.filter(e => e?.score != null);
+  const allNeg = filled.length === 3 && filled.every(e => e.type === 'negative');
+  const allPos = filled.length === 3 && filled.every(e => e.type === 'positive');
+  const gradC = entries.map(e => e ? getColor(e.type, e.score) : '#c8c3be');
+  const skyGrad = `linear-gradient(180deg,${gradC[0]} 0%,${gradC[0]} 25%,${gradC[1]} 50%,${gradC[2]} 75%,${gradC[2]} 100%)`;
+  const stripC = entries.map(e => e ? getColor(e.type, e.score) : '#d8d4d0');
+  const cloudSvg = renderCloudSVG(cloud, filled.length);
+  const wd = ['日','一','二','三','四','五','六'][date.getDay()];
+
+  let weatherHTML = '';
+  if (allNeg) {
+    weatherHTML = '<div class="pc-rain">';
+    for (let i = 0; i < 10; i++) {
+      const l = 8+Math.random()*84, h = 12+Math.random()*14, d = 1.8+Math.random()*1.2, dl = Math.random()*2;
+      weatherHTML += `<div style="position:absolute;top:-8px;left:${l}%;width:1.5px;height:${h}px;border-radius:1px;background:linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.25));animation:rainFall ${d}s linear ${dl}s infinite"></div>`;
+    }
+    weatherHTML += '</div>';
+  }
+  if (allPos) {
+    weatherHTML = '<div class="pc-glow">';
+    for (let i = 0; i < 8; i++) {
+      const l = 5+Math.random()*90, s = 3+Math.random()*4, d = 3+Math.random()*3, dl = Math.random()*3;
+      weatherHTML += `<div style="position:absolute;bottom:-4px;left:${l}%;width:${s}px;height:${s}px;border-radius:50%;background:radial-gradient(circle,rgba(255,220,130,0.7),rgba(255,195,80,0.1));animation:glowFloat ${d}s linear ${dl}s infinite"></div>`;
+    }
+    weatherHTML += '</div>';
+  }
+
   modal.innerHTML = `
-    <div class="overlay" id="modal-overlay">
-      <div class="modal" id="modal-content">
-        <div class="modal-header">
-          <h2>${curMonth+1}/${day}</h2>
-          <button class="close-btn" id="modal-close">✕</button>
-        </div>
-        <div class="modal-body">
-          <div style="display:flex;gap:10px;margin-bottom:16px;">
-            <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
-              <div id="period-cards" style="display:flex;flex-direction:column;gap:5px;"></div>
-              <div class="cycle-toggles" style="display:flex;gap:4px;margin-top:4px;">
-                <button class="cycle-tag ${dayC.pms ? 'pms-on' : 'off'}" id="toggle-pms" style="flex:1;text-align:center;"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M7.5 2C5.5 2.5 4 4.3 4 6.5S5.5 10.5 7.5 11c-3 0-5-2.2-5-4.5S4.5 2 7.5 2z" fill="currentColor"/></svg> 經前</button>
-                <button class="cycle-tag ${dayC.period ? 'period-on' : 'off'}" id="toggle-period" style="flex:1;text-align:center;"><svg width="10" height="10" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg> 月經</button>
-              </div>
+    <div class="pc-overlay" id="pc-overlay">
+      <div class="pc-wrap">
+        <div class="pc-inner" id="pc-inner">
+          <div class="pc-front" id="pc-front" style="background:${skyGrad}">
+            <div class="pc-cloud">${cloudSvg}</div>
+            ${weatherHTML}
+            <div class="pc-date-stamp">
+              <div class="pc-date-num">${curMonth+1}/${day}</div>
+              <div class="pc-date-weekday">週${wd}</div>
             </div>
-            <div id="monster-display" style="flex:1;display:flex;align-items:flex-start;justify-content:center;min-height:80px;transition:opacity 0.3s;"></div>
+            <div class="pc-hint">輕觸翻面</div>
+            <div class="pc-strip" style="position:absolute;bottom:0;left:0;right:0;height:32px">
+              ${stripC.map((c,i) => `<div class="pc-strip-seg" style="background:${c}">${PERIOD_NAMES[i]}</div>`).join('')}
+            </div>
           </div>
-          <div id="active-editor" style="margin-top:6px;"></div>
+          <div class="pc-back" id="pc-back">
+            <div class="pc-strip" id="pc-back-strip" style="height:36px">
+              ${stripC.map((c,i) => `<div class="pc-strip-seg" data-idx="${i}" style="background:${c}">${PERIOD_NAMES[i]}</div>`).join('')}
+            </div>
+            <div class="pc-header">
+              <div style="font-family:var(--display);font-size:22px;font-weight:700;color:#3a3530">
+                ${curMonth+1}/${day} <span style="font-size:13px;font-weight:400;color:#a09890">週${wd}</span>
+              </div>
+              <button class="pc-btn" id="pc-action-btn">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#b0a8a0" stroke-width="1.5" stroke-linecap="round"><path d="M2 8h12M8 3l5 5-5 5"/></svg>
+                翻面
+              </button>
+            </div>
+            <div class="pc-body" id="pc-body"></div>
+          </div>
         </div>
       </div>
-    </div>
-  `;
+    </div>`;
 
-  // Cycle toggles — mutual exclusion
-  document.getElementById('toggle-pms').addEventListener('click', () => {
-    if (!cycleData[dk]) cycleData[dk] = {};
-    cycleData[dk].pms = !cycleData[dk].pms;
-    if (cycleData[dk].pms) cycleData[dk].period = false;
-    if (!cycleData[dk].pms && !cycleData[dk].period) delete cycleData[dk];
-    saveData(); openDayModal(day, true);
-  });
-  document.getElementById('toggle-period').addEventListener('click', () => {
-    if (!cycleData[dk]) cycleData[dk] = {};
-    cycleData[dk].period = !cycleData[dk].period;
-    if (cycleData[dk].period) cycleData[dk].pms = false;
-    if (!cycleData[dk].pms && !cycleData[dk].period) delete cycleData[dk];
-    saveData(); openDayModal(day, true);
-  });
+  let editingIdx = null;
 
-  // Close
-  document.getElementById('modal-close').addEventListener('click', closeDayModal);
-  document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  document.getElementById('pc-front').addEventListener('click', () => {
+    document.getElementById('pc-inner').classList.add('flipped');
+  });
+  document.getElementById('pc-overlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeDayModal();
   });
-
-  // Monster display
-  const monsterEl = document.getElementById('monster-display');
-  let monsterFirstRender = true;
-  function updateMonster() {
-    const curDayD = monthData[dk] || {};
-    const hasEntry = PERIOD_KEYS.some(pk => curDayD[pk]?.score != null);
-    const shouldAnimate = monsterFirstRender;
-    monsterFirstRender = false;
-    if (hasEntry) {
-      const msg = getMonsterMessage(curDayD);
-      const msgStyle = shouldAnimate
-        ? 'font-size:11px;color:#5C5C5C;letter-spacing:0.2px;font-weight:400;text-align:center;animation:monsterMsgIn 0.3s ease-out 0.65s both;'
-        : 'font-size:11px;color:#5C5C5C;letter-spacing:0.2px;font-weight:400;text-align:center;';
-      monsterEl.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">${generateMonsterSVG(curDayD, 100, shouldAnimate)}<span style="${msgStyle}">${msg}</span></div>`;
-    } else {
-      monsterEl.innerHTML = `<div style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;">
-        <svg viewBox="0 0 100 100" width="100" height="100" xmlns="http://www.w3.org/2000/svg" style="display:block;">
-          <ellipse cx="50" cy="70" rx="18" ry="6" fill="#d0ccc8" opacity="0.2"/>
-        </svg>
-        <span style="font-size:11px;color:var(--text-faint);letter-spacing:0.2px;">今天會長出什麼呢？</span>
-      </div>`;
-    }
-  }
-  updateMonster();
-
-  // Click monster to collapse editor
-  monsterEl.style.cursor = 'pointer';
-  monsterEl.addEventListener('click', () => {
-    if (activeEditor !== null) {
-      activeEditor = null;
-      editorEl.innerHTML = '';
-      renderCards();
-    }
+  document.getElementById('pc-action-btn').addEventListener('click', () => {
+    if (editingIdx !== null) { editingIdx = null; renderBack(); }
+    else document.getElementById('pc-inner').classList.remove('flipped');
+  });
+  document.getElementById('pc-back-strip').addEventListener('click', (e) => {
+    const seg = e.target.closest('.pc-strip-seg');
+    if (!seg) return;
+    editingIdx = parseInt(seg.dataset.idx);
+    renderBack();
   });
 
-  // Period cards
-  const cardsEl = document.getElementById('period-cards');
-  const editorEl = document.getElementById('active-editor');
-  let activeEditor = null;
-
-  function renderCards() {
-    cardsEl.innerHTML = '';
-    PERIOD_KEYS.forEach((pk, idx) => {
-      const entry = (monthData[dk] || {})[pk];
-      const hasData = entry?.score != null;
-      const color = hasData ? getColor(entry.type, entry.score) : null;
-      const isActive = activeEditor === pk;
-
-      const card = document.createElement('button');
-      let bg, textColor;
-      if (isActive) {
-        // Check live editor state first, fall back to saved data
-        const editorDiv = editorEl.querySelector('.entry-editor');
-        const liveType = editorDiv?._currentType || (hasData ? entry.type : 'positive');
-        if (liveType === 'negative') {
-          bg = 'rgba(50,130,180,0.12)';
-        } else {
-          bg = 'rgba(255,200,80,0.35)';
-        }
-        textColor = '#6a6a70';
-      } else {
-        bg = '#e8e9ec';
-        textColor = '#6a6a70';
-      }
-
-      const shadow = isActive ? 'box-shadow:0 1px 6px rgba(0,0,0,0.1);' : '';
-
-      card.style.cssText = `display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:8px;cursor:pointer;
-        border:none;background:${bg};font-family:var(--ff);transition:all 0.2s;min-width:90px;${shadow}`;
-
-      const label = PERIOD_NAMES[idx];
-      const scoreText = hasData ? entry.score : '—';
-
-      const scoreColor = hasData ? (entry.type === 'positive' ? 'rgb(190,45,30)' : 'rgb(15,70,80)') : '#ccc';
-
-      card.innerHTML = `<span style="font-size:12px;font-weight:${isActive ? '700' : '500'};color:#2a2a2e">${label}</span>
-        <span style="font-size:11px;color:${scoreColor};font-family:var(--mono)">${scoreText}</span>`;
-
-      card.addEventListener('click', () => {
-        if (activeEditor === pk) {
-          activeEditor = null;
-          editorEl.innerHTML = '';
-          renderCards();
-        } else {
-          activeEditor = pk;
-          renderCards();
-          openPeriodEditor(pk, idx, day);
-        }
-      });
-
-      cardsEl.appendChild(card);
+  function refreshStripColors() {
+    const dd = monthData[dk] || {};
+    const newC = PERIOD_KEYS.map(pk => dd[pk] ? getColor(dd[pk].type, dd[pk].score) : '#d8d4d0');
+    document.getElementById('pc-back-strip').querySelectorAll('.pc-strip-seg').forEach((seg, i) => {
+      seg.style.background = newC[i];
     });
   }
 
-  function openPeriodEditor(pk, idx, day) {
-    const entry = (monthData[dk] || {})[pk] || {};
-    const hasExisting = entry.score != null;
-
-    const div = document.createElement('div');
-    div.className = `entry-editor ${entry.type || 'positive'}`;
-    div.innerHTML = buildEditorHTML(pk, idx, entry, hasExisting);
-    editorEl.innerHTML = '';
-    editorEl.appendChild(div);
-
-    // Delete link below editor if data exists
-    if (hasExisting) {
-      const delLink = document.createElement('button');
-      delLink.textContent = '刪除此段';
-      delLink.style.cssText = 'display:block;margin:6px auto 0;border:none;background:none;color:var(--text-mid);font-size:12px;cursor:pointer;font-family:var(--ff);text-decoration:underline;text-underline-offset:3px;';
-      delLink.addEventListener('click', () => {
-        if (monthData[dk]?.[pk]) {
-          delete monthData[dk][pk];
-          if (Object.keys(monthData[dk]).length === 0) delete monthData[dk];
-          saveData();
-          updateMonster();
-          renderCalendar();
-        }
-        activeEditor = null;
-        editorEl.innerHTML = '';
-        renderCards();
-      });
-      editorEl.appendChild(delLink);
+  function renderBack() {
+    const body = document.getElementById('pc-body');
+    const btn = document.getElementById('pc-action-btn');
+    const strip = document.getElementById('pc-back-strip');
+    strip.querySelectorAll('.pc-strip-seg').forEach((s, i) => {
+      s.classList.toggle('active', editingIdx === i);
+      s.style.borderBottom = editingIdx === i ? '3px solid rgba(255,255,255,0.8)' : '3px solid transparent';
+    });
+    if (editingIdx !== null) {
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#b0a8a0" stroke-width="1.5" stroke-linecap="round"><path d="M10 3L5 8l5 5"/></svg> 返回';
+      renderEditor(editingIdx);
+    } else {
+      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#b0a8a0" stroke-width="1.5" stroke-linecap="round"><path d="M2 8h12M8 3l5 5-5 5"/></svg> 翻面';
+      renderPeriodList();
     }
+  }
 
-    attachEditorEvents(div, pk, day, entry, renderCards);
-    renderCards(); // refresh cards now that _currentType is set
+  function renderPeriodList() {
+    const body = document.getElementById('pc-body');
+    const dd = monthData[dk] || {};
+    const dc = cycleData[dk] || {};
+    let html = '<div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">';
+    PERIOD_KEYS.forEach((pk, i) => {
+      const e = dd[pk];
+      const has = e?.score != null;
+      const bg = has ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.3)';
+      const dotC = has ? getColor(e.type, e.score) : '#d8d4d0';
+      const scoreHTML = has
+        ? `<span style="font-family:var(--display);font-size:15px;font-weight:700;color:${e.type==='positive'?'rgb(200,130,30)':'rgb(60,130,170)'}">${e.type==='positive'?'正':'負'}${e.score}</span>`
+        : '<span style="font-size:12px;color:#c8c0b8">未記錄</span>';
+      html += `<div class="pc-period-item ${has?'filled':''}" data-idx="${i}" style="background:${bg}">
+        <div style="width:8px;height:8px;border-radius:50%;background:${dotC}"></div>
+        <div style="flex:1;font-size:14px;font-weight:500;color:#3a3530">${PERIOD_NAMES[i]}</div>
+        ${scoreHTML}
+      </div>`;
+    });
+    html += '</div>';
+    html += `<div style="display:flex;gap:8px;margin-top:12px">
+      <button class="pc-cycle-btn" id="pc-pms" style="flex:1;padding:10px 0;border-radius:10px;border:1px solid ${dc.pms?'rgba(64,144,208,0.3)':'#e0dcd8'};background:${dc.pms?'rgba(64,144,208,0.08)':'transparent'};font-size:13px;color:${dc.pms?'#1a5580':'#a09890'};cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--ff)">
+        <svg width="14" height="14" viewBox="0 0 12 12" fill="currentColor"><path d="M7.5 2C5.5 2.5 4 4.3 4 6.5S5.5 10.5 7.5 11c-3 0-5-2.2-5-4.5S4.5 2 7.5 2z"/></svg>經前
+      </button>
+      <button class="pc-cycle-btn" id="pc-period" style="flex:1;padding:10px 0;border-radius:10px;border:1px solid ${dc.period?'rgba(200,60,90,0.2)':'#e0dcd8'};background:${dc.period?'rgba(200,60,90,0.06)':'transparent'};font-size:13px;color:${dc.period?'#8a2040':'#a09890'};cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--ff)">
+        <svg width="12" height="12" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="4"/></svg>月經
+      </button>
+    </div>`;
+    body.innerHTML = html;
 
-    // Save handler — on the inline button
-    const saveBtn = div.querySelector('.editor-save-btn');
-    let delLinkAdded = hasExisting;
+    body.querySelectorAll('.pc-period-item').forEach(item => {
+      item.addEventListener('click', () => {
+        editingIdx = parseInt(item.dataset.idx);
+        renderBack();
+      });
+    });
+    document.getElementById('pc-pms')?.addEventListener('click', () => {
+      if (!cycleData[dk]) cycleData[dk] = {};
+      cycleData[dk].pms = !cycleData[dk].pms;
+      if (cycleData[dk].pms) cycleData[dk].period = false;
+      if (!cycleData[dk].pms && !cycleData[dk].period) delete cycleData[dk];
+      saveData(); renderBack();
+    });
+    document.getElementById('pc-period')?.addEventListener('click', () => {
+      if (!cycleData[dk]) cycleData[dk] = {};
+      cycleData[dk].period = !cycleData[dk].period;
+      if (cycleData[dk].period) cycleData[dk].pms = false;
+      if (!cycleData[dk].pms && !cycleData[dk].period) delete cycleData[dk];
+      saveData(); renderBack();
+    });
+  }
+
+  function renderEditor(idx) {
+    const body = document.getElementById('pc-body');
+    const pk = PERIOD_KEYS[idx];
+    const entry = (monthData[dk] || {})[pk] || {};
+    const has = entry.score != null;
+    const sliderVal = has ? moodToSlider(entry.type, entry.score) : 50;
+    const mood = has ? { type: entry.type, score: entry.score } : sliderToMood(50);
+    const note = entry.note || '';
+    const numC = mood.score === 0 ? '#c0b8b0' : (mood.type === 'positive' ? 'rgb(200,130,30)' : 'rgb(60,130,170)');
+    const btnBg = mood.score === 0 ? '#c0b8b0' : (mood.type === 'positive' ? 'rgb(230,160,50)' : 'rgb(80,150,190)');
+    const escaped = note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    body.innerHTML = `<div style="animation:fadeIn 0.25s ease-out">
+      <div style="text-align:center;margin:8px 0 16px">
+        <div id="pc-score" style="font-family:var(--display);font-size:36px;font-weight:800;color:${numC}">${has ? mood.score : '0'}</div>
+      </div>
+      <input type="range" id="pc-slider" class="entry-slider" min="0" max="100" value="${sliderVal}" style="width:100%">
+      <div style="display:flex;justify-content:space-between;padding:20px 2px 0;font-size:12px;font-weight:600;font-family:var(--ff)">
+        <span style="color:#2080a0">負向</span><span style="color:#b0a8a0">平靜</span><span style="color:#c85030">正向</span>
+      </div>
+      <div style="margin-top:16px">
+        <div id="pc-note-display" style="display:flex;align-items:center;gap:6px;padding:10px 0;font-size:13px;color:${note?'var(--text-mid)':'#c0b8b0'};cursor:pointer;font-family:var(--ff)">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" style="flex-shrink:0;opacity:0.5"><path d="M14 3l3 3L7 16H4v-3L14 3z"/></svg>
+          <span>${note ? escaped : '說說你的感受'}</span>
+        </div>
+        <textarea id="pc-note-input" class="entry-note" placeholder="說說你的感受" style="display:none;width:100%" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" rows="2">${escaped}</textarea>
+      </div>
+      <button id="pc-save" style="display:block;margin:16px auto 0;padding:10px 40px;border-radius:10px;border:none;font-size:14px;font-weight:600;color:#fff;cursor:pointer;background:${btnBg};font-family:var(--ff);transition:all 0.3s">記下來</button>
+      ${has ? '<button id="pc-delete" style="display:block;margin:8px auto 0;border:none;background:none;color:var(--text-mid);font-size:12px;cursor:pointer;font-family:var(--ff);text-decoration:underline;text-underline-offset:3px">刪除此段</button>' : ''}
+    </div>`;
+
+    const slider = document.getElementById('pc-slider');
+    const scoreEl = document.getElementById('pc-score');
+    const saveBtn = document.getElementById('pc-save');
+    const noteDisp = document.getElementById('pc-note-display');
+    const noteIn = document.getElementById('pc-note-input');
+    let touched = has;
+
+    slider.addEventListener('input', (e) => {
+      touched = true;
+      const m = sliderToMood(parseInt(e.target.value));
+      scoreEl.textContent = m.score;
+      scoreEl.style.color = m.score === 0 ? '#c0b8b0' : (m.type === 'positive' ? 'rgb(200,130,30)' : 'rgb(60,130,170)');
+      saveBtn.style.background = m.score === 0 ? '#c0b8b0' : (m.type === 'positive' ? 'rgb(230,160,50)' : 'rgb(80,150,190)');
+    });
+
+    const autoGrow = () => { noteIn.style.height = 'auto'; noteIn.style.height = noteIn.scrollHeight + 'px'; };
+    noteDisp.addEventListener('click', () => {
+      noteDisp.style.display = 'none'; noteIn.style.display = ''; autoGrow(); noteIn.focus();
+    });
+    noteIn.addEventListener('input', autoGrow);
+    noteIn.addEventListener('blur', () => {
+      const v = noteIn.value.trim();
+      noteDisp.querySelector('span').textContent = v || '說說你的感受';
+      noteDisp.style.color = v ? 'var(--text-mid)' : '#c0b8b0';
+      noteDisp.style.display = ''; noteIn.style.display = 'none';
+      if (v) touched = true;
+    });
 
     saveBtn.addEventListener('click', () => {
-      const state = div._getState();
-      if (state.touched) {
+      const m = sliderToMood(parseInt(slider.value));
+      const n = noteIn.value.trim().slice(0, 500);
+      if (touched) {
         if (!monthData[dk]) monthData[dk] = {};
-        monthData[dk][pk] = { type: state.type, score: state.score, note: state.note.slice(0, 500) };
-        saveData();
-        updateMonster();
-        renderCalendar();
-        renderCards();
-        saveBtn.textContent = '已儲存 ✓';
-        saveBtn.style.opacity = '0.6';
-        setTimeout(() => {
-          saveBtn.textContent = '儲存';
-          saveBtn.style.opacity = '1';
-        }, 1500);
-        // Add delete link if not already there
-        if (!delLinkAdded) {
-          const delLink = document.createElement('button');
-          delLink.textContent = '刪除此段';
-          delLink.style.cssText = 'display:block;margin:6px auto 0;border:none;background:none;color:var(--text-mid);font-size:12px;cursor:pointer;font-family:var(--ff);text-decoration:underline;text-underline-offset:3px;';
-          delLink.addEventListener('click', () => {
-            if (monthData[dk]?.[pk]) {
-              delete monthData[dk][pk];
-              if (Object.keys(monthData[dk]).length === 0) delete monthData[dk];
-              saveData();
-              updateMonster();
-              renderCalendar();
-            }
-            activeEditor = null;
-            editorEl.innerHTML = '';
-            renderCards();
-          });
-          editorEl.appendChild(delLink);
-          delLinkAdded = true;
-        }
+        monthData[dk][pk] = { type: m.type, score: m.score, note: n };
+        saveData(); refreshStripColors();
+        saveBtn.textContent = '已記錄 ✓'; saveBtn.style.opacity = '0.6';
+        setTimeout(() => { saveBtn.textContent = '記下來'; saveBtn.style.opacity = '1'; }, 1500);
       }
+    });
+
+    document.getElementById('pc-delete')?.addEventListener('click', () => {
+      if (monthData[dk]?.[pk]) {
+        delete monthData[dk][pk];
+        if (Object.keys(monthData[dk]).length === 0) delete monthData[dk];
+        saveData(); refreshStripColors();
+      }
+      editingIdx = null; renderBack();
     });
   }
 
-  // Auto-open first empty period
-  const firstEmptyIdx = PERIOD_KEYS.findIndex(pk => !(monthData[dk]?.[pk]?.score != null));
-  if (firstEmptyIdx !== -1) {
-    activeEditor = PERIOD_KEYS[firstEmptyIdx];
-  }
-
-  renderCards();
-  if (activeEditor) {
-    openPeriodEditor(activeEditor, PERIOD_KEYS.indexOf(activeEditor), day);
-  }
-}
-
-function buildEditorHTML(pk, idx, entry, hasExisting) {
-  const type = entry.type || 'positive';
-  const score = hasExisting ? entry.score : 0;
-  const note = entry.note || '';
-  const sliderVal = hasExisting ? moodToSlider(type, score) : 50;
-  const mood = hasExisting ? { type, score } : { type: 'positive', score: 0 };
-  const saveBtnBg = mood.score === 0 ? '#c0b8b0' : (mood.type === 'positive' ? 'rgb(230,160,50)' : 'rgb(80,150,190)');
-  const numColor = mood.score === 0 ? '#c0b8b0' : (mood.type === 'positive' ? 'rgb(230,160,50)' : 'rgb(80,150,190)');
-
-  return `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <span class="editor-score-num" style="font-family:var(--display);font-size:32px;font-weight:800;color:${numColor}">${hasExisting ? score : '0'}</span>
-      <button class="editor-save-btn" style="background:${saveBtnBg}">儲存</button>
-    </div>
-    <div style="margin-bottom:4px;">
-      <input type="range" class="entry-slider" style="width:100%" min="0" max="100" value="${sliderVal}">
-    </div>
-    <div style="display:flex;justify-content:space-between;padding:2px 2px 6px;font-family:var(--ff);font-size:11px;font-weight:600;">
-      <span style="color:#2080a0">負向</span>
-      <span style="color:#b0a8a0">平靜</span>
-      <span style="color:#c85030">正向</span>
-    </div>
-    <div class="note-area">
-      <span class="note-display ${note ? 'filled' : 'empty'}"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;opacity:0.5"><path d="M10.5 1.5l2 2L4.5 11.5l-2.5.5.5-2.5L10.5 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>${note ? note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;') : '說說你的感受'}</span></span>
-      <textarea class="note-input" placeholder="說說你的感受" style="display:none" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" rows="1">${note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
-    </div>
-  `;
-}
-
-function attachEditorEvents(div, pk, day, initialEntry, onTypeChange) {
-  const hadExisting = initialEntry.score != null;
-  let sliderVal = hadExisting ? moodToSlider(initialEntry.type || 'positive', initialEntry.score) : 50;
-  let touched = hadExisting;
-
-  function markTouched() { touched = true; }
-
-  // Bidirectional slider
-  const slider = div.querySelector('.entry-slider');
-  const numEl = div.querySelector('.editor-score-num');
-  const saveBtn = div.querySelector('.editor-save-btn');
-
-  div._currentType = hadExisting ? (initialEntry.type || 'positive') : 'positive';
-
-  slider.addEventListener('input', (e) => {
-    sliderVal = parseInt(e.target.value);
-    markTouched();
-    const mood = sliderToMood(sliderVal);
-    numEl.textContent = mood.score;
-    if (mood.score === 0) {
-      numEl.style.color = '#c0b8b0';
-      saveBtn.style.background = '#c0b8b0';
-    } else if (mood.type === 'positive') {
-      numEl.style.color = 'rgb(230,160,50)';
-      saveBtn.style.background = 'rgb(230,160,50)';
-    } else {
-      numEl.style.color = 'rgb(80,150,190)';
-      saveBtn.style.background = 'rgb(80,150,190)';
-    }
-    div._currentType = mood.type;
-    if (onTypeChange) onTypeChange();
-  });
-
-  // Note: click-to-edit toggle
-  const noteDisplay = div.querySelector('.note-display');
-  const noteInput = div.querySelector('.note-input');
-  const autoGrow = () => {
-    noteInput.style.height = 'auto';
-    noteInput.style.height = noteInput.scrollHeight + 'px';
-  };
-  noteDisplay.addEventListener('click', () => {
-    noteDisplay.style.display = 'none';
-    noteInput.style.display = '';
-    autoGrow();
-    noteInput.focus();
-  });
-  noteInput.addEventListener('input', autoGrow);
-  noteInput.addEventListener('blur', () => {
-    const val = noteInput.value.trim();
-    const textSpan = noteDisplay.querySelector('span');
-    if (textSpan) textSpan.textContent = val || '說說你的感受';
-    noteDisplay.className = `note-display ${val ? 'filled' : 'empty'}`;
-    noteDisplay.style.display = '';
-    noteInput.style.display = 'none';
-    if (val) markTouched();
-  });
-
-  // State getter — returns mood from slider
-  div._getState = () => {
-    const mood = sliderToMood(sliderVal);
-    return { type: mood.type, score: mood.score, note: div.querySelector('.note-input').value.trim(), touched };
-  };
-  div._periodKey = pk;
+  renderBack();
 }
 
 function closeDayModal() {
   document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f4f5f7');
   document.getElementById('day-modal').innerHTML = '';
   renderCalendar();
-  // Refresh sky page
   if (document.getElementById('page-sky').classList.contains('active')) {
     updateSkyPeriods();
     updateSkyGradient();
     updateCloudState();
     triggerCloudWind();
   }
-}
-
-// ===== MONTHLY MONSTER ALGORITHM =====
-function computeMonthlyMonster(monthData) {
-  const dayEntries = Object.entries(monthData);
-  const totalDays = dayEntries.length;
-  if (totalDays === 0) return null;
-
-  // Group days by shape signature (e.g. "pos_neg_neg")
-  const groups = {};
-  for (const [dk, dayVal] of dayEntries) {
-    const sig = PERIOD_KEYS.map(pk => {
-      const e = dayVal?.[pk];
-      if (!e || e.score == null) return 'none';
-      return e.type === 'positive' ? 'pos' : 'neg';
-    }).join('_');
-    // Skip days with no records at all
-    if (sig === 'none_none_none') continue;
-    if (!groups[sig]) groups[sig] = [];
-    groups[sig].push(dayVal);
-  }
-
-  // Find largest group
-  let topShape = null, topCount = 0, topDays = [];
-  for (const [sig, days] of Object.entries(groups)) {
-    if (days.length > topCount) {
-      topShape = sig;
-      topCount = days.length;
-      topDays = days;
-    }
-  }
-  if (!topShape) return null;
-
-  // Meaningful pattern thresholds
-  const validDayCount = Object.values(groups).reduce((s, d) => s + d.length, 0);
-  const runnerUp = Object.values(groups).map(d => d.length).sort((a, b) => b - a)[1] || 0;
-  const dominance = topCount / validDayCount;
-  const lead = topCount - runnerUp;
-  const hasMeaningfulPattern = topCount >= 3 && dominance >= 0.2 && lead >= 2;
-
-  if (!hasMeaningfulPattern) {
-    return { hasPattern: false, totalDays: validDayCount };
-  }
-
-  // Compute average score for each period in the top shape
-  const avgData = {};
-  PERIOD_KEYS.forEach((pk, i) => {
-    const parts = topShape.split('_');
-    const dir = parts[i];
-    if (dir === 'none') return;
-    const scores = topDays
-      .map(d => d?.[pk])
-      .filter(e => e?.score != null && (dir === 'pos' ? e.type === 'positive' : e.type === 'negative'))
-      .map(e => e.score);
-    if (scores.length === 0) return;
-    const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-    avgData[pk] = { type: dir === 'pos' ? 'positive' : 'negative', score: avgScore };
-  });
-
-  return {
-    hasPattern: true,
-    shape: topShape,
-    count: topCount,
-    totalDays: validDayCount,
-    avgData,
-    dominance
-  };
-}
-
-function describeMonthlyShape(shape, avgData) {
-  const parts = shape.split('_');
-  const pLabels = { 0: '早上', 1: '下午', 2: '晚上' };
-
-  const filled = parts.map((d, i) => ({ idx: i, dir: d })).filter(x => x.dir !== 'none');
-  if (filled.length === 0) return '';
-
-  const descs = filled.map(({ idx, dir }) => {
-    const pk = PERIOD_KEYS[idx];
-    const entry = avgData[pk];
-    if (!entry) return pLabels[idx];
-    const score = entry.score;
-    let intensity;
-    if (dir === 'pos') {
-      intensity = score >= 70 ? '高昂' : score >= 40 ? '平穩' : '微亮';
-    } else {
-      intensity = score >= 70 ? '深沈' : score >= 40 ? '低落' : '輕微';
-    }
-    return `${pLabels[idx]}${intensity}`;
-  });
-
-  return descs.join(' · ');
-}
-
-function renderMonthlyMonsterHero() {
-  const result = computeMonthlyMonster(monthData);
-
-  if (!result) {
-    return `
-      <div class="monthly-monster-hero">
-        <div class="monthly-monster-label">這個月最常見的怪獸</div>
-        <div class="monthly-monster-none">這個月還沒有紀錄</div>
-      </div>
-    `;
-  }
-
-  if (!result.hasPattern) {
-    return `
-      <div class="monthly-monster-hero">
-        <div class="monthly-monster-label">這個月最常見的怪獸</div>
-        <div class="monthly-monster-none">
-          這個月沒有特別明顯的固定模式<br>
-          每天的樣子都不太一樣
-        </div>
-      </div>
-    `;
-  }
-
-  const monsterSVG = generateMonsterSVG(result.avgData, 180, false);
-  const description = describeMonthlyShape(result.shape, result.avgData);
-  const pct = Math.round(result.dominance * 100);
-
-  return `
-    <div class="monthly-monster-hero">
-      <div class="monthly-monster-label">這個月最常見的怪獸</div>
-      <div class="monthly-monster-svg">${monsterSVG}</div>
-      <div class="monthly-monster-desc">${description}</div>
-      <div class="monthly-monster-count">${result.count} / ${result.totalDays} 天 · ${pct}%</div>
-    </div>
-  `;
 }
 
 // ===== STATS PAGE =====
@@ -3790,6 +3276,20 @@ function _buildRainDrops() {
   return html;
 }
 
+function _buildGlowDots() {
+  let html = '';
+  const count = 12;
+  for (let i = 0; i < count; i++) {
+    const left = 5 + Math.random() * 90;
+    const size = 3 + Math.random() * 5;
+    const dur = 3 + Math.random() * 3;
+    const delay = Math.random() * 3.5;
+    const dist = -(60 + Math.random() * 70);
+    html += `<div class="glow-dot" style="left:${left}%;width:${size}px;height:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;--glow-dist:${dist}px"></div>`;
+  }
+  return html;
+}
+
 function _getMoonPhase(date) {
   // Reference new moon: Jan 6, 2000
   const ref = new Date(2000, 0, 6).getTime();
@@ -3839,6 +3339,10 @@ function updateCloudState() {
   wrap.innerHTML = renderCloudSVG(_cachedCloud, filled.length);
   wrap.className = 'cloud-wrap' + (filled.length === 0 ? ' idle' : '');
 
+  // Tagline: today vs past
+  const tagEl = document.querySelector('.sky-tagline');
+  if (tagEl) tagEl.textContent = isSkyToday() ? '今天的天空' : '之前的天空';
+
   // Cloud vertical position: positive → float up, negative → sink down
   if (filled.length > 0) {
     let total = 0;
@@ -3863,6 +3367,19 @@ function updateCloudState() {
     } else if (!allNeg) {
       rainEl.classList.remove('active');
       rainEl.innerHTML = '';
+    }
+  }
+
+  // Golden particles: all 3 periods positive
+  const glowEl = document.getElementById('glow-container');
+  if (glowEl) {
+    const allPos = filled.length === 3 && filled.every(e => e.type === 'positive');
+    if (allPos && !glowEl.classList.contains('active')) {
+      glowEl.innerHTML = _buildGlowDots();
+      glowEl.classList.add('active');
+    } else if (!allPos) {
+      glowEl.classList.remove('active');
+      glowEl.innerHTML = '';
     }
   }
 
