@@ -1613,13 +1613,16 @@ function openDayModal(day) {
         <div class="pc-inner" id="pc-inner">
           <div class="pc-front" id="pc-front" style="background:${skyGrad}">
             <div class="pc-cloud">${cloudSvg}</div>
-            ${weatherHTML}
+            <div id="pc-weather">${weatherHTML}</div>
             <div class="pc-date-stamp">
               <div class="pc-date-num">${curMonth+1}/${day}</div>
               <div class="pc-date-weekday">週${wd}</div>
             </div>
+            <button id="pc-close" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border:none;background:rgba(0,0,0,0.12);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+            </button>
             <div class="pc-hint">輕觸翻面</div>
-            <div class="pc-strip" style="position:absolute;bottom:0;left:0;right:0;height:32px">
+            <div class="pc-strip" id="pc-front-strip" style="position:absolute;bottom:0;left:0;right:0;height:32px">
               ${stripC.map((c,i) => `<div class="pc-strip-seg" style="background:${c}">${PERIOD_NAMES[i]}</div>`).join('')}
             </div>
           </div>
@@ -1644,7 +1647,12 @@ function openDayModal(day) {
 
   let editingIdx = null;
 
-  document.getElementById('pc-front').addEventListener('click', () => {
+  document.getElementById('pc-close').addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeDayModal();
+  });
+  document.getElementById('pc-front').addEventListener('click', (e) => {
+    if (e.target.closest('#pc-close')) return;
     document.getElementById('pc-inner').classList.add('flipped');
   });
   document.getElementById('pc-overlay').addEventListener('click', (e) => {
@@ -1652,8 +1660,46 @@ function openDayModal(day) {
   });
   document.getElementById('pc-action-btn').addEventListener('click', () => {
     if (editingIdx !== null) { editingIdx = null; renderBack(); }
-    else document.getElementById('pc-inner').classList.remove('flipped');
+    else { refreshFront(); document.getElementById('pc-inner').classList.remove('flipped'); }
   });
+
+  function refreshFront() {
+    const dd = monthData[dk] || {};
+    const ents = PERIOD_KEYS.map(pk => dd[pk] || null);
+    const fl = ents.filter(e => e?.score != null);
+    const gC = ents.map(e => e ? getColor(e.type, e.score) : '#c8c3be');
+    const sC = ents.map(e => e ? getColor(e.type, e.score) : '#d8d4d0');
+    const front = document.getElementById('pc-front');
+    front.style.background = `linear-gradient(180deg,${gC[0]} 0%,${gC[0]} 25%,${gC[1]} 50%,${gC[2]} 75%,${gC[2]} 100%)`;
+    // Update front strip
+    document.getElementById('pc-front-strip').querySelectorAll('.pc-strip-seg').forEach((seg, i) => {
+      seg.style.background = sC[i];
+    });
+    // Update cloud opacity
+    const cloudEl = front.querySelector('.pc-cloud svg');
+    if (cloudEl) cloudEl.style.opacity = 0.15 + fl.length * 0.2;
+    // Update weather
+    const wEl = document.getElementById('pc-weather');
+    const aN = fl.length === 3 && fl.every(e => e.type === 'negative');
+    const aP = fl.length === 3 && fl.every(e => e.type === 'positive');
+    let wHTML = '';
+    if (aN) {
+      wHTML = '<div class="pc-rain">';
+      for (let i = 0; i < 10; i++) {
+        const l=8+Math.random()*84,h=12+Math.random()*14,d=1.8+Math.random()*1.2,dl=Math.random()*2;
+        wHTML += `<div style="position:absolute;top:-8px;left:${l}%;width:1.5px;height:${h}px;border-radius:1px;background:linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.25));animation:rainFall ${d}s linear ${dl}s infinite"></div>`;
+      }
+      wHTML += '</div>';
+    } else if (aP) {
+      wHTML = '<div class="pc-glow">';
+      for (let i = 0; i < 8; i++) {
+        const l=5+Math.random()*90,s=3+Math.random()*4,d=3+Math.random()*3,dl=Math.random()*3;
+        wHTML += `<div style="position:absolute;bottom:-4px;left:${l}%;width:${s}px;height:${s}px;border-radius:50%;background:radial-gradient(circle,rgba(255,220,130,0.7),rgba(255,195,80,0.1));animation:glowFloat ${d}s linear ${dl}s infinite"></div>`;
+      }
+      wHTML += '</div>';
+    }
+    wEl.innerHTML = wHTML;
+  }
   document.getElementById('pc-back-strip').addEventListener('click', (e) => {
     const seg = e.target.closest('.pc-strip-seg');
     if (!seg) return;
