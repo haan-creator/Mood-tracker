@@ -3068,9 +3068,14 @@ function updateSkyDate() {
   document.getElementById('sky-date').textContent = (skyDate.getMonth()+1) + '/' + skyDate.getDate();
   document.getElementById('sky-weekday').textContent = '週' + WEEKDAYS_TW[skyDate.getDay()];
   document.getElementById('sky-next').disabled = isSkyToday();
+  // Hide prev arrow beyond 7 days
+  const diffDays = Math.round((new Date().setHours(0,0,0,0) - new Date(skyDate).setHours(0,0,0,0)) / 86400000);
+  document.getElementById('sky-prev').style.visibility = diffDays >= 7 ? 'hidden' : '';
 }
 
 function skyPrev() {
+  const diffDays = Math.round((new Date().setHours(0,0,0,0) - new Date(skyDate).setHours(0,0,0,0)) / 86400000);
+  if (diffDays >= 7) return;
   skyDate.setDate(skyDate.getDate() - 1);
   refreshSky();
 }
