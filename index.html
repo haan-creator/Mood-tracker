@@ -1622,9 +1622,6 @@ function openDayModal(day) {
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
             </button>
             <div class="pc-hint">輕觸翻面</div>
-            <div class="pc-strip" id="pc-front-strip" style="position:absolute;bottom:0;left:0;right:0;height:32px">
-              ${stripC.map((c,i) => `<div class="pc-strip-seg" style="background:${c}">${PERIOD_NAMES[i]}</div>`).join('')}
-            </div>
           </div>
           <div class="pc-back" id="pc-back">
             <div class="pc-strip" id="pc-back-strip" style="height:36px">
@@ -1671,10 +1668,6 @@ function openDayModal(day) {
     const sC = ents.map(e => e ? getColor(e.type, e.score) : '#d8d4d0');
     const front = document.getElementById('pc-front');
     front.style.background = `linear-gradient(180deg,${gC[0]} 0%,${gC[0]} 25%,${gC[1]} 50%,${gC[2]} 75%,${gC[2]} 100%)`;
-    // Update front strip
-    document.getElementById('pc-front-strip').querySelectorAll('.pc-strip-seg').forEach((seg, i) => {
-      seg.style.background = sC[i];
-    });
     // Update cloud opacity
     const cloudEl = front.querySelector('.pc-cloud svg');
     if (cloudEl) cloudEl.style.opacity = 0.15 + fl.length * 0.2;
