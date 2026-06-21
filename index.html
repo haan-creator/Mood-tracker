@@ -1353,13 +1353,12 @@ function saveData() {
 function getMonsterMessage(dayData) {
   const entries = PERIOD_KEYS.map(pk => dayData?.[pk]).filter(e => e?.score != null);
   if (entries.length === 0) return '';
-  if (entries.length === 1) return '天空有了第一抹色';
-  if (entries.length === 2) return '今天的顏色漸漸浮現';
 
-  // ── 每段獨立判讀 ──
-  const types  = entries.map(e => e.type);
-  const scores = entries.map(e => e.score);
+  // deterministic daily pick
+  const _d = new Date();
+  const _pick = (arr) => arr[(_d.getDate() + _d.getMonth()) % arr.length];
 
+  // ── 分類 ──
   function classify(type, score) {
     if (type === 'positive') {
       if (score >= 60) return 'P高';
@@ -1372,109 +1371,133 @@ function getMonsterMessage(dayData) {
     }
   }
 
-  const L = entries.map(e => classify(e.type, e.score));  // e.g. ['P中','N高','P低']
-  const dir = types.map(t => t === 'positive' ? 'P' : 'N').join(''); // e.g. 'PNP'
+  // ── 只填了一段 ──
+  if (entries.length === 1) {
+    const c = classify(entries[0].type, entries[0].score);
+    if (c === 'P高') return _pick(['今天捕捉到了一抹很亮的暖色。','天空透出了非常明亮的光澤。','有一道很鮮明的暖意留下來了。']);
+    if (c === 'P中') return _pick(['看見了一道很柔和的暖色。','天空染上了溫和的色彩。','留下了一抹淡淡的溫暖痕跡。']);
+    if (c === 'P低' || c === 'N低') return _pick(['是很輕的一筆，還看不出冷暖。','天空裡留下了一道淡淡的影子。','有一抹很淡很淡的痕跡。']);
+    if (c === 'N中') return _pick(['天空慢慢聚起了一些偏冷的色調。','看見了一抹帶著涼意的色彩。','今天的天空有一點微涼。']);
+    return _pick(['今天有一抹很深很深的藍色。','天空承載著一片很沉的色澤。','看見了很濃郁的冷色調。']);
+  }
 
-  // 輔助判斷
+  // ── 填了兩段 ──
+  if (entries.length === 2) {
+    const c0 = classify(entries[0].type, entries[0].score);
+    const c1 = classify(entries[1].type, entries[1].score);
+    const bothPos = entries[0].type === 'positive' && entries[1].type === 'positive';
+    const bothNeg = entries[0].type === 'negative' && entries[1].type === 'negative';
+    const hasNHigh = c0 === 'N高' || c1 === 'N高';
+    const bothLow = c0 === 'P低' && c1 === 'P低';
+
+    if (bothPos && !bothLow) return _pick(['連續兩段暖色，天空漸漸明朗了。','兩段光線交織出很明亮的色澤。','兩次捕捉到的都是溫暖的光澤。']);
+    if (bothPos && bothLow) return _pick(['都是輕輕淺淺的，但透著暖意。','雖然很淡，但都是明亮的色調。','天空裡有著若有似無的微光。']);
+    if (bothNeg && hasNHigh) return _pick(['是很沉的顏色，我都接住了。','兩段色彩疊加出很深厚的藍。','今天的空氣透著一股厚重感。']);
+    if (bothNeg) return _pick(['連續兩筆都帶著一點微涼的氣息。','天空的色調一直維持著偏冷。','兩段色彩都靜靜地沉下來了。']);
+    return _pick(['一暖一冷，天空有了不同的層次。','光線和陰影在今天交替出現了。','不同的溫度正在相互交錯著。']);
+  }
+
+  // ── 三段完整 ──
+  const types  = entries.map(e => e.type);
+  const scores = entries.map(e => e.score);
+  const L = entries.map(e => classify(e.type, e.score));
+  const dir = types.map(t => t === 'positive' ? 'P' : 'N').join('');
   const trend = scores[2] - scores[0];
   const hasHigh = tag => L.some(l => l === tag);
   const allSame = tag => L.every(l => l === tag);
 
-  // ── 規則表 ──
   const rules = [
-
-    // ===== PPP 全天正向 =====
+    // ===== PPP =====
     { test: () => dir === 'PPP' && allSame('P高'),
-      msg: '今天是發光的一天！！' },
+      msgs: ['今天一整天都閃閃發亮著。','是充滿光亮與溫度的一天。','今天的天空非常明亮耀眼。'] },
     { test: () => dir === 'PPP' && hasHigh('P高') && trend > 20,
-      msg: '越來越好的一天！' },
+      msgs: ['天空的色彩越來越明朗了。','溫度隨著時間慢慢升高了。','走到後面，光線變得好飽滿。'] },
     { test: () => dir === 'PPP' && hasHigh('P高') && trend < -20 && L[2] === 'P低',
-      msg: '早上的力氣，用到晚上就散了。' },
+      msgs: ['耀眼的開場，在夜裡安靜收尾了。','一開始很亮，後來輕輕地淡出了。','光線在入夜後漸漸轉淡了。'] },
     { test: () => dir === 'PPP' && hasHigh('P高') && trend < -20,
-      msg: '今天都不錯，晚上靜了一些。' },
+      msgs: ['白天很明亮，晚上安靜了下來。','今天一直都亮著，最後收得溫和。','光線漸漸轉為柔和的微光。'] },
     { test: () => dir === 'PPP' && L[1] === 'P低' && L[0] !== 'P低' && L[2] !== 'P低',
-      msg: '下午淡了一些，但早晚都好好的～' },
+      msgs: ['中途雖然轉淡，幸好首尾都有光。','中間稍稍變淡，後來又聚起光了。','中途有些輕淡，但首尾都溫暖。'] },
     { test: () => dir === 'PPP' && hasHigh('P高'),
-      msg: '今天有一段特別亮！' },
+      msgs: ['今天有一段時間的光線特別耀眼。','捕捉到了一抹特別明亮的色彩。','今天的某個時刻特別有光澤。'] },
     { test: () => dir === 'PPP' && allSame('P中'),
-      msg: '小小的，但是好的～' },
+      msgs: ['一整天都維持著柔和的暖意。','小小的光亮，平穩地亮了一天。','是很平靜也帶點溫暖的一天。'] },
     { test: () => dir === 'PPP' && allSame('P低'),
-      msg: '輕輕的，但是好的～' },
+      msgs: ['輕輕淺淺的，但都有微光。','一整天的色調都淡淡的好。','輕柔得像微風一樣的一天。'] },
     { test: () => dir === 'PPP' && scores.some(s => s < 10),
-      msg: '有好的時候，也有淡淡的時候。' },
+      msgs: ['有發亮的時刻，也有很淡的瞬間。','雖然有些模糊，但都是暖色調。','光線有時明顯，有時很輕微。'] },
     { test: () => dir === 'PPP',
-      msg: '今天心情不錯！' },
+      msgs: ['今天的天空維持著溫暖的底色。','一整天都沉浸在明亮的色調裡。','把今天滿滿的暖意都收好了。'] },
 
-    // ===== NNN 全天負向 =====
+    // ===== NNN =====
     { test: () => dir === 'NNN' && allSame('N高'),
-      msg: '今天辛苦了，已經很努力了！' },
+      msgs: ['今天的天空鋪滿了厚重的色彩。','累積了一整天厚實的深藍。','今天的顏色很深很深。'] },
     { test: () => dir === 'NNN' && trend > 20,
-      msg: '越來越沉，但你撐住了！' },
+      msgs: ['顏色越來越深，一層一層的。','雲層漸漸堆積出厚實的樣子。','越到後來，空氣感覺越厚重。'] },
     { test: () => dir === 'NNN' && trend < -20,
-      msg: '慢慢鬆開了一點～' },
+      msgs: ['深沉的顏色到了晚上慢慢化開了。','早上的重量，後來稍微鬆脫了些。','雖然帶著涼意，但慢慢變淡了。'] },
     { test: () => dir === 'NNN' && allSame('N低'),
-      msg: '有些什麼，但說不上來。' },
+      msgs: ['一整天都罩著一層淡淡的霧。','一整天都覆蓋著一層薄薄的灰。','帶著一點點淡淡的微涼感。'] },
     { test: () => dir === 'NNN',
-      msg: '悶悶的，但你撐過來了。' },
+      msgs: ['沉悶的空氣，都被輕輕接攏了。','天空透著涼意，今天就是這樣。','今天一整天都有些沉沉的呢。'] },
 
-    // ===== NPP 早負後正 =====
+    // ===== NPP =====
     { test: () => dir === 'NPP' && L[0] === 'N高' && L[2] !== 'P低',
-      msg: '早上那麼重，後來還是好起來了！' },
+      msgs: ['早上那麼重，後來慢慢透出光了。','從深藍色裡，逐漸走出了暖意。','早上的重量，終於在夜晚化開了。'] },
     { test: () => dir === 'NPP' && L[0] === 'N高',
-      msg: '早上那麼重，後來好多了！' },
+      msgs: ['一開始很沉重，後來慢慢轉暖了。','早上的深色調，後來被光蓋過了。','走過了沉重的早晨，迎來了光線。'] },
     { test: () => dir === 'NPP' && L[2] === 'P低',
-      msg: '方向是好的，慢慢來～' },
+      msgs: ['方向慢慢變暖了，輕輕柔柔的。','雖然光線很微弱，但漸漸好轉了。','最後留下了一抹淡淡的暖光。'] },
     { test: () => dir === 'NPP',
-      msg: '慢慢好起來了，很好喔！' },
+      msgs: ['色彩慢慢地從冷調變成暖色了。','天空漸漸好轉，透出了明亮。','逐漸散開了冷意，迎來了溫暖。'] },
 
-    // ===== PPN 前正晚負 =====
+    // ===== PPN =====
     { test: () => dir === 'PPN' && L[2] === 'N高' && L[0] === 'P低',
-      msg: '晚上辛苦了～' },
+      msgs: ['到了晚上突然變得好沉重啊。','白天淺淺的，晚上卻積累得很厚。','夜晚的空氣突然變得又冷又重。'] },
     { test: () => dir === 'PPN' && L[2] === 'N高',
-      msg: '前面都好好的，晚上辛苦了～' },
+      msgs: ['前面都好好的，晚上突然變沉了。','白天的光被夜晚的深藍蓋住了。','夜幕降臨後，雲層變得好厚重。'] },
     { test: () => dir === 'PPN' && L[2] === 'N中' && L[0] === 'P低',
-      msg: '今天淡淡的，沒關係。' },
+      msgs: ['到了最後，輕輕地染上了一層灰。','白天淡淡的，晚上稍微沉了一點。','最後的色彩稍微暗了下來。'] },
     { test: () => dir === 'PPN' && L[2] === 'N中',
-      msg: '晚上沉下去了，但至少前面是好的～' },
+      msgs: ['入夜後沉了一點，但前面是暖的。','晚上稍稍降溫了，但白天不錯。','雖然最後有點涼，但有過光亮。'] },
     { test: () => dir === 'PPN' && hasHigh('P高'),
-      msg: '相比白天晚上有些黯淡，但沒關係的～' },
+      msgs: ['晚上稍顯黯淡，但白天的光還在。','雖然夜晚轉涼，但白天曾閃耀過。','收起了白天的亮光，晚上變安靜了。'] },
     { test: () => dir === 'PPN',
-      msg: '晚上有點沉，但沒關係的～' },
+      msgs: ['前面閃著光，到了晚上轉涼了。','最後的色調稍微轉冷了一些。','溫暖過後，天空慢慢降溫了。'] },
 
-    // ===== PNN 早正後負 =====
+    // ===== PNN =====
     { test: () => dir === 'PNN' && L[0] === 'P高',
-      msg: '早上還好好的，後來辛苦了，休息吧～' },
+      msgs: ['早上那麼耀眼，後來慢慢暗下了。','開局很明亮，後來漸漸被遮蔽了。','早上的光線，在午後漸漸轉涼了。'] },
     { test: () => dir === 'PNN' && L[0] === 'P低',
-      msg: '後來很不好吧，辛苦了。' },
+      msgs: ['一開始就淡淡的，後來變沉重了。','微弱的光線慢慢被冷色取代了。','從一點點微光，走進了深藍裡。'] },
     { test: () => dir === 'PNN',
-      msg: '早上是好的，後來沉下去了～' },
+      msgs: ['從溫暖的早晨，慢慢走進了涼意。','光線漸漸褪去，天空冷了下來。','開頭是好的，後來慢慢沉下去了。'] },
 
-    // ===== NNP 前負晚正 =====
+    // ===== NNP =====
     { test: () => dir === 'NNP' && L[2] === 'P高',
-      msg: '撐到最後亮起來了！' },
+      msgs: ['撐過冷色後，夜裡透出了明朗。','在沉重的最後，迎來了耀眼的光。','沉悶了一天，在最後一刻放晴了。'] },
     { test: () => dir === 'NNP' && L[2] === 'P中',
-      msg: '晚上好一點了，很好呢！' },
+      msgs: ['晚上稍微暖和了一點，這樣很好。','冷了一陣子，到了晚上透出微光。','到了夜晚，空氣稍微變得溫和了。'] },
     { test: () => dir === 'NNP',
-      msg: '晚上有好一點了呢！' },
+      msgs: ['沉重的色調在最後慢慢化開了。','走到了晚上，總算透出一點暖意。','晚上的天空有慢慢變暖和了呢。'] },
 
-    // ===== PNP 中間掉下去 =====
+    // ===== PNP =====
     { test: () => dir === 'PNP' && L[2] === 'P低',
-      msg: '下午沉了一下，晚上輕輕的。' },
+      msgs: ['下午沉了一下，晚上剩一點微光。','中間降溫了，晚上只留下輕輕的暖。','經歷了微涼的下午，晚上淡淡的。'] },
     { test: () => dir === 'PNP',
-      msg: '下午沉了一下，晚上又好起來了～' },
+      msgs: ['下午稍微轉冷，但晚上又暖了。','雲層遮住了一下子，後來又散開了。','中途暗了一下，最後又找回了光。'] },
 
-    // ===== NPN 中間正向 =====
+    // ===== NPN =====
     { test: () => dir === 'NPN' && (L[1] === 'P高' || L[1] === 'P中'),
-      msg: '下午好了一陣子，那是真的。' },
+      msgs: ['下午透出的那道光，是非常真實的。','中間有一段時間，確實亮了起來。','被冷色包圍著，但下午有過光亮。'] },
     { test: () => dir === 'NPN',
-      msg: '今天不容易，辛苦了。' },
+      msgs: ['起伏不斷的一天，雲朵都接住了。','在冷熱交替中，度過了這一天。','這天的色彩忽明忽暗，不容易呢。'] },
   ];
 
-  // ── 匹配 ──
   for (const rule of rules) {
-    if (rule.test()) return rule.msg;
+    if (rule.test()) return _pick(rule.msgs);
   }
-  return '今天就是這樣。';
+  return _pick(['天空如實記錄了今天的每個樣子。','這就是今天天空留下來的痕跡。','各種深淺的顏色，都拼成了今天。']);
 }
 
 
@@ -2162,50 +2185,48 @@ function openStats() {
     }
   }
 
+  // ===== WARM DAY METRICS =====
+  let warmDays = 0;
+  let maxWarmStreak = 0, curWarmStreak = 0;
+  for (let d = 1; d <= dim; d++) {
+    const dk = String(d);
+    const dayD = monthData[dk];
+    if (!dayD) { curWarmStreak = 0; continue; }
+    const hasFilled = PERIOD_KEYS.some(pk => dayD[pk]?.score != null);
+    if (!hasFilled) { curWarmStreak = 0; continue; }
+    const hasNeg = PERIOD_KEYS.some(pk => dayD[pk]?.type === 'negative');
+    if (!hasNeg) {
+      warmDays++;
+      curWarmStreak++;
+      if (curWarmStreak > maxWarmStreak) maxWarmStreak = curWarmStreak;
+    } else {
+      curWarmStreak = 0;
+    }
+  }
+  const warmDayRatio = filledDays > 0 ? warmDays / filledDays : null;
+
   // ===== SUMMARY =====
   const totalEntries = posCount + negCount;
   const posRatio = totalEntries > 0 ? posCount / totalEntries : null;
   const posRatioPct = posRatio !== null ? Math.round(posRatio * 100) : null;
   let summaryVerdict, verdictColor;
-  if (posRatio === null || totalEntries < 3) {
+  if (warmDayRatio === null || filledDays < 3) {
     summaryVerdict = '開始記錄你的情緒旅程';
     verdictColor = 'var(--text-dark)';
-  } else if (posRatio >= 0.68) {
-    summaryVerdict = `${MONTHS_TW[curMonth]}整體情緒不錯`;
+  } else if (warmDayRatio >= 0.65) {
+    summaryVerdict = `${MONTHS_TW[curMonth]}的天空大多是暖的`;
     verdictColor = 'var(--warm-accent)';
-  } else if (posRatio >= 0.52) {
-    summaryVerdict = `${MONTHS_TW[curMonth]}情緒偏正面`;
-    verdictColor = 'var(--warm-accent)';
-  } else if (posRatio >= 0.42) {
-    summaryVerdict = `${MONTHS_TW[curMonth]}情緒正負均衡`;
+  } else if (warmDayRatio >= 0.45) {
+    summaryVerdict = `${MONTHS_TW[curMonth]}的天空冷暖交替`;
     verdictColor = 'var(--text-dark)';
+  } else if (warmDayRatio >= 0.25) {
+    summaryVerdict = `${MONTHS_TW[curMonth]}的天空帶著不少涼意`;
+    verdictColor = 'var(--cool-accent)';
   } else {
-    summaryVerdict = `${MONTHS_TW[curMonth]}是情緒比較辛苦的一個月`;
+    summaryVerdict = `${MONTHS_TW[curMonth]}是偏冷的一段日子`;
     verdictColor = 'var(--cool-accent)';
   }
 
-  // ===== BAR CHART =====
-  let barsHTML = '';
-  for (let i = 0; i < dailyAvgs.length; i++) {
-    const dk = String(i + 1);
-    const dayD = monthData[dk];
-    const dayC = cycleData[dk];
-    const hasCycle = dayC?.pms || dayC?.period;
-    let dotHTML = '';
-    if (hasCycle) {
-      dotHTML = `<div class="bar-cycle-dot" style="background:${dayC.period ? '#d04060' : '#4090d0'}"></div>`;
-    }
-    if (dailyAvgs[i] === null) {
-      barsHTML += `<div class="bar-col">${dotHTML}<div class="bar empty-bar"></div></div>`;
-    } else {
-      const avg = dailyAvgs[i];
-      const h = (avg / 100) * 80 + 4;
-      let pCnt = 0, nCnt = 0;
-      if (dayD) PERIOD_KEYS.forEach(pk => { if (dayD[pk]?.type === 'positive') pCnt++; else if (dayD[pk]?.type === 'negative') nCnt++; });
-      const domType = pCnt >= nCnt ? 'positive' : 'negative';
-      barsHTML += `<div class="bar-col">${dotHTML}<div class="bar" style="height:${h}px;background:${getColor(domType, avg)}"></div></div>`;
-    }
-  }
 
   // ===== SVG ICONS (replace emoji) =====
   const IC = {
@@ -2235,55 +2256,52 @@ function openStats() {
     else if (d.icon === '🔄') d.icon = IC.cycle;
   });
 
-  // ===== SKY STRIP (replaces bar chart) =====
-  let stripSegments = [];
-  for (let i = 0; i < dailyAvgs.length; i++) {
-    const dk = String(i + 1);
-    const dayD = monthData[dk];
-    if (dailyAvgs[i] === null) {
-      stripSegments.push('#e0ddd8');
+  // ===== SKY FILMSTRIP (blended gradient per day) =====
+  function moodColor(type, score) {
+    if (type === 'positive') {
+      if (score > 65) return 'rgb(232,145,58)';
+      if (score > 40) return 'rgb(240,184,101)';
+      if (score > 20) return 'rgb(245,211,148)';
+      return 'rgb(250,232,200)';
     } else {
-      let pCnt = 0, nCnt = 0;
-      if (dayD) PERIOD_KEYS.forEach(pk => { if (dayD[pk]?.type === 'positive') pCnt++; else if (dayD[pk]?.type === 'negative') nCnt++; });
-      const domType = pCnt >= nCnt ? 'positive' : 'negative';
-      stripSegments.push(getColor(domType, dailyAvgs[i]));
+      if (score > 65) return 'rgb(60,80,130)';
+      if (score > 40) return 'rgb(90,120,165)';
+      if (score > 20) return 'rgb(140,170,200)';
+      return 'rgb(185,205,220)';
     }
   }
-  const stripGrad = stripSegments.map((c, i) => {
-    const pct1 = (i / stripSegments.length * 100).toFixed(1);
-    const pct2 = ((i + 1) / stripSegments.length * 100).toFixed(1);
-    return `${c} ${pct1}%, ${c} ${pct2}%`;
-  }).join(', ');
+  let filmstripHTML = '';
+  for (let i = 0; i < dim; i++) {
+    const dk = String(i + 1);
+    const dayD = monthData[dk];
+    const filled = dayD && PERIOD_KEYS.some(pk => dayD[pk]?.score != null);
+    if (!filled) {
+      filmstripHTML += `<div style="flex:1;min-width:0;border-radius:2px;background:#e0ddd8;"></div>`;
+    } else {
+      const colors = PERIOD_KEYS.map(pk => {
+        const e = dayD[pk];
+        if (!e || e.score == null) return null;
+        return moodColor(e.type, e.score);
+      }).filter(Boolean);
+      let grad;
+      if (colors.length === 1) grad = colors[0];
+      else if (colors.length === 2) grad = `linear-gradient(to bottom, ${colors[0]} 0%, ${colors[1]} 100%)`;
+      else grad = `linear-gradient(to bottom, ${colors[0]} 0%, ${colors[1]} 50%, ${colors[2]} 100%)`;
+      filmstripHTML += `<div style="flex:1;min-width:0;border-radius:2px;background:${grad};"></div>`;
+    }
+  }
 
-  // ===== SKY COLOR CARD =====
-  let skyCardColor = '#ddd8d0';
-  if (totalEntries >= 3) {
-    const avgMood = posRatio >= 0.5 ? posAvg || 40 : negAvg || 40;
-    skyCardColor = posRatio >= 0.5 ? getColor('positive', avgMood) : getColor('negative', avgMood);
+  // Warm day summary text
+  let warmSummaryText = '';
+  if (filledDays >= 3) {
+    warmSummaryText = `${warmDays} 天全暖`;
+    if (maxWarmStreak >= 2) warmSummaryText += `・連續 ${maxWarmStreak} 天`;
   }
 
   // ===== STATS PAGE =====
   const statsTextColor = 'var(--text-dark)';
   const statsTextSub = 'var(--text-mid)';
   const statsTextFaint = 'var(--text-light)';
-
-  // Blob expression - same eyes as sky page, eyebrows for emotion
-  const blobBaseEyes = `
-    <circle cx="45" cy="62" r="5" fill="rgba(255,255,255,0.85)"/>
-    <circle cx="85" cy="62" r="5" fill="rgba(255,255,255,0.85)"/>
-    <circle cx="46" cy="63" r="2.2" fill="rgba(80,70,60,0.4)"/>
-    <circle cx="86" cy="63" r="2.2" fill="rgba(80,70,60,0.4)"/>`;
-  let blobBrows = '';
-  if (posRatio === null || totalEntries < 3) {
-    blobBrows = `<path d="M32 52 Q50 46, 65 52 Q80 46, 98 52" fill="none" stroke="rgba(80,70,60,0.25)" stroke-width="2" stroke-linecap="round"/>`;
-  } else if (posRatio >= 0.6) {
-    blobBrows = `<path d="M30 54 Q42 42, 54 52 Q65 60, 76 48 Q88 38, 100 50" fill="none" stroke="rgba(80,70,60,0.35)" stroke-width="2.2" stroke-linecap="round"/>`;
-  } else if (posRatio >= 0.45) {
-    blobBrows = `<path d="M32 52 Q48 45, 65 52 Q82 45, 98 52" fill="none" stroke="rgba(80,70,60,0.28)" stroke-width="2" stroke-linecap="round"/>`;
-  } else {
-    blobBrows = `<path d="M32 50 Q48 55, 65 52 Q82 55, 98 50" fill="none" stroke="rgba(80,70,60,0.28)" stroke-width="2" stroke-linecap="round"/>`;
-  }
-  const blobEyes = blobBrows + blobBaseEyes;
 
   // Cycle HTML with proper text colors
   let cycleSection = '';
@@ -2315,14 +2333,16 @@ function openStats() {
         <!-- Summary -->
         <div style="text-align:center;padding:20px 10px 24px;">
           <div style="font-family:var(--ff);font-size:18px;font-weight:700;color:${verdictColor};margin-bottom:6px;">${summaryVerdict}</div>
-          ${posRatioPct !== null ? `<div style="font-family:var(--mono);font-size:13px;color:${statsTextSub};margin-bottom:4px;">正面情緒佔 ${posRatioPct}%</div>` : ''}
+          ${warmSummaryText ? `<div style="font-family:var(--mono);font-size:13px;color:${statsTextSub};margin-bottom:4px;">${warmSummaryText}</div>` : ''}
           <div style="font-family:var(--mono);font-size:11px;color:${statsTextFaint};">記錄了 ${filledDays} 天・共 ${totalEntries} 筆</div>
         </div>
 
-        <!-- Sky strip -->
+        <!-- Sky filmstrip -->
         <div class="section-box" style="margin-bottom:16px;">
           <div style="font-size:12px;font-weight:600;color:var(--text-mid);margin-bottom:8px;">天空紀錄</div>
-          <div style="height:24px;border-radius:12px;overflow:hidden;background:linear-gradient(90deg, ${stripGrad});"></div>
+          <div style="display:flex;gap:0;height:40px;border-radius:6px;overflow:hidden;">
+            ${filmstripHTML}
+          </div>
           <div style="display:flex;justify-content:space-between;padding:4px 2px 0;font-family:var(--mono);font-size:10px;color:var(--text-light);">
             <span>1</span><span>${Math.ceil(dim / 2)}</span><span>${dim}</span>
           </div>
