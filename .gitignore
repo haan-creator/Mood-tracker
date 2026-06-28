@@ -12,3 +12,6 @@ archive/
 # 編輯器設定
 .vscode/
 .idea/
+
+# Local Netlify folder
+.netlify
