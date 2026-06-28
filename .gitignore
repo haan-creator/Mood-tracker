@@ -1,3 +1,14 @@
 .DS_Store
 archive/
 靈感/
+
+# 環境變數與密鑰
+.env
+.env.*
+
+# Log 檔
+*.log
+
+# 編輯器設定
+.vscode/
+.idea/
