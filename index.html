@@ -525,12 +525,9 @@ input[type=number] { -moz-appearance: textfield; }
   font-weight: 500;
 }
 .journal-period-score {
-  font-family: var(--display); font-size: 11px;
-  font-weight: 600; letter-spacing: 1px;
-  opacity: 0.7;
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0;
 }
-.journal-period-score.pos { color: #c86030; }
-.journal-period-score.neg { color: #2070a8; }
 .journal-period-body {
   font-family: var(--ff); font-size: 14px; line-height: 1.8;
   color: #3a3530; word-break: break-word; white-space: pre-wrap;
@@ -727,8 +724,7 @@ input[type=number] { -moz-appearance: textfield; }
 }
 .sky-period-btn.filled .sky-period-label { color: rgba(40,35,30,0.75); }
 .sky-period-score {
-  font-family: var(--display); font-size: 18px; font-weight: 700;
-  color: rgba(40,35,30,0.7);
+  width: 10px; height: 10px; border-radius: 50%;
 }
 .sky-period-dot {
   width: 5px; height: 5px; border-radius: 50%;
@@ -748,7 +744,6 @@ input[type=number] { -moz-appearance: textfield; }
 .sky-dark .sky-tagline { color: rgba(255,255,255,0.25); }
 .sky-dark .sky-period-label { color: rgba(255,255,255,0.8); }
 .sky-dark .sky-period-btn.filled .sky-period-label { color: rgba(255,255,255,0.95); }
-.sky-dark .sky-period-score { color: rgba(255,255,255,0.9); }
 .sky-dark .sky-period-btn {
   border-color: rgba(255,255,255,0.2);
   background: rgba(255,255,255,0.1);
@@ -809,34 +804,33 @@ input[type=number] { -moz-appearance: textfield; }
 .entry-cycle-btn.period-on {
   border-color: #d44060; background: rgba(212,64,96,0.08); color: #d44060;
 }
-/* Bidirectional score */
+/* Sky color slider */
 .entry-score-area { padding: 4px 0 8px; }
-.entry-score-num {
-  font-family: var(--display); font-size: 42px; font-weight: 800;
-  text-align: center; margin-bottom: 8px;
-  color: rgb(200,190,180);
+.entry-slider-row {
+  display: flex; align-items: center; gap: 12px;
 }
-.entry-score-num.pos { color: rgb(230,160,50); }
-.entry-score-num.neg { color: rgb(80,150,190); }
-.entry-slider {
+.entry-slider-icon {
+  flex-shrink: 0; width: 22px; height: 22px;
+  color: #b0a898;
+}
+.entry-slider-icon svg { width: 100%; height: 100%; }
+.entry-track-area {
+  flex: 1; position: relative; height: 44px;
+  display: flex; align-items: center;
+  touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.entry-track {
   width: 100%; height: 6px; border-radius: 3px;
-  outline: none;
-  -webkit-appearance: none; appearance: none;
   background: linear-gradient(90deg, #1e648c 0%, #5aaad2 25%, #c8c3be 50%, #f0b43c 75%, #c83828 100%);
 }
-.entry-slider::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 28px; height: 28px;
-  border-radius: 50%; background: #fff;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.15);
+.entry-droplet {
+  position: absolute; top: 50%;
+  transform: translate(-50%, -45%);
+  width: 22px; height: 30px;
   cursor: pointer;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.12));
 }
-.entry-labels {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 20px 2px 0; font-family: var(--ff); font-size: 12px; font-weight: 600;
-}
-.entry-label-neg { color: #2080a0; }
-.entry-label-mid { color: #b0a8a0; }
-.entry-label-pos { color: #c85030; }
+.entry-droplet svg { width: 100%; height: 100%; }
 /* Collapsible note */
 .entry-note-toggle {
   display: flex; align-items: center; gap: 6px;
@@ -1273,12 +1267,30 @@ input[type=number] { -moz-appearance: textfield; }
     </div>
   </div>
   <div class="entry-score-area" id="entry-score-area">
-    <div class="entry-score-num" id="entry-score-num">0</div>
-    <input type="range" class="entry-slider" id="entry-slider" min="0" max="100" value="50" oninput="onEntrySlider(this.value)">
-    <div class="entry-labels">
-      <span class="entry-label-neg">負向</span>
-      <span class="entry-label-mid">平靜</span>
-      <span class="entry-label-pos">正向</span>
+    <div class="entry-slider-row">
+      <div class="entry-slider-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19.5 12.5a3.5 3.5 0 0 0-3.4-3.5 5 5 0 0 0-9.2-1.2A4 4 0 0 0 4 12a4 4 0 0 0 4 4h11a3.5 3.5 0 0 0 .5-7z"/>
+          <line x1="8" y1="19" x2="7.2" y2="21.5"/><line x1="12" y1="19" x2="11.2" y2="21.5"/><line x1="16" y1="19" x2="15.2" y2="21.5"/>
+        </svg>
+      </div>
+      <div class="entry-track-area" id="entry-track-area">
+        <div class="entry-track"></div>
+        <div class="entry-droplet" id="entry-droplet" style="left:50%">
+          <svg viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">
+            <path id="entry-drop-path" d="M10 2C10 2 1 13 1 17.5C1 22.7 5 27 10 27C15 27 19 22.7 19 17.5C19 13 10 2 10 2Z" fill="rgb(200,196,188)" stroke="rgba(255,255,255,0.9)" stroke-width="1.8"/>
+          </svg>
+        </div>
+      </div>
+      <div class="entry-slider-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="15" cy="9" r="3"/>
+          <line x1="15" y1="3" x2="15" y2="4.5"/><line x1="21" y1="9" x2="19.5" y2="9"/>
+          <line x1="19.24" y1="4.76" x2="18.18" y2="5.82"/><line x1="19.24" y1="13.24" x2="18.18" y2="12.18"/>
+          <line x1="15" y1="13.5" x2="15" y2="15"/>
+          <path d="M10.5 17h8a2.5 2.5 0 0 0 0-5 3.5 3.5 0 0 0-6-1.2 3.2 3.2 0 0 0-4.5.7A3 3 0 0 0 10.5 17z"/>
+        </svg>
+      </div>
     </div>
   </div>
   <div class="entry-note-toggle" id="entry-note-toggle" onclick="toggleEntryNote()">
@@ -1652,7 +1664,7 @@ function openDayModal(day) {
               ${stripC.map((c,i) => `<div class="pc-strip-seg" data-idx="${i}" style="background:${c}">${PERIOD_NAMES[i]}</div>`).join('')}
             </div>
             <div class="pc-header">
-              <div style="font-family:var(--display);font-size:22px;font-weight:700;color:#3a3530">
+              <div id="pc-date-info" style="font-family:var(--display);font-size:22px;font-weight:700;color:#3a3530">
                 ${curMonth+1}/${day} <span style="font-size:13px;font-weight:400;color:#a09890">週${wd}</span>
               </div>
               <button class="pc-btn" id="pc-action-btn">
@@ -1735,6 +1747,7 @@ function openDayModal(day) {
   function renderBack() {
     const body = document.getElementById('pc-body');
     const btn = document.getElementById('pc-action-btn');
+    const dateInfo = document.getElementById('pc-date-info');
     const strip = document.getElementById('pc-back-strip');
     strip.querySelectorAll('.pc-strip-seg').forEach((s, i) => {
       s.classList.toggle('active', editingIdx === i);
@@ -1742,9 +1755,11 @@ function openDayModal(day) {
     });
     if (editingIdx !== null) {
       btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#b0a8a0" stroke-width="1.5" stroke-linecap="round"><path d="M10 3L5 8l5 5"/></svg> 返回';
+      dateInfo.innerHTML = `${curMonth+1}/${day} <span style="font-size:13px;font-weight:400;color:#a09890">週${wd}</span> <span style="font-size:13px;font-weight:500;color:#8a8078;margin-left:4px">${PERIOD_NAMES[editingIdx]}</span>`;
       renderEditor(editingIdx);
     } else {
       btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#b0a8a0" stroke-width="1.5" stroke-linecap="round"><path d="M2 8h12M8 3l5 5-5 5"/></svg> 翻面';
+      dateInfo.innerHTML = `${curMonth+1}/${day} <span style="font-size:13px;font-weight:400;color:#a09890">週${wd}</span>`;
       renderPeriodList();
     }
   }
@@ -1759,13 +1774,11 @@ function openDayModal(day) {
       const has = e?.score != null;
       const bg = has ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.3)';
       const dotC = has ? getColor(e.type, e.score) : '#d8d4d0';
-      const scoreHTML = has
-        ? `<span style="font-family:var(--display);font-size:15px;font-weight:700;color:${e.type==='positive'?'rgb(200,130,30)':'rgb(60,130,170)'}">${e.type==='positive'?'正':'負'}${e.score}</span>`
-        : '<span style="font-size:12px;color:#c8c0b8">未記錄</span>';
+      const rightHTML = has ? '' : '<span style="font-size:12px;color:#c8c0b8">未記錄</span>';
       html += `<div class="pc-period-item ${has?'filled':''}" data-idx="${i}" style="background:${bg}">
         <div style="width:8px;height:8px;border-radius:50%;background:${dotC}"></div>
         <div style="flex:1;font-size:14px;font-weight:500;color:#3a3530">${PERIOD_NAMES[i]}</div>
-        ${scoreHTML}
+        ${rightHTML}
       </div>`;
     });
     html += '</div>';
@@ -1809,17 +1822,35 @@ function openDayModal(day) {
     const sliderVal = has ? moodToSlider(entry.type, entry.score) : 50;
     const mood = has ? { type: entry.type, score: entry.score } : sliderToMood(50);
     const note = entry.note || '';
-    const numC = mood.score === 0 ? '#c0b8b0' : (mood.type === 'positive' ? 'rgb(200,130,30)' : 'rgb(60,130,170)');
     const btnBg = mood.score === 0 ? '#c0b8b0' : (mood.type === 'positive' ? 'rgb(230,160,50)' : 'rgb(80,150,190)');
     const escaped = note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const dropColor = mood.score === 0 ? 'rgb(200,196,188)' : getColor(mood.type, mood.score);
 
     body.innerHTML = `<div style="animation:fadeIn 0.25s ease-out">
-      <div style="text-align:center;margin:8px 0 16px">
-        <div id="pc-score" style="font-family:var(--display);font-size:36px;font-weight:800;color:${numC}">${has ? mood.score : '0'}</div>
-      </div>
-      <input type="range" id="pc-slider" class="entry-slider" min="0" max="100" value="${sliderVal}" style="width:100%">
-      <div style="display:flex;justify-content:space-between;padding:20px 2px 0;font-size:12px;font-weight:600;font-family:var(--ff)">
-        <span style="color:#2080a0">負向</span><span style="color:#b0a8a0">平靜</span><span style="color:#c85030">正向</span>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex-shrink:0;width:22px;height:22px;color:#b0a898">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%">
+            <path d="M19.5 12.5a3.5 3.5 0 0 0-3.4-3.5 5 5 0 0 0-9.2-1.2A4 4 0 0 0 4 12a4 4 0 0 0 4 4h11a3.5 3.5 0 0 0 .5-7z"/>
+            <line x1="8" y1="19" x2="7.2" y2="21.5"/><line x1="12" y1="19" x2="11.2" y2="21.5"/><line x1="16" y1="19" x2="15.2" y2="21.5"/>
+          </svg>
+        </div>
+        <div id="pc-track-area" style="flex:1;position:relative;height:44px;display:flex;align-items:center;touch-action:none;user-select:none;-webkit-user-select:none">
+          <div style="width:100%;height:6px;border-radius:3px;background:linear-gradient(90deg,#1e648c 0%,#5aaad2 25%,#c8c3be 50%,#f0b43c 75%,#c83828 100%)"></div>
+          <div id="pc-droplet" style="position:absolute;top:50%;transform:translate(-50%,-45%);width:22px;height:30px;cursor:pointer;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.12));left:${sliderVal}%">
+            <svg viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+              <path id="pc-drop-path" d="M10 2C10 2 1 13 1 17.5C1 22.7 5 27 10 27C15 27 19 22.7 19 17.5C19 13 10 2 10 2Z" fill="${dropColor}" stroke="rgba(255,255,255,0.9)" stroke-width="1.8"/>
+            </svg>
+          </div>
+        </div>
+        <div style="flex-shrink:0;width:22px;height:22px;color:#b0a898">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%">
+            <circle cx="15" cy="9" r="3"/>
+            <line x1="15" y1="3" x2="15" y2="4.5"/><line x1="21" y1="9" x2="19.5" y2="9"/>
+            <line x1="19.24" y1="4.76" x2="18.18" y2="5.82"/><line x1="19.24" y1="13.24" x2="18.18" y2="12.18"/>
+            <line x1="15" y1="13.5" x2="15" y2="15"/>
+            <path d="M10.5 17h8a2.5 2.5 0 0 0 0-5 3.5 3.5 0 0 0-6-1.2 3.2 3.2 0 0 0-4.5.7A3 3 0 0 0 10.5 17z"/>
+          </svg>
+        </div>
       </div>
       <div style="margin-top:16px">
         <div id="pc-note-display" style="display:flex;align-items:center;gap:6px;padding:10px 0;font-size:13px;color:${note?'var(--text-mid)':'#c0b8b0'};cursor:pointer;font-family:var(--ff)">
@@ -1832,20 +1863,36 @@ function openDayModal(day) {
       ${has ? '<button id="pc-delete" style="display:block;margin:8px auto 0;border:none;background:none;color:var(--text-mid);font-size:12px;cursor:pointer;font-family:var(--ff);text-decoration:underline;text-underline-offset:3px">刪除此段</button>' : ''}
     </div>`;
 
-    const slider = document.getElementById('pc-slider');
-    const scoreEl = document.getElementById('pc-score');
+    const pcTrack = document.getElementById('pc-track-area');
+    const pcDroplet = document.getElementById('pc-droplet');
+    const pcDropPath = document.getElementById('pc-drop-path');
     const saveBtn = document.getElementById('pc-save');
     const noteDisp = document.getElementById('pc-note-display');
     const noteIn = document.getElementById('pc-note-input');
+    let pcVal = sliderVal;
     let touched = has;
+    let pcDragging = false;
 
-    slider.addEventListener('input', (e) => {
-      touched = true;
-      const m = sliderToMood(parseInt(e.target.value));
-      scoreEl.textContent = m.score;
-      scoreEl.style.color = m.score === 0 ? '#c0b8b0' : (m.type === 'positive' ? 'rgb(200,130,30)' : 'rgb(60,130,170)');
+    function pcGetVal(e) {
+      const r = pcTrack.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+      return Math.round(Math.max(0, Math.min(1, x / r.width)) * 100);
+    }
+    function pcUpdate(v) {
+      pcVal = v; touched = true;
+      const m = sliderToMood(v);
+      const c = m.score === 0 ? 'rgb(200,196,188)' : getColor(m.type, m.score);
+      pcDroplet.style.left = v + '%';
+      pcDropPath.setAttribute('fill', c);
       saveBtn.style.background = m.score === 0 ? '#c0b8b0' : (m.type === 'positive' ? 'rgb(230,160,50)' : 'rgb(80,150,190)');
+    }
+    pcTrack.addEventListener('pointerdown', function(e) {
+      pcDragging = true; pcTrack.setPointerCapture(e.pointerId);
+      pcUpdate(pcGetVal(e));
     });
+    pcTrack.addEventListener('pointermove', function(e) { if (pcDragging) pcUpdate(pcGetVal(e)); });
+    pcTrack.addEventListener('pointerup', function() { pcDragging = false; });
+    pcTrack.addEventListener('pointercancel', function() { pcDragging = false; });
 
     const autoGrow = () => { noteIn.style.height = 'auto'; noteIn.style.height = noteIn.scrollHeight + 'px'; };
     noteDisp.addEventListener('click', () => {
@@ -1861,7 +1908,7 @@ function openDayModal(day) {
     });
 
     saveBtn.addEventListener('click', () => {
-      const m = sliderToMood(parseInt(slider.value));
+      const m = sliderToMood(pcVal);
       const n = noteIn.value.trim().slice(0, 500);
       if (touched) {
         if (!monthData[dk]) monthData[dk] = {};
@@ -2512,13 +2559,13 @@ function renderJournalItems(append = false) {
     const periodsHTML = day.periods.map((p, idx) => {
       if (!p) return '';
       const scoreClass = p.type === 'positive' ? 'pos' : 'neg';
-      const scoreSign = p.type === 'positive' ? '+' : '−';
+      const dotColor = p.score === 0 ? '#c8c3be' : getColor(p.type, p.score);
       const periodLabel = PERIOD_LABELS_ZH[p.period];
       return `
         <div class="journal-period ${scoreClass}">
           <div class="journal-period-head">
             <span class="journal-period-label">${periodLabel}</span>
-            <span class="journal-period-score ${scoreClass}">${scoreSign}${p.score}</span>
+            <span class="journal-period-score" style="background:${dotColor}"></span>
           </div>
           <div class="journal-period-body">${escapeHTML(p.note)}</div>
         </div>
@@ -3140,13 +3187,14 @@ function updateSkyPeriods() {
     if (entry?.score != null) {
       btn.classList.add('filled');
       scoreEl.style.display = 'block';
-      const prefix = entry.type === 'negative' ? '負' : '正';
-      scoreEl.textContent = entry.score === 0 ? '平靜' : prefix + entry.score;
+      scoreEl.textContent = '';
+      scoreEl.style.background = entry.score === 0 ? '#c8c3be' : getColor(entry.type, entry.score);
       if (dotEl) dotEl.style.display = 'none';
     } else if (entry?.type === 'unclear') {
       btn.classList.add('filled');
       scoreEl.style.display = 'block';
-      scoreEl.textContent = '·';
+      scoreEl.textContent = '';
+      scoreEl.style.background = '#c8c3be';
       if (dotEl) dotEl.style.display = 'none';
     } else {
       btn.classList.remove('filled');
@@ -3589,6 +3637,29 @@ window.addEventListener('resize', updateCellHeight);
 let entryPeriod = null;
 let entrySliderVal = 50;
 
+// Custom droplet slider interaction
+(function() {
+  const area = document.getElementById('entry-track-area');
+  if (!area) return;
+  let dragging = false;
+  function getVal(e) {
+    const r = area.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    return Math.round(Math.max(0, Math.min(1, x / r.width)) * 100);
+  }
+  area.addEventListener('pointerdown', function(e) {
+    dragging = true;
+    area.setPointerCapture(e.pointerId);
+    onEntrySlider(getVal(e));
+  });
+  area.addEventListener('pointermove', function(e) {
+    if (!dragging) return;
+    onEntrySlider(getVal(e));
+  });
+  area.addEventListener('pointerup', function() { dragging = false; });
+  area.addEventListener('pointercancel', function() { dragging = false; });
+})();
+
 function sliderToMood(val) {
   const v = parseInt(val);
   const mapped = (v - 50) * 2; // -100 to +100
@@ -3629,7 +3700,7 @@ function openEntrySheet(period) {
   } else {
     entrySliderVal = 50;
   }
-  document.getElementById('entry-slider').value = entrySliderVal;
+  document.getElementById('entry-droplet').style.left = (entrySliderVal) + '%';
   onEntrySlider(entrySliderVal);
 
   // Note — always start collapsed
@@ -3669,19 +3740,25 @@ function closeEntrySheet() {
 function onEntrySlider(val) {
   entrySliderVal = parseInt(val);
   const mood = sliderToMood(entrySliderVal);
-  const numEl = document.getElementById('entry-score-num');
   const saveBtn = document.getElementById('entry-save');
-  numEl.textContent = mood.score;
+  // Update droplet color
+  const dropPath = document.getElementById('entry-drop-path');
+  if (dropPath) {
+    const c = getColor(mood.type, mood.score);
+    dropPath.setAttribute('fill', mood.score === 0 ? 'rgb(200,196,188)' : c);
+  }
+  // Update save button
   if (mood.score === 0) {
-    numEl.className = 'entry-score-num';
     saveBtn.className = 'entry-save';
   } else if (mood.type === 'positive') {
-    numEl.className = 'entry-score-num pos';
     saveBtn.className = 'entry-save pos';
   } else {
-    numEl.className = 'entry-score-num neg';
     saveBtn.className = 'entry-save neg';
   }
+  // Update thumb position
+  const pct = entrySliderVal / 100;
+  const droplet = document.getElementById('entry-droplet');
+  if (droplet) droplet.style.left = (pct * 100) + '%';
 }
 
 function toggleEntryNote() {
