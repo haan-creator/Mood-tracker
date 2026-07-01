@@ -228,7 +228,7 @@ input[type=number] { -moz-appearance: textfield; }
 .pc-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px 8px; }
 .pc-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 13px; color: #b0a8a0; padding: 4px 8px; font-family: var(--ff); }
 .pc-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 18px 18px; }
-.pc-period-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.3); border: 1px solid rgba(0,0,0,0.04); transition: background 0.2s; }
+.pc-period-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.3); border: 1px solid rgba(0,0,0,0.04); transition: background 0.2s; }
 .pc-period-item.filled { background: rgba(255,255,255,0.7); }
 .pc-date-stamp { position: absolute; top: 20px; left: 22px; color: rgba(255,255,255,0.8); }
 .pc-date-num { font-family: var(--display); font-size: 32px; font-weight: 800; line-height: 1; }
@@ -805,7 +805,7 @@ input[type=number] { -moz-appearance: textfield; }
   border-color: #d44060; background: rgba(212,64,96,0.08); color: #d44060;
 }
 /* Sky color slider */
-.entry-score-area { padding: 4px 0 8px; }
+.entry-score-area { padding: 4px 0 16px; }
 .entry-slider-row {
   display: flex; align-items: center; gap: 12px;
 }
@@ -833,12 +833,12 @@ input[type=number] { -moz-appearance: textfield; }
 .entry-droplet svg { width: 100%; height: 100%; }
 /* Collapsible note */
 .entry-note-toggle {
-  display: flex; align-items: center; gap: 6px;
-  padding: 10px 0; cursor: pointer; transition: opacity 0.2s;
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 0; cursor: pointer; transition: opacity 0.2s;
 }
 .entry-note-toggle svg { flex-shrink: 0; }
 .entry-note-toggle span {
-  font-family: var(--ff); font-size: 13px; color: #c0b8b0;
+  font-family: var(--ff); font-size: 14px; color: #b0a8a0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   flex: 1; min-width: 0;
 }
@@ -847,9 +847,9 @@ input[type=number] { -moz-appearance: textfield; }
 .entry-note-wrap.open { display: block; }
 .entry-note {
   width: 100%; border: 1px solid #e8e4e0; border-radius: 12px;
-  padding: 12px 14px; font-family: var(--ff); font-size: 14px;
+  padding: 14px 16px; font-family: var(--ff); font-size: 14px;
   color: var(--text-dark); resize: none; outline: none;
-  min-height: 48px; margin-bottom: 8px;
+  min-height: 72px; margin-bottom: 8px;
   transition: border-color 0.2s;
 }
 .entry-note:focus { border-color: #ccc; }
@@ -860,7 +860,7 @@ input[type=number] { -moz-appearance: textfield; }
 }
 /* Save button */
 .entry-save {
-  display: block; margin: 8px auto 0;
+  display: block; margin: 14px auto 0;
   padding: 11px 48px; border: none; border-radius: 12px;
   font-family: var(--ff); font-size: 14px; font-weight: 600;
   color: #fff; cursor: pointer; transition: all 0.3s;
@@ -1029,9 +1029,9 @@ input[type=number] { -moz-appearance: textfield; }
 }
 #splash-brand {
   margin-top: 10px;
-  font-family: var(--display); font-size: 15px; font-weight: 600;
-  color: rgba(40,35,30,0.4); letter-spacing: 4px; text-indent: 4px;
-  opacity: 0; white-space: nowrap;
+  font-family: var(--display); font-size: 20px; font-weight: 800;
+  color: rgba(40,35,30,0.4); letter-spacing: 5px; text-indent: 5px;
+  opacity: 0; white-space: nowrap; text-align: center;
   animation: splashFadeIn 0.35s ease-out 1.4s forwards;
 }
 #splash.exit {
@@ -1116,7 +1116,7 @@ input[type=number] { -moz-appearance: textfield; }
         </button>
       </div>
       <div style="display:flex;gap:6px;">
-        <button class="sky-cal-btn" id="open-cal-overlay" aria-label="月曆">
+        <button class="sky-cal-btn" id="open-cal-overlay" aria-label="那些天空">
           <svg viewBox="0 0 18 18" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
             <rect x="2" y="3" width="14" height="13" rx="2"/><line x1="2" y1="7.5" x2="16" y2="7.5"/>
             <line x1="6" y1="1.5" x2="6" y2="4.5"/><line x1="12" y1="1.5" x2="12" y2="4.5"/>
@@ -1179,7 +1179,7 @@ input[type=number] { -moz-appearance: textfield; }
 <div class="cal-overlay" id="cal-overlay">
   <div class="grid-bg-inner"></div>
   <div class="cal-close-bar">
-    <h2 id="cal-overlay-title">月曆</h2>
+    <h2 id="cal-overlay-title">那些天空 .......</h2>
     <button class="cal-close-btn" id="close-cal-overlay">✕</button>
   </div>
   <div id="page-main" style="position:relative;z-index:1;padding:6px 8px 20px;">
@@ -1300,7 +1300,7 @@ input[type=number] { -moz-appearance: textfield; }
     <span>說說你的感受</span>
   </div>
   <div class="entry-note-wrap" id="entry-note-wrap">
-    <textarea class="entry-note" id="entry-note" placeholder="說說你的感受" rows="2" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
+    <textarea class="entry-note" id="entry-note" placeholder="說說你的感受" rows="3" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
   </div>
   <button class="entry-save" id="entry-save" onclick="saveEntry()">記下來</button>
 </div>
@@ -1660,19 +1660,24 @@ function openDayModal(day) {
             <div class="pc-hint">輕觸翻面</div>
           </div>
           <div class="pc-back" id="pc-back">
-            <div class="pc-strip" id="pc-back-strip" style="height:42px">
-              ${stripC.map((c,i) => `<div class="pc-strip-seg" data-idx="${i}" style="background:${c}">${PERIOD_NAMES[i]}</div>`).join('')}
-            </div>
-            <div class="pc-header">
-              <div id="pc-date-info" style="font-family:var(--display);font-size:22px;font-weight:700;color:#3a3530">
-                ${curMonth+1}/${day} <span style="font-size:13px;font-weight:400;color:#a09890">週${wd}</span>
+            <div class="pc-header" style="padding:14px 18px 0;display:flex;flex-direction:column;align-items:stretch">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div id="pc-header-left" style="font-family:var(--display);font-size:22px;font-weight:700;color:#3a3530">
+                  ${curMonth+1}/${day} <span style="font-size:13px;font-weight:400;color:#a09890">週${wd}</span>
+                </div>
+                <button id="pc-back-close" style="width:30px;height:30px;border:none;background:rgba(0,0,0,0.06);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a8078" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+                </button>
               </div>
-              <button class="pc-btn" id="pc-action-btn">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#b0a8a0" stroke-width="1.5" stroke-linecap="round"><path d="M2 8h12M8 3l5 5-5 5"/></svg>
+              <div id="pc-date-sub" style="display:none;margin-top:8px;font-family:var(--display);font-size:18px;font-weight:600;color:#3a3530"></div>
+            </div>
+            <div class="pc-body" id="pc-body"></div>
+            <div id="pc-footer" style="flex-shrink:0;padding:10px 18px calc(10px + env(safe-area-inset-bottom));text-align:center">
+              <button class="pc-btn" id="pc-flip-btn" style="margin:0 auto">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#b0a8a0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2.5v4h-4"/><path d="M3 13.5v-4h4"/><path d="M4.5 5.5A5 5 0 0 1 13 6.5"/><path d="M11.5 10.5A5 5 0 0 1 3 9.5"/></svg>
                 翻面
               </button>
             </div>
-            <div class="pc-body" id="pc-body"></div>
           </div>
         </div>
       </div>
@@ -1691,9 +1696,13 @@ function openDayModal(day) {
   document.getElementById('pc-overlay').addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeDayModal();
   });
-  document.getElementById('pc-action-btn').addEventListener('click', () => {
-    if (editingIdx !== null) { editingIdx = null; renderBack(); }
-    else { refreshFront(); document.getElementById('pc-inner').classList.remove('flipped'); }
+  document.getElementById('pc-back-close').addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeDayModal();
+  });
+  document.getElementById('pc-flip-btn').addEventListener('click', () => {
+    refreshFront();
+    document.getElementById('pc-inner').classList.remove('flipped');
   });
 
   function refreshFront() {
@@ -1729,37 +1738,33 @@ function openDayModal(day) {
     }
     wEl.innerHTML = wHTML;
   }
-  document.getElementById('pc-back-strip').addEventListener('click', (e) => {
-    const seg = e.target.closest('.pc-strip-seg');
-    if (!seg) return;
-    editingIdx = parseInt(seg.dataset.idx);
+  document.getElementById('pc-body').addEventListener('click', (e) => {
+    const item = e.target.closest('.pc-period-item');
+    if (!item) return;
+    editingIdx = parseInt(item.dataset.idx);
     renderBack();
   });
 
-  function refreshStripColors() {
-    const dd = monthData[dk] || {};
-    const newC = PERIOD_KEYS.map(pk => dd[pk] ? getColor(dd[pk].type, dd[pk].score) : '#d8d4d0');
-    document.getElementById('pc-back-strip').querySelectorAll('.pc-strip-seg').forEach((seg, i) => {
-      seg.style.background = newC[i];
-    });
-  }
-
   function renderBack() {
     const body = document.getElementById('pc-body');
-    const btn = document.getElementById('pc-action-btn');
-    const dateInfo = document.getElementById('pc-date-info');
-    const strip = document.getElementById('pc-back-strip');
-    strip.querySelectorAll('.pc-strip-seg').forEach((s, i) => {
-      s.classList.toggle('active', editingIdx === i);
-      if (editingIdx === i) s.style.setProperty('--seg-color', s.style.background);
-    });
+    const headerLeft = document.getElementById('pc-header-left');
+    const dateSub = document.getElementById('pc-date-sub');
+    const footer = document.getElementById('pc-footer');
     if (editingIdx !== null) {
-      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#b0a8a0" stroke-width="1.5" stroke-linecap="round"><path d="M10 3L5 8l5 5"/></svg> 返回';
-      dateInfo.innerHTML = `${curMonth+1}/${day} <span style="font-size:13px;font-weight:400;color:#a09890">週${wd}</span> <span style="font-size:13px;font-weight:500;color:#8a8078;margin-left:4px">${PERIOD_NAMES[editingIdx]}</span>`;
+      headerLeft.innerHTML = `<button class="pc-btn" id="pc-back-btn" style="padding:0"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#b0a8a0" stroke-width="1.5" stroke-linecap="round"><path d="M10 3L5 8l5 5"/></svg> 返回</button>`;
+      document.getElementById('pc-back-btn').addEventListener('click', () => { editingIdx = null; renderBack(); });
+      dateSub.style.display = '';
+      dateSub.textContent = `${curMonth+1}/${day} 週${wd} ${PERIOD_NAMES[editingIdx]}`;
+      footer.style.display = 'none';
       renderEditor(editingIdx);
     } else {
-      btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#b0a8a0" stroke-width="1.5" stroke-linecap="round"><path d="M2 8h12M8 3l5 5-5 5"/></svg> 翻面';
-      dateInfo.innerHTML = `${curMonth+1}/${day} <span style="font-size:13px;font-weight:400;color:#a09890">週${wd}</span>`;
+      headerLeft.innerHTML = `${curMonth+1}/${day} <span style="font-size:13px;font-weight:400;color:#a09890">週${wd}</span>`;
+      headerLeft.style.fontFamily = 'var(--display)';
+      headerLeft.style.fontSize = '22px';
+      headerLeft.style.fontWeight = '700';
+      headerLeft.style.color = '#3a3530';
+      dateSub.style.display = 'none';
+      footer.style.display = '';
       renderPeriodList();
     }
   }
@@ -1768,15 +1773,21 @@ function openDayModal(day) {
     const body = document.getElementById('pc-body');
     const dd = monthData[dk] || {};
     const dc = cycleData[dk] || {};
+    const periodIcons = [
+      `<svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="10" cy="10" r="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="10" y1="16" x2="10" y2="18"/><line x1="2" y1="10" x2="4" y2="10"/><line x1="16" y1="10" x2="18" y2="10"/><line x1="4.34" y1="4.34" x2="5.76" y2="5.76"/><line x1="14.24" y1="14.24" x2="15.66" y2="15.66"/><line x1="4.34" y1="15.66" x2="5.76" y2="14.24"/><line x1="14.24" y1="5.76" x2="15.66" y2="4.34"/></svg>`,
+      `<svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 3C10 3 5 9 5 12.5C5 15.5 7.2 18 10 18C12.8 18 15 15.5 15 12.5C15 9 10 3 10 3Z"/></svg>`,
+      `<svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" stroke="none"><path d="M10 2l2.4 5 5.6.8-4 3.8 1 5.4-5-2.6-5 2.6 1-5.4-4-3.8 5.6-.8z"/></svg>`
+    ];
     let html = '<div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">';
     PERIOD_KEYS.forEach((pk, i) => {
       const e = dd[pk];
       const has = e?.score != null;
-      const bg = has ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.3)';
-      const dotC = has ? getColor(e.type, e.score) : '#d8d4d0';
+      const barC = has ? getColor(e.type, e.score) : '#e0dcd8';
+      const iconColor = has ? barC : '#c8c0b8';
+      const bg = has ? `linear-gradient(90deg, ${barC}18 0%, rgba(255,255,255,0.6) 100%)` : 'rgba(255,255,255,0.3)';
       const rightHTML = has ? '' : '<span style="font-size:12px;color:#c8c0b8">未記錄</span>';
-      html += `<div class="pc-period-item ${has?'filled':''}" data-idx="${i}" style="background:${bg}">
-        <div style="width:8px;height:8px;border-radius:50%;background:${dotC}"></div>
+      html += `<div class="pc-period-item ${has?'filled':''}" data-idx="${i}" style="background:${bg};border-left:3.5px solid ${barC}">
+        <div style="color:${iconColor};flex-shrink:0;display:flex;align-items:center">${periodIcons[i]}</div>
         <div style="flex:1;font-size:14px;font-weight:500;color:#3a3530">${PERIOD_NAMES[i]}</div>
         ${rightHTML}
       </div>`;
@@ -1826,7 +1837,7 @@ function openDayModal(day) {
     const escaped = note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const dropColor = mood.score === 0 ? 'rgb(200,196,188)' : getColor(mood.type, mood.score);
 
-    body.innerHTML = `<div style="animation:fadeIn 0.25s ease-out">
+    body.innerHTML = `<div style="animation:fadeIn 0.25s ease-out;margin-top:16px">
       <div style="display:flex;align-items:center;gap:12px">
         <div style="flex-shrink:0;width:22px;height:22px;color:#b0a898">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%">
@@ -1852,15 +1863,15 @@ function openDayModal(day) {
           </svg>
         </div>
       </div>
-      <div style="margin-top:16px">
-        <div id="pc-note-display" style="display:flex;align-items:center;gap:6px;padding:10px 0;font-size:13px;color:${note?'var(--text-mid)':'#c0b8b0'};cursor:pointer;font-family:var(--ff)">
+      <div style="margin-top:24px">
+        <div id="pc-note-display" style="display:flex;align-items:center;gap:8px;padding:14px 0;font-size:14px;color:${note?'var(--text-mid)':'#b0a8a0'};cursor:pointer;font-family:var(--ff)">
           <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" style="flex-shrink:0;opacity:0.5"><path d="M14 3l3 3L7 16H4v-3L14 3z"/></svg>
           <span>${note ? escaped : '說說你的感受'}</span>
         </div>
-        <textarea id="pc-note-input" class="entry-note" placeholder="說說你的感受" style="display:none;width:100%" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" rows="2">${escaped}</textarea>
+        <textarea id="pc-note-input" class="entry-note" placeholder="說說你的感受" style="display:none;width:100%;min-height:72px" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" rows="3">${escaped}</textarea>
       </div>
-      <button id="pc-save" style="display:block;margin:16px auto 0;padding:10px 40px;border-radius:10px;border:none;font-size:14px;font-weight:600;color:#fff;cursor:pointer;background:${btnBg};font-family:var(--ff);transition:all 0.3s">記下來</button>
-      ${has ? '<button id="pc-delete" style="display:block;margin:8px auto 0;border:none;background:none;color:var(--text-mid);font-size:12px;cursor:pointer;font-family:var(--ff);text-decoration:underline;text-underline-offset:3px">刪除此段</button>' : ''}
+      <button id="pc-save" style="display:block;margin:20px auto 0;padding:11px 40px;border-radius:10px;border:none;font-size:14px;font-weight:600;color:#fff;cursor:pointer;background:${btnBg};font-family:var(--ff);transition:all 0.3s">記下來</button>
+      ${has ? '<button id="pc-delete" style="display:block;margin:10px auto 0;border:none;background:none;color:var(--text-mid);font-size:12px;cursor:pointer;font-family:var(--ff);text-decoration:underline;text-underline-offset:3px">刪除此段</button>' : ''}
     </div>`;
 
     const pcTrack = document.getElementById('pc-track-area');
@@ -1913,7 +1924,7 @@ function openDayModal(day) {
       if (touched) {
         if (!monthData[dk]) monthData[dk] = {};
         monthData[dk][pk] = { type: m.type, score: m.score, note: n };
-        saveData(); refreshStripColors();
+        saveData();
         saveBtn.textContent = '已記錄 ✓'; saveBtn.style.opacity = '0.6';
         setTimeout(() => { saveBtn.textContent = '記下來'; saveBtn.style.opacity = '1'; }, 1500);
       }
@@ -1923,7 +1934,7 @@ function openDayModal(day) {
       if (monthData[dk]?.[pk]) {
         delete monthData[dk][pk];
         if (Object.keys(monthData[dk]).length === 0) delete monthData[dk];
-        saveData(); refreshStripColors();
+        saveData();
       }
       editingIdx = null; renderBack();
     });
