@@ -831,6 +831,16 @@ input[type=number] { -moz-appearance: textfield; }
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.12));
 }
 .entry-droplet svg { width: 100%; height: 100%; }
+.entry-score-hint {
+  text-align: center; font-family: var(--display);
+  font-size: 28px; font-weight: 700; height: 36px;
+  color: rgb(200,190,180); opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.entry-score-hint.vis { opacity: 1; }
+.entry-score-hint.pos { color: rgb(230,160,50); }
+.entry-score-hint.neg { color: rgb(80,150,190); }
 /* Collapsible note */
 .entry-note-toggle {
   display: flex; align-items: center; gap: 8px;
@@ -1267,6 +1277,7 @@ input[type=number] { -moz-appearance: textfield; }
     </div>
   </div>
   <div class="entry-score-area" id="entry-score-area">
+    <div class="entry-score-hint" id="entry-score-hint"></div>
     <div class="entry-slider-row">
       <div class="entry-slider-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1838,6 +1849,7 @@ function openDayModal(day) {
     const dropColor = mood.score === 0 ? 'rgb(200,196,188)' : getColor(mood.type, mood.score);
 
     body.innerHTML = `<div style="animation:fadeIn 0.25s ease-out;margin-top:16px">
+      <div id="pc-score-hint" class="entry-score-hint" style="height:32px;font-size:24px"></div>
       <div style="display:flex;align-items:center;gap:12px">
         <div style="flex-shrink:0;width:22px;height:22px;color:#b0a898">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%">
@@ -1896,14 +1908,29 @@ function openDayModal(day) {
       pcDroplet.style.left = v + '%';
       pcDropPath.setAttribute('fill', c);
       saveBtn.style.background = m.score === 0 ? '#c0b8b0' : (m.type === 'positive' ? 'rgb(230,160,50)' : 'rgb(80,150,190)');
+      const hint = document.getElementById('pc-score-hint');
+      if (hint) {
+        hint.textContent = m.score;
+        if (m.score === 0) hint.className = 'entry-score-hint vis';
+        else if (m.type === 'positive') hint.className = 'entry-score-hint vis pos';
+        else hint.className = 'entry-score-hint vis neg';
+      }
     }
     pcTrack.addEventListener('pointerdown', function(e) {
       pcDragging = true; pcTrack.setPointerCapture(e.pointerId);
       pcUpdate(pcGetVal(e));
     });
     pcTrack.addEventListener('pointermove', function(e) { if (pcDragging) pcUpdate(pcGetVal(e)); });
-    pcTrack.addEventListener('pointerup', function() { pcDragging = false; });
-    pcTrack.addEventListener('pointercancel', function() { pcDragging = false; });
+    pcTrack.addEventListener('pointerup', function() {
+      pcDragging = false;
+      var h = document.getElementById('pc-score-hint');
+      if (h) h.className = 'entry-score-hint';
+    });
+    pcTrack.addEventListener('pointercancel', function() {
+      pcDragging = false;
+      var h = document.getElementById('pc-score-hint');
+      if (h) h.className = 'entry-score-hint';
+    });
 
     const autoGrow = () => { noteIn.style.height = 'auto'; noteIn.style.height = noteIn.scrollHeight + 'px'; };
     noteDisp.addEventListener('click', () => {
@@ -3667,8 +3694,16 @@ let entrySliderVal = 50;
     if (!dragging) return;
     onEntrySlider(getVal(e));
   });
-  area.addEventListener('pointerup', function() { dragging = false; });
-  area.addEventListener('pointercancel', function() { dragging = false; });
+  area.addEventListener('pointerup', function() {
+    dragging = false;
+    var h = document.getElementById('entry-score-hint');
+    if (h) h.className = 'entry-score-hint';
+  });
+  area.addEventListener('pointercancel', function() {
+    dragging = false;
+    var h = document.getElementById('entry-score-hint');
+    if (h) h.className = 'entry-score-hint';
+  });
 })();
 
 function sliderToMood(val) {
@@ -3713,6 +3748,8 @@ function openEntrySheet(period) {
   }
   document.getElementById('entry-droplet').style.left = (entrySliderVal) + '%';
   onEntrySlider(entrySliderVal);
+  // Hide score hint on open (only show while dragging)
+  document.getElementById('entry-score-hint').className = 'entry-score-hint';
 
   // Note — always start collapsed
   const noteVal = existing?.note || '';
@@ -3757,6 +3794,14 @@ function onEntrySlider(val) {
   if (dropPath) {
     const c = getColor(mood.type, mood.score);
     dropPath.setAttribute('fill', mood.score === 0 ? 'rgb(200,196,188)' : c);
+  }
+  // Update score hint
+  const hint = document.getElementById('entry-score-hint');
+  if (hint) {
+    hint.textContent = mood.score;
+    if (mood.score === 0) hint.className = 'entry-score-hint vis';
+    else if (mood.type === 'positive') hint.className = 'entry-score-hint vis pos';
+    else hint.className = 'entry-score-hint vis neg';
   }
   // Update save button
   if (mood.score === 0) {
