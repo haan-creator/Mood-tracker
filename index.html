@@ -630,10 +630,13 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* First-run nudge telling you the sky is draggable — a bead travelling
    a dotted axis, so the hint is drawn rather than spelled with a symbol */
+/* In normal flow, directly above the message. Percentage positioning
+   collided with the message text on shorter screens. It is only ever
+   shown on a day with no entries, where that message is empty. */
 .sky-drag-coach {
-  position: absolute; left: 0; right: 0; top: 61%;
   pointer-events: none;
   display: flex; flex-direction: column; align-items: center; gap: 5px;
+  margin-bottom: 8px;
   font-family: var(--ff); font-size: 12px; letter-spacing: 2px;
   color: rgba(40,35,30,0.32);
 }
@@ -752,6 +755,12 @@ input[type=number] { -moz-appearance: textfield; }
   letter-spacing: 0.5px; line-height: 1.4;
   min-height: 24px; margin-top: -4px;
   transition: opacity 0.4s ease;
+  /* Own compositing layer: this text animates while the whole sky-bg is
+     mid-transition behind it, which is exactly when Safari leaves a
+     repaint ghost of the previous message. */
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 .sky-monster-msg.hushed { opacity: 0; }
 @keyframes msgReveal {
@@ -888,43 +897,38 @@ input[type=number] { -moz-appearance: textfield; }
 .entry-cycle-btn.period-on {
   border-color: #d44060; background: rgba(212,64,96,0.08); color: #d44060;
 }
-/* Sky color slider */
+/* Five-level mood picker — shared by the today sheet and the postcard */
 .entry-score-area { padding: 4px 0 16px; }
-.entry-slider-row {
-  display: flex; align-items: center; gap: 12px;
+.mood-picker { width: 100%; }
+.mp-label {
+  text-align: center; font-family: var(--ff);
+  font-size: 19px; font-weight: 700; height: 30px; line-height: 30px;
+  color: var(--text-dark); letter-spacing: 2px;
+  transition: color 0.25s ease;
 }
-.entry-slider-icon {
-  flex-shrink: 0; width: 22px; height: 22px;
-  color: #b0a898;
+.mp-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 8px 0 2px;
 }
-.entry-slider-icon svg { width: 100%; height: 100%; }
-.entry-track-area {
-  flex: 1; position: relative; height: 44px;
-  display: flex; align-items: center;
-  touch-action: none; user-select: none; -webkit-user-select: none;
+.mp-dot {
+  flex: 1; max-width: 62px; height: 52px;
+  border: none; background: none; padding: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
 }
-.entry-track {
-  width: 100%; height: 6px; border-radius: 3px;
-  background: linear-gradient(90deg, #1e648c 0%, #5aaad2 25%, #c8c3be 50%, #f0b43c 75%, #c83828 100%);
+.mp-dot span {
+  display: block; width: 20px; height: 20px; border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(0,0,0,0);
+  transition: width 0.24s cubic-bezier(0.22,1,0.36,1),
+              height 0.24s cubic-bezier(0.22,1,0.36,1),
+              box-shadow 0.24s ease, opacity 0.24s ease;
+  opacity: 0.42;
 }
-.entry-droplet {
-  position: absolute; top: 50%;
-  transform: translate(-50%, -45%);
-  width: 22px; height: 30px;
-  cursor: pointer;
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.12));
+.mp-dot.on span {
+  width: 34px; height: 34px; opacity: 1;
+  box-shadow: 0 0 0 3.5px rgba(255,255,255,0.9), 0 2px 8px rgba(0,0,0,0.13);
 }
-.entry-droplet svg { width: 100%; height: 100%; }
-.entry-score-hint {
-  text-align: center; font-family: var(--display);
-  font-size: 28px; font-weight: 700; height: 36px;
-  color: rgb(200,190,180); opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-}
-.entry-score-hint.vis { opacity: 1; }
-.entry-score-hint.pos { color: rgb(230,160,50); }
-.entry-score-hint.neg { color: rgb(80,150,190); }
+.mp-dot:active span { opacity: 0.8; }
 /* Collapsible note */
 .entry-note-toggle {
   display: flex; align-items: center; gap: 8px;
@@ -1231,17 +1235,17 @@ input[type=number] { -moz-appearance: textfield; }
       <span class="dh-period" id="dh-period"></span>
       <span class="dh-word" id="dh-word"></span>
     </div>
+    <div class="rain-container" id="rain-container"></div>
+    <div class="glow-container" id="glow-container"></div>
+    <div class="moon-container" id="moon-container"></div>
     <div class="sky-drag-coach" id="sky-drag-coach" style="display:none">
       <svg viewBox="0 0 16 40" width="16" height="40" fill="none" aria-hidden="true">
         <line x1="8" y1="6" x2="8" y2="34" stroke="currentColor" stroke-width="1.1"
               stroke-linecap="round" stroke-dasharray="1.5 3.5" opacity="0.45"/>
         <circle class="coach-bead" cx="8" cy="20" r="3.4" fill="currentColor"/>
       </svg>
-      <span>在天空上滑動</span>
+      <span>按住後上下滑動</span>
     </div>
-    <div class="rain-container" id="rain-container"></div>
-    <div class="glow-container" id="glow-container"></div>
-    <div class="moon-container" id="moon-container"></div>
     <div class="sky-monster-msg" id="sky-monster-msg"></div>
     <div class="sky-tagline">今天的天空</div>
     <div class="wave-area">
@@ -1378,32 +1382,7 @@ input[type=number] { -moz-appearance: textfield; }
     </div>
   </div>
   <div class="entry-score-area" id="entry-score-area">
-    <div class="entry-score-hint" id="entry-score-hint"></div>
-    <div class="entry-slider-row">
-      <div class="entry-slider-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19.5 12.5a3.5 3.5 0 0 0-3.4-3.5 5 5 0 0 0-9.2-1.2A4 4 0 0 0 4 12a4 4 0 0 0 4 4h11a3.5 3.5 0 0 0 .5-7z"/>
-          <line x1="8" y1="19" x2="7.2" y2="21.5"/><line x1="12" y1="19" x2="11.2" y2="21.5"/><line x1="16" y1="19" x2="15.2" y2="21.5"/>
-        </svg>
-      </div>
-      <div class="entry-track-area" id="entry-track-area">
-        <div class="entry-track"></div>
-        <div class="entry-droplet" id="entry-droplet" style="left:50%">
-          <svg viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">
-            <path id="entry-drop-path" d="M10 2C10 2 1 13 1 17.5C1 22.7 5 27 10 27C15 27 19 22.7 19 17.5C19 13 10 2 10 2Z" fill="rgb(200,196,188)" stroke="rgba(255,255,255,0.9)" stroke-width="1.8"/>
-          </svg>
-        </div>
-      </div>
-      <div class="entry-slider-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="15" cy="9" r="3"/>
-          <line x1="15" y1="3" x2="15" y2="4.5"/><line x1="21" y1="9" x2="19.5" y2="9"/>
-          <line x1="19.24" y1="4.76" x2="18.18" y2="5.82"/><line x1="19.24" y1="13.24" x2="18.18" y2="12.18"/>
-          <line x1="15" y1="13.5" x2="15" y2="15"/>
-          <path d="M10.5 17h8a2.5 2.5 0 0 0 0-5 3.5 3.5 0 0 0-6-1.2 3.2 3.2 0 0 0-4.5.7A3 3 0 0 0 10.5 17z"/>
-        </svg>
-      </div>
-    </div>
+    <div id="entry-picker"></div>
   </div>
   <div class="entry-note-toggle" id="entry-note-toggle" onclick="toggleEntryNote()">
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#c0b8b0" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
@@ -1448,6 +1427,89 @@ function lerp(stops, t) {
 function getColor(type, score) {
   if (score == null) return '#e0dcd8';
   return lerp(type === 'positive' ? WARM : COOL, score / 100);
+}
+
+// ===== MOOD LEVELS =====
+// Five steps instead of a 0–100 slider: nobody has that much resolution
+// on their own feelings, least of all when recalling last Tuesday.
+// They sit on the same 0–100 scale the app has always stored, so older
+// entries keep working untouched — this changes input granularity only.
+const MOOD_LEVELS = [
+  { label: '很沉',   type: 'negative', score: 90 },
+  { label: '有點沉', type: 'negative', score: 45 },
+  { label: '還好',   type: 'positive', score: 0  },
+  { label: '不錯',   type: 'positive', score: 45 },
+  { label: '很亮',   type: 'positive', score: 90 },
+];
+const MOOD_NEUTRAL = 2; // index of 還好
+
+function _signed(type, score) { return (type === 'positive' ? 1 : -1) * score; }
+
+// Nearest level to an arbitrary stored score, so a legacy 62 lands on 不錯.
+function levelFromSigned(signed) {
+  let best = MOOD_NEUTRAL, bestD = Infinity;
+  MOOD_LEVELS.forEach((L, i) => {
+    const d = Math.abs(_signed(L.type, L.score) - signed);
+    if (d < bestD) { bestD = d; best = i; }
+  });
+  return best;
+}
+function levelFromEntry(entry) {
+  if (!entry || entry.score == null) return MOOD_NEUTRAL;
+  return levelFromSigned(_signed(entry.type, entry.score));
+}
+
+// One picker, used by both the today sheet and the postcard editor.
+// Before this the slider existed twice, in two near-identical copies.
+function createMoodPicker(host, onChange) {
+  host.className = 'mood-picker';
+  host.innerHTML =
+    '<div class="mp-label"></div><div class="mp-row">' +
+    MOOD_LEVELS.map((L, i) =>
+      `<button type="button" class="mp-dot" data-i="${i}" aria-label="${L.label}"><span></span></button>`
+    ).join('') + '</div>';
+
+  let level = MOOD_NEUTRAL, touched = false, original = null;
+
+  function paint() {
+    host.querySelectorAll('.mp-dot').forEach((b, i) => {
+      const L = MOOD_LEVELS[i];
+      b.querySelector('span').style.background =
+        L.score === 0 ? '#c8c3be' : getColor(L.type, L.score);
+      b.classList.toggle('on', i === level);
+    });
+    host.querySelector('.mp-label').textContent = MOOD_LEVELS[level].label;
+  }
+
+  host.querySelectorAll('.mp-dot').forEach(b => {
+    b.addEventListener('click', () => {
+      level = parseInt(b.dataset.i, 10);
+      touched = true;
+      paint();
+      if (onChange) onChange(api);
+    });
+  });
+
+  const api = {
+    setFromEntry(entry) {
+      original = (entry && entry.score != null)
+        ? { type: entry.type, score: entry.score } : null;
+      level = levelFromEntry(entry);
+      touched = false;
+      paint();
+      return api;
+    },
+    isTouched() { return touched; },
+    // An untouched old entry keeps its exact score, so merely opening a
+    // record and saving never quietly rounds it.
+    mood() {
+      if (!touched && original) return { type: original.type, score: original.score };
+      const L = MOOD_LEVELS[level];
+      return { type: L.type, score: L.score };
+    },
+  };
+  paint();
+  return api;
 }
 
 // ===== CONSTANTS =====
@@ -1942,96 +2004,35 @@ function openDayModal(day) {
     const pk = PERIOD_KEYS[idx];
     const entry = (monthData[dk] || {})[pk] || {};
     const has = entry.score != null;
-    const sliderVal = has ? moodToSlider(entry.type, entry.score) : 50;
-    const mood = has ? { type: entry.type, score: entry.score } : sliderToMood(50);
     const note = entry.note || '';
-    const btnBg = mood.score === 0 ? '#c0b8b0' : (mood.type === 'positive' ? 'rgb(230,160,50)' : 'rgb(80,150,190)');
     const escaped = note.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const dropColor = mood.score === 0 ? 'rgb(200,196,188)' : getColor(mood.type, mood.score);
 
     body.innerHTML = `<div style="animation:fadeIn 0.25s ease-out;margin-top:16px">
-      <div id="pc-score-hint" class="entry-score-hint" style="height:32px;font-size:24px"></div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="flex-shrink:0;width:22px;height:22px;color:#b0a898">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%">
-            <path d="M19.5 12.5a3.5 3.5 0 0 0-3.4-3.5 5 5 0 0 0-9.2-1.2A4 4 0 0 0 4 12a4 4 0 0 0 4 4h11a3.5 3.5 0 0 0 .5-7z"/>
-            <line x1="8" y1="19" x2="7.2" y2="21.5"/><line x1="12" y1="19" x2="11.2" y2="21.5"/><line x1="16" y1="19" x2="15.2" y2="21.5"/>
-          </svg>
-        </div>
-        <div id="pc-track-area" style="flex:1;position:relative;height:44px;display:flex;align-items:center;touch-action:none;user-select:none;-webkit-user-select:none">
-          <div style="width:100%;height:6px;border-radius:3px;background:linear-gradient(90deg,#1e648c 0%,#5aaad2 25%,#c8c3be 50%,#f0b43c 75%,#c83828 100%)"></div>
-          <div id="pc-droplet" style="position:absolute;top:50%;transform:translate(-50%,-45%);width:22px;height:30px;cursor:pointer;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.12));left:${sliderVal}%">
-            <svg viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
-              <path id="pc-drop-path" d="M10 2C10 2 1 13 1 17.5C1 22.7 5 27 10 27C15 27 19 22.7 19 17.5C19 13 10 2 10 2Z" fill="${dropColor}" stroke="rgba(255,255,255,0.9)" stroke-width="1.8"/>
-            </svg>
-          </div>
-        </div>
-        <div style="flex-shrink:0;width:22px;height:22px;color:#b0a898">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%">
-            <circle cx="15" cy="9" r="3"/>
-            <line x1="15" y1="3" x2="15" y2="4.5"/><line x1="21" y1="9" x2="19.5" y2="9"/>
-            <line x1="19.24" y1="4.76" x2="18.18" y2="5.82"/><line x1="19.24" y1="13.24" x2="18.18" y2="12.18"/>
-            <line x1="15" y1="13.5" x2="15" y2="15"/>
-            <path d="M10.5 17h8a2.5 2.5 0 0 0 0-5 3.5 3.5 0 0 0-6-1.2 3.2 3.2 0 0 0-4.5.7A3 3 0 0 0 10.5 17z"/>
-          </svg>
-        </div>
-      </div>
-      <div style="margin-top:24px">
+      <div id="pc-picker"></div>
+      <div style="margin-top:20px">
         <div id="pc-note-display" style="display:flex;align-items:center;gap:8px;padding:14px 0;font-size:14px;color:${note?'var(--text-mid)':'#b0a8a0'};cursor:pointer;font-family:var(--ff)">
           <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" style="flex-shrink:0;opacity:0.5"><path d="M14 3l3 3L7 16H4v-3L14 3z"/></svg>
           <span>${note ? escaped : '說說你的感受'}</span>
         </div>
         <textarea id="pc-note-input" class="entry-note" placeholder="說說你的感受" style="display:none;width:100%;min-height:72px" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" rows="3">${escaped}</textarea>
       </div>
-      <button id="pc-save" style="display:block;margin:20px auto 0;padding:11px 40px;border-radius:10px;border:none;font-size:14px;font-weight:600;color:#fff;cursor:pointer;background:${btnBg};font-family:var(--ff);transition:all 0.3s">記下來</button>
+      <button id="pc-save" style="display:block;margin:20px auto 0;padding:11px 40px;border-radius:10px;border:none;font-size:14px;font-weight:600;color:#fff;cursor:pointer;background:#c0b8b0;font-family:var(--ff);transition:all 0.3s">記下來</button>
       ${has ? '<button id="pc-delete" style="display:block;margin:10px auto 0;border:none;background:none;color:var(--text-mid);font-size:12px;cursor:pointer;font-family:var(--ff);text-decoration:underline;text-underline-offset:3px">刪除此段</button>' : ''}
     </div>`;
 
-    const pcTrack = document.getElementById('pc-track-area');
-    const pcDroplet = document.getElementById('pc-droplet');
-    const pcDropPath = document.getElementById('pc-drop-path');
     const saveBtn = document.getElementById('pc-save');
     const noteDisp = document.getElementById('pc-note-display');
     const noteIn = document.getElementById('pc-note-input');
-    let pcVal = sliderVal;
-    let touched = has;
-    let pcDragging = false;
+    let noteTouched = false;
 
-    function pcGetVal(e) {
-      const r = pcTrack.getBoundingClientRect();
-      const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-      return Math.round(Math.max(0, Math.min(1, x / r.width)) * 100);
+    function paintSave() {
+      const m = picker.mood();
+      saveBtn.style.background = m.score === 0 ? '#c0b8b0'
+        : (m.type === 'positive' ? 'rgb(230,160,50)' : 'rgb(80,150,190)');
     }
-    function pcUpdate(v) {
-      pcVal = v; touched = true;
-      const m = sliderToMood(v);
-      const c = m.score === 0 ? 'rgb(200,196,188)' : getColor(m.type, m.score);
-      pcDroplet.style.left = v + '%';
-      pcDropPath.setAttribute('fill', c);
-      saveBtn.style.background = m.score === 0 ? '#c0b8b0' : (m.type === 'positive' ? 'rgb(230,160,50)' : 'rgb(80,150,190)');
-      const hint = document.getElementById('pc-score-hint');
-      if (hint) {
-        hint.textContent = m.score;
-        if (m.score === 0) hint.className = 'entry-score-hint vis';
-        else if (m.type === 'positive') hint.className = 'entry-score-hint vis pos';
-        else hint.className = 'entry-score-hint vis neg';
-      }
-    }
-    pcTrack.addEventListener('pointerdown', function(e) {
-      pcDragging = true; pcTrack.setPointerCapture(e.pointerId);
-      pcUpdate(pcGetVal(e));
-    });
-    pcTrack.addEventListener('pointermove', function(e) { if (pcDragging) pcUpdate(pcGetVal(e)); });
-    pcTrack.addEventListener('pointerup', function() {
-      pcDragging = false;
-      var h = document.getElementById('pc-score-hint');
-      if (h) h.className = 'entry-score-hint';
-    });
-    pcTrack.addEventListener('pointercancel', function() {
-      pcDragging = false;
-      var h = document.getElementById('pc-score-hint');
-      if (h) h.className = 'entry-score-hint';
-    });
+    const picker = createMoodPicker(document.getElementById('pc-picker'), paintSave);
+    picker.setFromEntry(has ? entry : null);
+    paintSave();
 
     const autoGrow = () => { noteIn.style.height = 'auto'; noteIn.style.height = noteIn.scrollHeight + 'px'; };
     noteDisp.addEventListener('click', () => {
@@ -2043,13 +2044,13 @@ function openDayModal(day) {
       noteDisp.querySelector('span').textContent = v || '說說你的感受';
       noteDisp.style.color = v ? 'var(--text-mid)' : '#c0b8b0';
       noteDisp.style.display = ''; noteIn.style.display = 'none';
-      if (v) touched = true;
+      if (v) noteTouched = true;
     });
 
     saveBtn.addEventListener('click', () => {
-      const m = sliderToMood(pcVal);
+      const m = picker.mood();
       const n = noteIn.value.trim().slice(0, 500);
-      if (touched) {
+      if (picker.isTouched() || noteTouched || has) {
         if (!monthData[dk]) monthData[dk] = {};
         monthData[dk][pk] = { type: m.type, score: m.score, note: n };
         saveData();
@@ -3828,15 +3829,11 @@ function currentPeriodKey() {
   return 'evening';
 }
 
-function _dragWord(val) {
-  if (val >= 88) return '很亮';
-  if (val >= 68) return '明亮';
-  if (val >= 56) return '微亮';
-  if (val > 44) return '還好';
-  if (val >= 32) return '微涼';
-  if (val >= 12) return '沉';
-  return '很沉';
-}
+// Hold before the gesture engages. A brush, a stray swipe, or a tap that
+// slid a little must never change a recorded mood — the earlier version
+// armed on 8px of movement, which went off by accident constantly.
+const SKY_DRAG_HOLD_MS = 300;
+const SKY_DRAG_ARM_SLOP = 10; // moving further than this cancels the hold
 
 function _commitSkyDrag(period, mood) {
   const now = new Date();
@@ -3871,16 +3868,20 @@ function attachSkyDrag(area, resolvePeriod) {
   if (!area) return;
   const $ = id => document.getElementById(id);
 
-  let active = false, moved = false, startY = 0, startVal = 50, val = 50;
-  let period = 'morning', raf = 0;
+  let down = false, armed = false, movedSinceArm = false;
+  let startY = 0, startVal = 50, val = 50, level = MOOD_NEUTRAL;
+  let period = 'morning', raf = 0, holdTimer = 0;
 
   function paint() {
     raf = 0;
-    const mood = sliderToMood(val);
-    const t = (val - 50) / 50; // -1 .. +1
+    const signed = (val - 50) * 2;          // -100..+100, continuous
+    level = levelFromSigned(signed);        // but only five can be written
+    const L = MOOD_LEVELS[level];
+    const t = signed / 100;                 // -1..+1
     const wrap = $('cloud-wrap');
     if (wrap) {
-      // Up: rise and puff out. Down: sink and press flat.
+      // Motion stays analogue so the cloud tracks the finger smoothly;
+      // only the value that gets written is stepped.
       const ty = -t * 26;
       const sx = t >= 0 ? 1 + t * 0.13 : 1 + (-t) * 0.12;
       const sy = t >= 0 ? 1 + t * 0.16 : 1 - (-t) * 0.20;
@@ -3890,62 +3891,85 @@ function attachSkyDrag(area, resolvePeriod) {
       const svg = wrap.querySelector('svg');
       if (svg) svg.style.opacity = (0.30 + 0.45 * Math.min(1, Math.abs(t))).toFixed(3);
     }
-    updateSkyGradient({ period: period, type: mood.type, score: mood.score });
+    // Preview the level that will actually be stored, so releasing
+    // never shifts the colour you were looking at.
+    updateSkyGradient({ period: period, type: L.type, score: L.score });
     const wordEl = $('dh-word');
-    if (wordEl) wordEl.textContent = _dragWord(val);
+    if (wordEl) wordEl.textContent = L.label;
   }
   function schedule() { if (!raf) raf = requestAnimationFrame(paint); }
+
+  function arm() {
+    holdTimer = 0;
+    armed = true;
+    cancelSkyRitual();
+    $('cloud-wrap')?.classList.add('dragging');
+    $('sky-bg')?.classList.add('no-transition');
+    const dp = $('dh-period');
+    if (dp) dp.textContent = PERIOD_NAMES[PERIOD_KEYS.indexOf(period)];
+    $('sky-drag-hint')?.classList.add('on');
+    $('sky-monster-msg')?.classList.add('hushed');
+    const coach = $('sky-drag-coach');
+    if (coach) coach.style.display = 'none';
+    paint();
+  }
+
+  function clearHold() {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = 0; }
+  }
 
   area.addEventListener('pointerdown', e => {
     if (!isSkyToday()) return;
     if (!$('page-sky').classList.contains('active')) return;
-    cancelSkyRitual();
-    active = true; moved = false;
+    down = true; armed = false; movedSinceArm = false;
     startY = e.clientY;
     period = resolvePeriod();
     const existing = getSkyDayData()[period];
-    startVal = existing?.score != null ? moodToSlider(existing.type, existing.score) : 50;
+    startVal = existing?.score != null
+      ? 50 + _signed(existing.type, existing.score) / 2 : 50;
     val = startVal;
+    level = levelFromSigned((val - 50) * 2);
     try { area.setPointerCapture(e.pointerId); } catch {}
+    clearHold();
+    holdTimer = setTimeout(arm, SKY_DRAG_HOLD_MS);
   });
 
   area.addEventListener('pointermove', e => {
-    if (!active) return;
+    if (!down) return;
     const dy = e.clientY - startY;
-    if (!moved) {
-      if (Math.abs(dy) < 8) return; // a tap is not a drag
-      moved = true;
-      $('cloud-wrap')?.classList.add('dragging');
-      $('sky-bg')?.classList.add('no-transition');
-      const dp = $('dh-period');
-      if (dp) dp.textContent = PERIOD_NAMES[PERIOD_KEYS.indexOf(period)];
-      $('sky-drag-hint')?.classList.add('on');
-      $('sky-monster-msg')?.classList.add('hushed');
-      const coach = $('sky-drag-coach');
-      if (coach) coach.style.display = 'none';
+    if (!armed) {
+      // Still waiting out the hold. Wandering off means this was a swipe
+      // or a scroll, not someone settling in to change their mood.
+      if (Math.abs(dy) > SKY_DRAG_ARM_SLOP) { clearHold(); down = false; }
+      return;
     }
+    movedSinceArm = true;
     val = Math.max(0, Math.min(100, startVal + (-dy / SKY_DRAG_RANGE) * 50));
     schedule();
   });
 
   function finish(commit) {
-    if (!active) return;
-    active = false;
+    if (!down) return;
+    down = false;
+    clearHold();
     if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    if (!armed) return;                    // never engaged; nothing happened
+    armed = false;
+    _skyDragEndedAt = Date.now();          // suppress the tap that follows
+
     const wrap = $('cloud-wrap');
     $('sky-bg')?.classList.remove('no-transition');
     $('sky-drag-hint')?.classList.remove('on');
-    if (!moved) { wrap?.classList.remove('dragging'); return; }
-    _skyDragEndedAt = Date.now(); // suppress the tap that follows
-
     if (wrap) {
       // Ease back from the finger's position; the ritual takes over from there.
       wrap.classList.remove('dragging');
       wrap.classList.add('releasing');
       wrap.style.transform = '';
     }
-    if (commit) {
-      _commitSkyDrag(period, sliderToMood(val));
+    // Armed but never moved: they thought better of it. Leave the day alone.
+    if (commit && movedSinceArm) {
+      const L = MOOD_LEVELS[level];
+      _commitSkyDrag(period, { type: L.type, score: L.score });
       try { localStorage.setItem('skyDragSeen', '1'); } catch {}
       runSkyRitual({ fromDrag: true });
     } else {
@@ -4082,52 +4106,7 @@ window.addEventListener('resize', updateCellHeight);
 
 // ===== ENTRY SHEET =====
 let entryPeriod = null;
-let entrySliderVal = 50;
-
-// Custom droplet slider interaction
-(function() {
-  const area = document.getElementById('entry-track-area');
-  if (!area) return;
-  let dragging = false;
-  function getVal(e) {
-    const r = area.getBoundingClientRect();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-    return Math.round(Math.max(0, Math.min(1, x / r.width)) * 100);
-  }
-  area.addEventListener('pointerdown', function(e) {
-    dragging = true;
-    area.setPointerCapture(e.pointerId);
-    onEntrySlider(getVal(e));
-  });
-  area.addEventListener('pointermove', function(e) {
-    if (!dragging) return;
-    onEntrySlider(getVal(e));
-  });
-  area.addEventListener('pointerup', function() {
-    dragging = false;
-    var h = document.getElementById('entry-score-hint');
-    if (h) h.className = 'entry-score-hint';
-  });
-  area.addEventListener('pointercancel', function() {
-    dragging = false;
-    var h = document.getElementById('entry-score-hint');
-    if (h) h.className = 'entry-score-hint';
-  });
-})();
-
-function sliderToMood(val) {
-  const v = parseInt(val);
-  const mapped = (v - 50) * 2; // -100 to +100
-  if (mapped > 0) return { type: 'positive', score: mapped };
-  if (mapped < 0) return { type: 'negative', score: Math.abs(mapped) };
-  return { type: 'positive', score: 0 };
-}
-
-function moodToSlider(type, score) {
-  if (type === 'positive') return 50 + Math.round(score / 2);
-  if (type === 'negative') return 50 - Math.round(score / 2);
-  return 50;
-}
+let entryPicker = null;
 
 function openEntrySheet(period) {
   entryPeriod = period;
@@ -4150,15 +4129,11 @@ function openEntrySheet(period) {
   } catch {}
 
   const existing = todayData[period];
-  if (existing?.score != null) {
-    entrySliderVal = moodToSlider(existing.type, existing.score);
-  } else {
-    entrySliderVal = 50;
+  if (!entryPicker) {
+    entryPicker = createMoodPicker(document.getElementById('entry-picker'), paintEntrySave);
   }
-  document.getElementById('entry-droplet').style.left = (entrySliderVal) + '%';
-  onEntrySlider(entrySliderVal);
-  // Hide score hint on open (only show while dragging)
-  document.getElementById('entry-score-hint').className = 'entry-score-hint';
+  entryPicker.setFromEntry(existing);
+  paintEntrySave();
 
   // Note — always start collapsed
   const noteVal = existing?.note || '';
@@ -4201,36 +4176,13 @@ function closeEntrySheet() {
   document.getElementById('entry-sheet').classList.remove('open');
 }
 
-function onEntrySlider(val) {
-  entrySliderVal = parseInt(val);
-  const mood = sliderToMood(entrySliderVal);
+function paintEntrySave() {
   const saveBtn = document.getElementById('entry-save');
-  // Update droplet color
-  const dropPath = document.getElementById('entry-drop-path');
-  if (dropPath) {
-    const c = getColor(mood.type, mood.score);
-    dropPath.setAttribute('fill', mood.score === 0 ? 'rgb(200,196,188)' : c);
-  }
-  // Update score hint
-  const hint = document.getElementById('entry-score-hint');
-  if (hint) {
-    hint.textContent = mood.score;
-    if (mood.score === 0) hint.className = 'entry-score-hint vis';
-    else if (mood.type === 'positive') hint.className = 'entry-score-hint vis pos';
-    else hint.className = 'entry-score-hint vis neg';
-  }
-  // Update save button
-  if (mood.score === 0) {
-    saveBtn.className = 'entry-save';
-  } else if (mood.type === 'positive') {
-    saveBtn.className = 'entry-save pos';
-  } else {
-    saveBtn.className = 'entry-save neg';
-  }
-  // Update thumb position
-  const pct = entrySliderVal / 100;
-  const droplet = document.getElementById('entry-droplet');
-  if (droplet) droplet.style.left = (pct * 100) + '%';
+  if (!saveBtn || !entryPicker) return;
+  const mood = entryPicker.mood();
+  if (mood.score === 0) saveBtn.className = 'entry-save';
+  else if (mood.type === 'positive') saveBtn.className = 'entry-save pos';
+  else saveBtn.className = 'entry-save neg';
 }
 
 function toggleEntryNote() {
@@ -4259,7 +4211,7 @@ function saveEntry() {
   curYear = todayY; curMonth = todayM; loadData();
   if (!monthData[todayD]) monthData[todayD] = {};
 
-  const mood = sliderToMood(entrySliderVal);
+  const mood = entryPicker.mood();
   const note = document.getElementById('entry-note').value.trim().slice(0, 500);
   monthData[todayD][entryPeriod] = { type: mood.type, score: mood.score, note: note || undefined };
 
@@ -4306,7 +4258,7 @@ function saveEntry() {
   } else {
     window._saveRevertTimer = setTimeout(() => {
       saveBtn.textContent = '記下來';
-      onEntrySlider(entrySliderVal);
+      paintEntrySave();
     }, 2000);
   }
 }
