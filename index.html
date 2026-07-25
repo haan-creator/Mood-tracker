@@ -595,6 +595,48 @@ input[type=number] { -moz-appearance: textfield; }
 .sky-arrow:disabled { opacity: 0.2; pointer-events: none; }
 .sky-dark .sky-arrow { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
 
+/* Cycle marker — per-day data, so it annotates the date rather than
+   living in the per-period sheet, where it was asked three times a day.
+   No standing glyph: a lone ring beside the date meant nothing on its
+   own and read as an icon that had failed to load, and anything shaped
+   like a moon or a raindrop collides with the weather the sky draws.
+   An underline is unmistakably about the thing above it, and when
+   nothing is set there is simply nothing there. */
+.cycle-anchor { position: relative; display: flex; align-items: center; margin-left: 4px; }
+.sky-datebtn {
+  border: none; background: none; padding: 2px 2px 5px; cursor: pointer;
+  position: relative; display: flex; align-items: baseline; gap: 6px;
+  font-family: inherit;
+}
+.cycle-underline {
+  position: absolute; left: 2px; bottom: 0; height: 2.5px; width: 0;
+  border-radius: 2px; background: transparent;
+  transition: width 0.3s cubic-bezier(0.22,1,0.36,1), background 0.3s ease;
+}
+.sky-datebtn.pms-on    .cycle-underline { width: 30px; background: #3f8fd0; }
+.sky-datebtn.period-on .cycle-underline { width: 30px; background: #d1476a; }
+.sky-dark .sky-datebtn.pms-on    .cycle-underline { background: #8fc8f0; }
+.sky-dark .sky-datebtn.period-on .cycle-underline { background: #f093aa; }
+
+.cycle-pop {
+  position: absolute; top: 100%; left: 0; margin-top: 6px; z-index: 40;
+  display: none; flex-direction: column; gap: 2px; padding: 4px;
+  background: rgba(255,255,255,0.97); border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.14);
+  border: 1px solid rgba(100,110,130,0.1);
+}
+.cycle-pop.open { display: flex; animation: fadeIn 0.15s ease; }
+.cycle-pop button {
+  border: none; background: none; cursor: pointer;
+  font-family: var(--ff); font-size: 13px; color: #6a6058;
+  padding: 9px 18px; border-radius: 8px; white-space: nowrap;
+  text-align: left;
+}
+.cycle-pop button:active { background: rgba(120,110,100,0.09); }
+.cycle-pop button.on { font-weight: 700; }
+.cycle-pop button#cycle-opt-pms.on    { color: #2b7ab8; background: rgba(64,144,208,0.1); }
+.cycle-pop button#cycle-opt-period.on { color: #b8355a; background: rgba(200,60,90,0.09); }
+
 /* Read-only past day */
 .sky-period-btn.readonly { opacity: 0.7; pointer-events: none; }
 
@@ -613,11 +655,12 @@ input[type=number] { -moz-appearance: textfield; }
 .sky-rail {
   position: absolute; right: 0; top: 50%;
   transform: translateY(-50%);
-  /* Grabbing a narrow, deliberate target cannot happen by accident, so
-     the rail needs no hold — it behaves like a real slider. The padding
-     is the touch target; the drawing inside stays slim. */
+  /* A reading, not a control. Its job — the one it was added for — is to
+     show that up is brighter and down is heavier, so the sky gesture is
+     guessable, and to say where today sits. Making it draggable as well
+     is what put a control under a resting thumb. */
   padding: 14px 20px 14px 22px;
-  touch-action: none; cursor: grab;
+  pointer-events: none;
   color: rgba(40,35,30,0.62);
   opacity: 0.78; transition: opacity 0.35s ease;
 }
@@ -627,16 +670,9 @@ input[type=number] { -moz-appearance: textfield; }
 .rail-tick {
   transition: opacity 0.25s ease, stroke-width 0.25s ease;
 }
-.rail-bead {
-  fill: currentColor;
-  transition: cy 0.28s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease, r 0.25s ease;
-  opacity: 0.95;
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.22));
-}
 .sky-rail.live { opacity: 1; }
-.sky-rail.live .rail-bead { r: 8; }
 .sky-rail.live .rail-spine { opacity: 0.6; }
-.sky-rail.empty .rail-bead { opacity: 0.25; }
+.sky-rail.empty .rail-tick.on { opacity: 0.45 !important; }
 /* While dragging, the cloud follows the finger instead of idling */
 .cloud-wrap.dragging { animation: none !important; }
 .sky-bg.no-transition { transition: none !important; }
@@ -677,17 +713,19 @@ input[type=number] { -moz-appearance: textfield; }
 /* Until the gesture has been used once, the rail beckons rather than
    sitting still, so there is one instrument on screen instead of two. */
 .sky-rail.beckon { opacity: 0.85; }
-.sky-rail.beckon .rail-bead {
-  animation: railBeckon 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  transition: none;
+.sky-rail.beckon .rail-tick {
+  animation: railBeckon 2.4s ease-in-out infinite;
 }
+.sky-rail.beckon .rail-tick[data-i="4"] { animation-delay: 0s; }
+.sky-rail.beckon .rail-tick[data-i="3"] { animation-delay: 0.12s; }
+.sky-rail.beckon .rail-tick[data-i="2"] { animation-delay: 0.24s; }
+.sky-rail.beckon .rail-tick[data-i="1"] { animation-delay: 0.36s; }
+.sky-rail.beckon .rail-tick[data-i="0"] { animation-delay: 0.48s; }
 @keyframes railBeckon {
-  0%, 100% { transform: translateY(0);    opacity: 0.35; }
-  25%      { transform: translateY(-46px); opacity: 1; }
-  50%      { transform: translateY(0);    opacity: 0.6; }
-  75%      { transform: translateY(46px);  opacity: 1; }
+  0%, 60%, 100% { opacity: 0.3; }
+  25%           { opacity: 1; }
 }
-.sky-rail.live .rail-bead { animation: none; }
+.sky-rail.live .rail-tick { animation: none; }
 .cloud-wrap {
   animation: cloudFloat 6s ease-in-out infinite;
 }
@@ -1251,9 +1289,16 @@ input[type=number] { -moz-appearance: textfield; }
         <button class="sky-arrow" id="sky-prev" aria-label="前一天">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L3.5 7L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <div>
-          <span class="sky-date" id="sky-date"></span>
-          <span class="sky-weekday" id="sky-weekday"></span>
+        <div class="cycle-anchor">
+          <button class="sky-datebtn" id="sky-datebtn">
+            <span class="sky-date" id="sky-date"></span>
+            <span class="sky-weekday" id="sky-weekday"></span>
+            <span class="cycle-underline" id="cycle-underline"></span>
+          </button>
+          <div class="cycle-pop" id="cycle-pop">
+            <button data-c="pms" id="cycle-opt-pms">經前</button>
+            <button data-c="period" id="cycle-opt-period">月經</button>
+          </div>
         </div>
         <button class="sky-arrow" id="sky-next" aria-label="後一天">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2L10.5 7L5 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1282,7 +1327,6 @@ input[type=number] { -moz-appearance: textfield; }
                 stroke="currentColor" stroke-width="1" stroke-linecap="round"
                 stroke-dasharray="1.5 4" opacity="0.35"/>
           <g id="rail-ticks"></g>
-          <circle class="rail-bead" id="rail-bead" cx="13" cy="84" r="4.2"/>
         </svg>
       </div>
     </div>
@@ -1426,10 +1470,6 @@ input[type=number] { -moz-appearance: textfield; }
       </svg>
     </button>
     <div class="entry-sheet-title" id="entry-title">早上</div>
-    <div class="entry-cycle">
-      <button class="entry-cycle-btn" id="entry-pms" onclick="toggleEntryCycle('pms')"><svg width="8" height="8" viewBox="0 0 10 10"><path d="M7 1C5 1.5 3.5 3.3 3.5 5.5S5 9.5 7 10c-3 0-5-2-5-4.5S4 1 7 1z" fill="currentColor"/></svg>經前</button>
-      <button class="entry-cycle-btn" id="entry-period" onclick="toggleEntryCycle('period')"><svg width="7" height="7" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="currentColor"/></svg>月經</button>
-    </div>
   </div>
   <div class="entry-score-area" id="entry-score-area">
     <div id="entry-picker"></div>
@@ -3332,6 +3372,7 @@ function initSkyPage() {
   updateSkyGradient();
   updateCloudState();
   updateSkyRail();
+  updateCycleMoon();
   updateDragCoach();
 }
 
@@ -3365,6 +3406,7 @@ function refreshSky() {
   updateSkyGradient();
   updateCloudState();
   updateSkyRail();
+  updateCycleMoon();
   updateDragCoach();
 }
 
@@ -3923,6 +3965,67 @@ function _commitSkyDrag(period, mood) {
   renderCalendar();
 }
 
+// ===== CYCLE MARKER =====
+function getSkyCycle() {
+  const y = skyDate.getFullYear(), m = skyDate.getMonth(), d = String(skyDate.getDate());
+  try {
+    const clean = sanitizeCycleData(JSON.parse(localStorage.getItem(cKey(y, m))));
+    if (clean && clean[d]) return clean[d];
+  } catch {}
+  return {};
+}
+
+function updateCycleMoon() {
+  const btn = document.getElementById('sky-datebtn');
+  if (!btn) return;
+  const today = isSkyToday();
+  // Past days are edited from their postcard, same as their moods.
+  btn.style.pointerEvents = today ? '' : 'none';
+  const c = getSkyCycle();
+  btn.classList.toggle('pms-on', !!c.pms);
+  btn.classList.toggle('period-on', !!c.period);
+  document.getElementById('cycle-opt-pms')?.classList.toggle('on', !!c.pms);
+  document.getElementById('cycle-opt-period')?.classList.toggle('on', !!c.period);
+}
+
+function closeCyclePop() {
+  document.getElementById('cycle-pop')?.classList.remove('open');
+}
+
+function toggleCycleToday(which) {
+  const now = new Date();
+  const d = String(now.getDate());
+  curYear = now.getFullYear(); curMonth = now.getMonth();
+  loadData();
+  const wasOn = !!(cycleData[d] || {})[which];
+  // Picking the one already set clears the day — that is how "none" is
+  // expressed, rather than a third button for it.
+  if (wasOn) delete cycleData[d];
+  else cycleData[d] = { pms: which === 'pms', period: which === 'period' };
+  saveData();
+  renderCalendar();
+  updateCycleMoon();
+}
+
+(function initCycleMoon() {
+  const moon = document.getElementById('sky-datebtn');
+  const pop = document.getElementById('cycle-pop');
+  if (!moon || !pop) return;
+  moon.addEventListener('click', e => {
+    if (!isSkyToday()) return;
+    e.stopPropagation();
+    pop.classList.toggle('open');
+  });
+  pop.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-c]');
+    if (!btn) return;
+    e.stopPropagation();
+    toggleCycleToday(btn.dataset.c);
+    closeCyclePop();
+  });
+  document.addEventListener('click', closeCyclePop);
+})();
+
 // ===== THE RAIL =====
 // Five ticks, coldest at the bottom, brightest at the top — the same
 // direction the gesture runs, so the rail doubles as the instruction.
@@ -3949,123 +4052,30 @@ function buildRailTicks() {
 }
 
 // `preview` is the live drag value; without it the rail shows what is stored.
+// The reading is the tick itself. A separate bead riding the line looked
+// like something had failed to render, and having it be grabbable kept
+// putting a control where a thumb rests.
 function updateSkyRail(preview) {
   const rail = document.getElementById('sky-rail');
-  const bead = document.getElementById('rail-bead');
-  if (!rail || !bead) return;
+  if (!rail) return;
   buildRailTicks();
 
   const entry = getSkyDayData()[activePeriod()];
   const stored = entry?.score != null;
-  let level, y;
+  const level = preview != null
+    ? levelFromSigned((preview - 50) * 2)
+    : (stored ? levelFromEntry(entry) : MOOD_NEUTRAL);
 
-  if (preview != null) {
-    y = railYFromVal(preview);
-    level = levelFromSigned((preview - 50) * 2);
-  } else {
-    level = stored ? levelFromEntry(entry) : MOOD_NEUTRAL;
-    y = railY(level);
-  }
-
-  bead.setAttribute('cy', y.toFixed(1));
-  const L = MOOD_LEVELS[level];
-  bead.style.fill = (!stored && preview == null) || L.score === 0
-    ? 'currentColor' : getColor(L.type, L.score);
   rail.classList.toggle('empty', !stored && preview == null);
 
   rail.querySelectorAll('.rail-tick').forEach(t => {
     const on = parseInt(t.dataset.i, 10) === level;
-    t.setAttribute('opacity', on ? '1' : '0.5');
-    t.setAttribute('stroke-width', on ? '3.4' : '2.6');
+    t.classList.toggle('on', on);
+    t.setAttribute('opacity', on ? '1' : '0.32');
+    t.setAttribute('stroke-width', on ? '4.5' : '2.4');
   });
 }
 
-// Dragging the rail itself. No hold: you cannot brush a target this
-// narrow by accident, and requiring a hold here was what made the
-// gesture feel like work. Absolute, like a real slider — touch a tick
-// and the bead goes there.
-function attachRailDrag() {
-  const rail = document.getElementById('sky-rail');
-  const svg = rail && rail.querySelector('svg');
-  if (!rail || !svg) return;
-  let dragging = false, period = 'morning', val = 50, raf = 0;
-
-  const valFromEvent = e => {
-    const r = svg.getBoundingClientRect();
-    const y = ((e.clientY - r.top) / r.height) * 168; // viewBox units
-    const v = 100 * (RAIL_BOTTOM - y) / (RAIL_BOTTOM - RAIL_TOP);
-    return Math.max(0, Math.min(100, v));
-  };
-
-  function paint() {
-    raf = 0;
-    const L = MOOD_LEVELS[levelFromSigned((val - 50) * 2)];
-    updateSkyGradient({ period: period, type: L.type, score: L.score });
-    updateSkyRail(val);
-    const wrap = document.getElementById('cloud-wrap');
-    if (wrap) {
-      const t = (val - 50) / 50;
-      const sx = t >= 0 ? 1 + t * 0.13 : 1 + (-t) * 0.12;
-      const sy = t >= 0 ? 1 + t * 0.16 : 1 - (-t) * 0.20;
-      wrap.style.transform = `translateY(${(-t * 26).toFixed(1)}px) scale(${sx.toFixed(3)},${sy.toFixed(3)})`;
-      const s = wrap.querySelector('svg');
-      if (s) s.style.opacity = (0.30 + 0.45 * Math.min(1, Math.abs(t))).toFixed(3);
-    }
-    const w = document.getElementById('dh-word');
-    if (w) w.textContent = L.label;
-  }
-
-  rail.addEventListener('pointerdown', e => {
-    if (!isSkyToday()) return;
-    // The rail sits inside the cloud area, whose own hold-to-drag would
-    // otherwise steal the pointer capture and swallow the release.
-    e.stopPropagation();
-    e.preventDefault();
-    cancelSkyRitual();
-    dragging = true;
-    period = activePeriod();
-    val = valFromEvent(e);
-    try { rail.setPointerCapture(e.pointerId); } catch {}
-    rail.classList.add('live');
-    document.getElementById('cloud-wrap')?.classList.add('dragging');
-    document.getElementById('sky-bg')?.classList.add('no-transition');
-    const dp = document.getElementById('dh-period');
-    if (dp) dp.textContent = PERIOD_NAMES[PERIOD_KEYS.indexOf(period)];
-    document.getElementById('sky-drag-hint')?.classList.add('on');
-    document.getElementById('sky-monster-msg')?.classList.add('hushed');
-    const coach = document.getElementById('sky-drag-coach');
-    if (coach) coach.style.display = 'none';
-    paint();
-  });
-
-  rail.addEventListener('pointermove', e => {
-    if (!dragging) return;
-    val = valFromEvent(e);
-    if (!raf) raf = requestAnimationFrame(paint);
-  });
-
-  function end() {
-    if (!dragging) return;
-    dragging = false;
-    if (raf) { cancelAnimationFrame(raf); raf = 0; }
-    _skyDragEndedAt = Date.now();
-    rail.classList.remove('live');
-    document.getElementById('sky-bg')?.classList.remove('no-transition');
-    document.getElementById('sky-drag-hint')?.classList.remove('on');
-    const wrap = document.getElementById('cloud-wrap');
-    if (wrap) {
-      wrap.classList.remove('dragging');
-      wrap.classList.add('releasing');
-      wrap.style.transform = '';
-    }
-    const L = MOOD_LEVELS[levelFromSigned((val - 50) * 2)];
-    _commitSkyDrag(period, { type: L.type, score: L.score });
-    try { localStorage.setItem('skyDragSeen', '1'); } catch {}
-    runSkyRitual({ fromDrag: true });
-  }
-  rail.addEventListener('pointerup', end);
-  rail.addEventListener('pointercancel', end);
-}
 
 function updateDragCoach() {
   const coach = document.getElementById('sky-drag-coach');
@@ -4212,7 +4222,6 @@ function attachSkyDrag(area, resolvePeriod) {
 // as a hidden trick nobody would guess at; selecting one and then
 // dragging the sky keeps a single place where the gesture lives.
 attachSkyDrag(document.getElementById('cloud-area'), activePeriod);
-attachRailDrag();
 
 // ===== NAVIGATION =====
 function updateNavState(page) {
@@ -4379,10 +4388,6 @@ function openEntrySheet(period) {
   }
 
   // Cycle
-  const pmsBtn = document.getElementById('entry-pms');
-  const perBtn = document.getElementById('entry-period');
-  pmsBtn.className = 'entry-cycle-btn' + (todayCycle.pms ? ' pms-on' : '');
-  perBtn.className = 'entry-cycle-btn' + (todayCycle.period ? ' period-on' : '');
 
   document.getElementById('entry-overlay').classList.add('open');
   document.getElementById('entry-sheet').classList.add('open');
@@ -4418,19 +4423,6 @@ function toggleEntryNote() {
   setTimeout(() => document.getElementById('entry-note').focus(), 100);
 }
 
-function toggleEntryCycle(which) {
-  const pmsBtn = document.getElementById('entry-pms');
-  const perBtn = document.getElementById('entry-period');
-  if (which === 'pms') {
-    const isOn = pmsBtn.classList.contains('pms-on');
-    pmsBtn.className = 'entry-cycle-btn' + (isOn ? '' : ' pms-on');
-    perBtn.className = 'entry-cycle-btn';
-  } else {
-    const isOn = perBtn.classList.contains('period-on');
-    perBtn.className = 'entry-cycle-btn' + (isOn ? '' : ' period-on');
-    pmsBtn.className = 'entry-cycle-btn';
-  }
-}
 
 function saveEntry() {
   const todayD = String(today.getDate());
@@ -4441,13 +4433,6 @@ function saveEntry() {
   const mood = entryPicker.mood();
   const note = document.getElementById('entry-note').value.trim().slice(0, 500);
   monthData[todayD][entryPeriod] = { type: mood.type, score: mood.score, note: note || undefined };
-
-  const pmsOn = document.getElementById('entry-pms').classList.contains('pms-on');
-  const perOn = document.getElementById('entry-period').classList.contains('period-on');
-  if (pmsOn || perOn) {
-    if (!cycleData[todayD]) cycleData[todayD] = {};
-    cycleData[todayD].pms = pmsOn; cycleData[todayD].period = perOn;
-  } else { delete cycleData[todayD]; }
 
   saveData();
   renderCalendar();
