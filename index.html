@@ -1491,7 +1491,7 @@ input[type=number] { -moz-appearance: textfield; }
 // which build is actually loaded rather than guessing at the cache.
 // Bump this on every handover — it was left unchanged across several,
 // which made the readout useless for the one question it exists for.
-const APP_VERSION = '2026.07.25 · v9';
+const APP_VERSION = '2026.07.25 · v10';
 
 // ===== COLOR SYSTEM =====
 // A brighter mood has to read as more radiant, not deeper. The old ramp
@@ -1501,7 +1501,7 @@ const APP_VERSION = '2026.07.25 · v9';
 // 不錯 sat at rgb(255,194,98) — a washed-out amber too close to 還好 to
 // feel like anything. The middle of the ramp is a vivid gold now, so the
 // step from neutral to good actually reads as one.
-const WARM = [[255,246,210],[255,228,140],[255,205,60],[253,170,70],[248,132,104]];
+const WARM = [[255,247,216],[255,228,140],[255,205,60],[253,170,70],[248,132,104]];
 const COOL = [[160,210,230],[90,170,210],[50,130,180],[30,100,140],[15,70,80]];
 
 function lerp(stops, t) {
@@ -3479,7 +3479,11 @@ function updateSkyGradient(provisional) {
     todayData[provisional.period] = { type: provisional.type, score: provisional.score };
   }
   const bg = document.getElementById('sky-bg');
-  const neutral = '#ddd8d0';
+  // A day with nothing on it. Deliberately cool and desaturated: grey in a
+  // sky reads as overcast, and overcast belongs to the day you have not
+  // painted, not to a day that was merely ordinary. The warm grey this
+  // replaces looked like 還好 with the lights down.
+  const neutral = 'rgb(211,212,214)';
 
   function periodColor(pk) {
     const e = todayData[pk];
