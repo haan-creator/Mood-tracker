@@ -670,6 +670,24 @@ input[type=number] { -moz-appearance: textfield; }
   animation: cloudWind 2.8s ease-in-out forwards;
 }
 
+/* Recording ritual — cloud inhales, then blooms into its new shape */
+@keyframes cloudInhale {
+  0%   { transform: scale(1) translateY(0); opacity: 1; }
+  100% { transform: scale(0.86) translateY(7px); opacity: 0.3; }
+}
+.cloud-wrap.inhale {
+  animation: cloudInhale 0.42s cubic-bezier(0.4, 0, 0.7, 0.2) forwards;
+}
+@keyframes cloudBloom {
+  0%   { transform: scale(0.86) translateY(7px); opacity: 0.3; }
+  45%  { transform: scale(1.07) translateY(-7px); opacity: 1; }
+  72%  { transform: scale(0.982) translateY(2px); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.cloud-wrap.bloom {
+  animation: cloudBloom 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 /* Monster message */
 .sky-monster-msg {
   text-align: center; padding: 0 20px;
@@ -677,6 +695,15 @@ input[type=number] { -moz-appearance: textfield; }
   color: rgba(40,35,30,0.6);
   letter-spacing: 0.5px; line-height: 1.4;
   min-height: 24px; margin-top: -4px;
+  transition: opacity 0.4s ease;
+}
+.sky-monster-msg.hushed { opacity: 0; }
+@keyframes msgReveal {
+  0%   { opacity: 0; transform: translateY(9px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.sky-monster-msg.reveal {
+  animation: msgReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* Tagline */
@@ -1625,7 +1652,7 @@ function openDayModal(day) {
   const dayC = cycleData[dk] || {};
   const modal = document.getElementById('day-modal');
   const date = new Date(curYear, curMonth, day);
-  const cloud = generateCloudForDate(date);
+  const cloud = generateCloudForDay(date, dayD);
   const entries = PERIOD_KEYS.map(pk => dayD[pk] || null);
   const filled = entries.filter(e => e?.score != null);
   const allNeg = filled.length === 3 && filled.every(e => e.type === 'negative');
@@ -1724,9 +1751,9 @@ function openDayModal(day) {
     const sC = ents.map(e => e ? getColor(e.type, e.score) : '#d8d4d0');
     const front = document.getElementById('pc-front');
     front.style.background = `linear-gradient(180deg,${gC[0]} 0%,${gC[0]} 25%,${gC[1]} 50%,${gC[2]} 75%,${gC[2]} 100%)`;
-    // Update cloud opacity
-    const cloudEl = front.querySelector('.pc-cloud svg');
-    if (cloudEl) cloudEl.style.opacity = 0.15 + fl.length * 0.2;
+    // The cloud is grown from the mood, so re-grow it after an edit.
+    const cloudHost = front.querySelector('.pc-cloud');
+    if (cloudHost) cloudHost.innerHTML = renderCloudSVG(generateCloudForDay(date, dd), fl.length);
     // Update weather
     const wEl = document.getElementById('pc-weather');
     const aN = fl.length === 3 && fl.every(e => e.type === 'negative');
@@ -3193,6 +3220,7 @@ function skyNext() {
 }
 
 function refreshSky() {
+  cancelSkyRitual();
   updateSkyDate();
   updateSkyPeriods();
   updateSkyGradient();
@@ -3354,13 +3382,88 @@ function _genAltocumulus(rng) {
   return {type:'altocumulus',circles:allC,puffs,blur:4.5,threshold:true,tM:18,tS:-7,eyeScale:0.6,eyeX:e.x,eyeY:e.y-2,baseOpacity:0.6};
 }
 
-function generateCloudForDate(date) {
-  const seed=date.getFullYear()*10000+(date.getMonth()+1)*100+date.getDate();
-  const rng=_cRng(seed), roll=rng();
-  if(roll<0.35) return _genCumulus(rng);
-  if(roll<0.60) return _genCirrus(rng);
-  if(roll<0.75) return _genAltostratus(rng);
-  return _genAltocumulus(rng);
+// ===== MOOD → CLOUD =====
+// The cloud is grown from the day's entries, not just its date.
+// Same day + same mood always yields the same cloud; change the mood
+// and the sky grows a different shape.
+
+function _moodSignature(dayData) {
+  const entries = PERIOD_KEYS.map(pk => dayData?.[pk]).filter(e => e?.score != null);
+  if (!entries.length) return { count: 0, avg: 0, spread: 0 };
+  const vals = entries.map(e => (e.type === 'positive' ? 1 : -1) * e.score);
+  const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const spread = vals.length > 1 ? Math.max(...vals) - Math.min(...vals) : 0;
+  return { count: entries.length, avg, spread };
+}
+
+// Quantised so nudging a score by a few points refines the cloud
+// instead of reshuffling it into something unrecognisable.
+function _moodSeed(date, sig) {
+  const day = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+  const qAvg = Math.round(sig.avg / 10) + 16;
+  const qSpread = Math.round(sig.spread / 25);
+  return (day * 31 + qAvg * 97 + qSpread * 7919 + sig.count * 131) >>> 0;
+}
+
+function _pickCloudType(sig, rng) {
+  if (sig.count === 0) {
+    const roll = rng();
+    if (roll < 0.35) return 'cumulus';
+    if (roll < 0.60) return 'cirrus';
+    if (roll < 0.75) return 'altostratus';
+    return 'altocumulus';
+  }
+  if (sig.spread >= 90) return 'altocumulus';   // 大起大落 → 破碎的鱗片
+  if (sig.avg >= 35) return 'cumulus';          // 明亮飽滿 → 蓬鬆積雲
+  if (sig.avg >= 0) return 'altocumulus';       // 微暖 → 輕快
+  if (sig.avg > -35) return 'cirrus';           // 微涼 → 稀薄卷雲
+  return 'altostratus';                         // 沉重 → 厚實層雲
+}
+
+function _applyMoodToCloud(cloud, sig) {
+  if (sig.count === 0) return cloud;
+  const t = Math.min(1, Math.abs(sig.avg) / 100);
+  const pos = sig.avg > 0;
+
+  // Warm days puff up; cold days thicken.
+  const rScale = pos ? 1 + 0.22 * t : 1 + 0.14 * t;
+  cloud.circles.forEach(c => { c.r *= rScale; });
+
+  // Heavy cold days press the cloud flat against the horizon.
+  if (!cloud.puffs && !pos && t > 0.35) {
+    const midY = cloud.circles.reduce((a, c) => a + c.cy, 0) / cloud.circles.length;
+    const squash = 1 - 0.28 * t;
+    cloud.circles.forEach(c => { c.cy = midY + (c.cy - midY) * squash; });
+  }
+
+  // A turbulent day sits at uneven heights.
+  if (!cloud.puffs && sig.spread >= 70) {
+    const j = Math.min(0.3, (sig.spread - 70) / 130);
+    cloud.circles.forEach((c, i) => { c.cy += Math.sin(i * 2.399) * 10 * j; });
+  }
+
+  cloud.baseOpacity = Math.min(0.95, cloud.baseOpacity * (pos ? 1 - 0.12 * t : 1 + 0.42 * t));
+  cloud.blur = Math.max(2.5, cloud.blur * (pos ? 1 - 0.18 * t : 1 + 0.30 * t));
+
+  // Geometry moved, so the face has to move with it.
+  if (!cloud.puffs) {
+    const e = _centroid(cloud.circles);
+    cloud.eyeX = e.x;
+    cloud.eyeY = e.y - (cloud.type === 'cumulus' ? 5 : 0);
+  }
+  return cloud;
+}
+
+function generateCloudForDay(date, dayData) {
+  const sig = _moodSignature(dayData);
+  const rng = _cRng(_moodSeed(date, sig));
+  const type = _pickCloudType(sig, rng);
+  let cloud;
+  if (type === 'cumulus') cloud = _genCumulus(rng);
+  else if (type === 'cirrus') cloud = _genCirrus(rng);
+  else if (type === 'altostratus') cloud = _genAltostratus(rng);
+  else cloud = _genAltocumulus(rng);
+  return _applyMoodToCloud(cloud, sig);
 }
 
 function _eyePairSVG(ex,ey,s) {
@@ -3474,16 +3577,18 @@ function _buildMoonSVG(date) {
     `</svg>`;
 }
 
-function updateCloudState() {
+function updateCloudState(opts) {
   const todayData = getSkyDayData();
   const filled = PERIOD_KEYS.map(pk => todayData[pk]).filter(e => e?.score != null);
   const wrap = document.getElementById('cloud-wrap');
   const area = document.getElementById('cloud-area');
   const msgEl = document.getElementById('sky-monster-msg');
 
-  const seed = skyDate.getFullYear()*10000 + (skyDate.getMonth()+1)*100 + skyDate.getDate();
+  // Seed now folds in the day's mood, so the cloud is regenerated
+  // whenever the shape would actually change.
+  const seed = _moodSeed(skyDate, _moodSignature(todayData));
   if (seed !== _lastCloudSeed) {
-    _cachedCloud = generateCloudForDate(skyDate);
+    _cachedCloud = generateCloudForDay(skyDate, todayData);
     _lastCloudSeed = seed;
   }
 
@@ -3549,8 +3654,11 @@ function updateCloudState() {
     }
   }
 
-  const msg = getMonsterMessage(todayData);
-  if (msgEl) msgEl.textContent = msg || '';
+  // During the ritual the message is revealed on its own beat.
+  if (!opts || !opts.silent) {
+    const msg = getMonsterMessage(todayData);
+    if (msgEl) msgEl.textContent = msg || '';
+  }
 }
 
 function triggerCloudWind() {
@@ -3560,6 +3668,65 @@ function triggerCloudWind() {
   void wrap.offsetWidth; // force reflow to restart animation
   wrap.classList.add('wind');
   wrap.addEventListener('animationend', () => wrap.classList.remove('wind'), { once: true });
+}
+
+// ===== RECORDING RITUAL =====
+// Saving is not a toast. The sky re-colours, the cloud re-grows into the
+// shape this mood makes, and only then does it say something back.
+let _ritualTimers = [];
+
+function cancelSkyRitual() {
+  _ritualTimers.forEach(clearTimeout);
+  _ritualTimers = [];
+  const wrap = document.getElementById('cloud-wrap');
+  if (wrap) wrap.classList.remove('inhale', 'bloom');
+  const msgEl = document.getElementById('sky-monster-msg');
+  if (msgEl) msgEl.classList.remove('hushed', 'reveal');
+}
+
+function _ritualStep(fn, ms) { _ritualTimers.push(setTimeout(fn, ms)); }
+
+function runSkyRitual() {
+  cancelSkyRitual();
+  const wrap = document.getElementById('cloud-wrap');
+  const msgEl = document.getElementById('sky-monster-msg');
+
+  // 1. The old message steps back, the cloud draws breath.
+  if (msgEl) msgEl.classList.add('hushed');
+  if (wrap) wrap.classList.add('inhale');
+
+  // 2. The sky changes colour behind the closing sheet
+  //    (.sky-bg carries a 1.2s transition, so this reads immediately).
+  _ritualStep(() => {
+    updateSkyGradient();
+    updateSkyPeriods();
+  }, 120);
+
+  // 3. The cloud re-grows in its new shape.
+  _ritualStep(() => {
+    if (wrap) wrap.classList.remove('inhale');
+    updateCloudState({ silent: true });
+    if (wrap) {
+      wrap.classList.remove('bloom');
+      void wrap.offsetWidth;
+      wrap.classList.add('bloom');
+    }
+  }, 440);
+
+  // 4. And then it says something.
+  _ritualStep(() => {
+    if (!msgEl) return;
+    msgEl.textContent = getMonsterMessage(getSkyDayData()) || '';
+    msgEl.classList.remove('hushed', 'reveal');
+    void msgEl.offsetWidth;
+    msgEl.classList.add('reveal');
+  }, 1180);
+
+  // 5. Hand the cloud back to its idle float.
+  _ritualStep(() => {
+    if (wrap) wrap.classList.remove('bloom');
+    _ritualTimers = [];
+  }, 2000);
 }
 
 // ===== NAVIGATION =====
@@ -3778,6 +3945,13 @@ function openEntrySheet(period) {
 }
 
 function closeEntrySheet() {
+  // Dismissed before the ritual got its cue — run it anyway, or the
+  // save would leave the sky untouched.
+  if (window._ritualStartTimer) {
+    clearTimeout(window._ritualStartTimer);
+    window._ritualStartTimer = null;
+    runSkyRitual();
+  }
   if (window._saveRevertTimer) clearTimeout(window._saveRevertTimer);
   const saveBtn = document.getElementById('entry-save');
   if (saveBtn) { saveBtn.textContent = '記下來'; saveBtn.classList.remove('saved'); }
@@ -3855,7 +4029,11 @@ function saveEntry() {
   } else { delete cycleData[todayD]; }
 
   saveData();
-  updateSkyPeriods(); updateSkyGradient(); updateCloudState(); triggerCloudWind(); renderCalendar();
+  renderCalendar();
+  // The sky itself is the confirmation — but only when it's the sky
+  // you're actually looking at. Otherwise just refresh in place.
+  const ritual = isSkyToday();
+  if (!ritual) { updateSkyPeriods(); updateSkyGradient(); updateCloudState(); triggerCloudWind(); }
 
   // Collapse note area back to toggle
   const noteWrap = document.getElementById('entry-note-wrap');
@@ -3871,15 +4049,24 @@ function saveEntry() {
     toggleText.style.color = '#c0b8b0';
   }
 
-  // Show confirmed state
+  // Show confirmed state, then get out of the way and let the sky answer.
   const saveBtn = document.getElementById('entry-save');
   saveBtn.classList.add('saved');
   saveBtn.textContent = '已記錄 ✓';
   if (window._saveRevertTimer) clearTimeout(window._saveRevertTimer);
-  window._saveRevertTimer = setTimeout(() => {
-    saveBtn.textContent = '記下來';
-    onEntrySlider(entrySliderVal);
-  }, 2000);
+  if (ritual) {
+    if (window._ritualStartTimer) clearTimeout(window._ritualStartTimer);
+    window._ritualStartTimer = setTimeout(() => {
+      window._ritualStartTimer = null;
+      closeEntrySheet();
+      runSkyRitual();
+    }, 220);
+  } else {
+    window._saveRevertTimer = setTimeout(() => {
+      saveBtn.textContent = '記下來';
+      onEntrySlider(entrySliderVal);
+    }, 2000);
+  }
 }
 </script>
 <script>
