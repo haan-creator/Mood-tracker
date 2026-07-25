@@ -1327,8 +1327,11 @@ input[type=number] { -moz-appearance: textfield; }
       <button class="backup-btn import-btn" id="settings-import">匯入備份</button>
       <input type="file" id="settings-import-file" accept=".json" style="display:none">
     </div>
-    <div style="margin-top:22px;text-align:center;font-family:var(--mono);font-size:10px;color:#c8c0b8;letter-spacing:1px;">
-      版本 <span id="settings-version"></span>
+    <div style="margin-top:22px;text-align:center;">
+      <button id="settings-refresh" style="border:none;background:none;font-family:var(--ff);font-size:11px;color:#a09890;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px;">強制更新</button>
+      <div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:#c8c0b8;letter-spacing:1px;">
+        版本 <span id="settings-version"></span>
+      </div>
     </div>
   </div>
 </div>
@@ -1336,7 +1339,9 @@ input[type=number] { -moz-appearance: textfield; }
 <script>
 // Shown in settings so it is possible to tell, on the phone itself,
 // which build is actually loaded rather than guessing at the cache.
-const APP_VERSION = '2026.07.25';
+// Bump this on every handover — it was left unchanged across several,
+// which made the readout useless for the one question it exists for.
+const APP_VERSION = '2026.07.25 · v9';
 
 // ===== COLOR SYSTEM =====
 // A brighter mood has to read as more radiant, not deeper. The old ramp
@@ -4338,6 +4343,23 @@ function saveEntry() {
 <script>
 const _v = document.getElementById('settings-version');
 if (_v) _v.textContent = APP_VERSION;
+
+// A client that already installed the original cache-first worker is
+// pinned to whatever build it first loaded and cannot be reached by
+// publishing. This is the way out from the phone itself.
+document.getElementById('settings-refresh')?.addEventListener('click', async () => {
+  try {
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    if (window.caches) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+  } catch {}
+  location.reload();
+});
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js').then(reg => {
