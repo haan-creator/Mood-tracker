@@ -1409,10 +1409,17 @@ input[type=number] { -moz-appearance: textfield; }
       <button class="backup-btn import-btn" id="settings-import">匯入備份</button>
       <input type="file" id="settings-import-file" accept=".json" style="display:none">
     </div>
+    <div style="margin-top:22px;text-align:center;font-family:var(--mono);font-size:10px;color:#c8c0b8;letter-spacing:1px;">
+      版本 <span id="settings-version"></span>
+    </div>
   </div>
 </div>
 
 <script>
+// Shown in settings so it is possible to tell, on the phone itself,
+// which build is actually loaded rather than guessing at the cache.
+const APP_VERSION = '2026.07.25';
+
 // ===== COLOR SYSTEM =====
 const WARM = [[255,220,120],[255,180,60],[240,130,50],[220,80,40],[190,45,30]];
 const COOL = [[160,210,230],[90,170,210],[50,130,180],[30,100,140],[15,70,80]];
@@ -4264,8 +4271,25 @@ function saveEntry() {
 }
 </script>
 <script>
+const _v = document.getElementById('settings-version');
+if (_v) _v.textContent = APP_VERSION;
+
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js');
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    // Check on every load, so a deploy is picked up without waiting for
+    // the browser's own update schedule.
+    reg.update();
+    // A newly installed worker means the page in front of you is stale.
+    reg.addEventListener('updatefound', () => {
+      const sw = reg.installing;
+      if (!sw) return;
+      sw.addEventListener('statechange', () => {
+        if (sw.state === 'activated' && navigator.serviceWorker.controller) {
+          location.reload();
+        }
+      });
+    });
+  }).catch(() => {});
 }
 </script>
 </body>
