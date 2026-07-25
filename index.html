@@ -602,6 +602,44 @@ input[type=number] { -moz-appearance: textfield; }
 .cloud-area {
   flex: 1; display: flex; align-items: center; justify-content: center;
   width: 100%; transition: transform 1.8s ease;
+  touch-action: none; /* the sky itself is a drag surface */
+}
+/* While dragging, the cloud follows the finger instead of idling */
+.cloud-wrap.dragging { animation: none !important; }
+.sky-bg.no-transition { transition: none !important; }
+
+/* Live readout while dragging the sky */
+.sky-drag-hint {
+  position: absolute; left: 0; right: 0; top: 25%;
+  text-align: center; pointer-events: none;
+  font-family: var(--ff); font-weight: 700;
+  opacity: 0; transition: opacity 0.18s ease;
+  z-index: 2;
+}
+.sky-drag-hint.on { opacity: 1; }
+.sky-drag-hint .dh-period {
+  display: block; font-size: 12px; font-weight: 600;
+  letter-spacing: 3px; color: rgba(40,35,30,0.4); margin-bottom: 2px;
+}
+.sky-drag-hint .dh-word {
+  display: block; font-size: 30px; letter-spacing: 2px;
+  color: rgba(40,35,30,0.72);
+}
+.sky-dark .sky-drag-hint .dh-period { color: rgba(255,255,255,0.5); }
+.sky-dark .sky-drag-hint .dh-word { color: rgba(255,255,255,0.92); }
+
+/* First-run nudge telling you the sky is draggable */
+.sky-drag-coach {
+  position: absolute; left: 0; right: 0; top: 63%;
+  text-align: center; pointer-events: none;
+  font-family: var(--ff); font-size: 12px; letter-spacing: 1.5px;
+  color: rgba(40,35,30,0.3);
+  animation: coachBob 2.6s ease-in-out infinite;
+}
+.sky-dark .sky-drag-coach { color: rgba(255,255,255,0.4); }
+@keyframes coachBob {
+  0%, 100% { transform: translateY(0); opacity: 0.55; }
+  50%      { transform: translateY(-6px); opacity: 1; }
 }
 .cloud-wrap {
   animation: cloudFloat 6s ease-in-out infinite;
@@ -687,6 +725,18 @@ input[type=number] { -moz-appearance: textfield; }
 .cloud-wrap.bloom {
   animation: cloudBloom 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
+/* Released from a drag the cloud is already at full size, so it blooms
+   from where the finger left it instead of popping down first. */
+.cloud-wrap.releasing {
+  transition: transform 0.18s ease-out; animation: none !important;
+}
+@keyframes cloudBloomFromDrag {
+  0%   { transform: scale(1) translateY(0); opacity: 0.45; }
+  40%  { transform: scale(1.07) translateY(-7px); opacity: 1; }
+  70%  { transform: scale(0.985) translateY(2px); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.cloud-wrap.bloom.from-drag { animation-name: cloudBloomFromDrag; }
 
 /* Monster message */
 .sky-monster-msg {
@@ -1170,6 +1220,11 @@ input[type=number] { -moz-appearance: textfield; }
     <div class="cloud-area" id="cloud-area">
       <div class="cloud-wrap idle" id="cloud-wrap"></div>
     </div>
+    <div class="sky-drag-hint" id="sky-drag-hint">
+      <span class="dh-period" id="dh-period"></span>
+      <span class="dh-word" id="dh-word"></span>
+    </div>
+    <div class="sky-drag-coach" id="sky-drag-coach" style="display:none">↕ 在天空上滑動</div>
     <div class="rain-container" id="rain-container"></div>
     <div class="glow-container" id="glow-container"></div>
     <div class="moon-container" id="moon-container"></div>
@@ -3195,6 +3250,7 @@ function initSkyPage() {
   updateSkyPeriods();
   updateSkyGradient();
   updateCloudState();
+  updateDragCoach();
 }
 
 function updateSkyDate() {
@@ -3225,6 +3281,7 @@ function refreshSky() {
   updateSkyPeriods();
   updateSkyGradient();
   updateCloudState();
+  updateDragCoach();
 }
 
 function getSkyDayData() {
@@ -3270,8 +3327,13 @@ function updateSkyPeriods() {
   });
 }
 
-function updateSkyGradient() {
-  const todayData = getSkyDayData();
+// `provisional` lets a drag preview a value that isn't saved yet:
+// { period, type, score }
+function updateSkyGradient(provisional) {
+  const todayData = Object.assign({}, getSkyDayData());
+  if (provisional) {
+    todayData[provisional.period] = { type: provisional.type, score: provisional.score };
+  }
   const bg = document.getElementById('sky-bg');
   const neutral = '#ddd8d0';
 
@@ -3679,39 +3741,44 @@ function cancelSkyRitual() {
   _ritualTimers.forEach(clearTimeout);
   _ritualTimers = [];
   const wrap = document.getElementById('cloud-wrap');
-  if (wrap) wrap.classList.remove('inhale', 'bloom');
+  if (wrap) wrap.classList.remove('inhale', 'bloom', 'from-drag', 'releasing');
   const msgEl = document.getElementById('sky-monster-msg');
   if (msgEl) msgEl.classList.remove('hushed', 'reveal');
 }
 
 function _ritualStep(fn, ms) { _ritualTimers.push(setTimeout(fn, ms)); }
 
-function runSkyRitual() {
+// opts.fromDrag: the sky was just dragged, so the cloud is already
+// displaced and the colour already previewed — skip the wind-up.
+function runSkyRitual(opts) {
+  const fromDrag = !!(opts && opts.fromDrag);
   cancelSkyRitual();
   const wrap = document.getElementById('cloud-wrap');
   const msgEl = document.getElementById('sky-monster-msg');
 
   // 1. The old message steps back, the cloud draws breath.
   if (msgEl) msgEl.classList.add('hushed');
-  if (wrap) wrap.classList.add('inhale');
+  if (wrap && !fromDrag) wrap.classList.add('inhale');
 
   // 2. The sky changes colour behind the closing sheet
   //    (.sky-bg carries a 1.2s transition, so this reads immediately).
   _ritualStep(() => {
     updateSkyGradient();
     updateSkyPeriods();
-  }, 120);
+  }, fromDrag ? 0 : 120);
 
   // 3. The cloud re-grows in its new shape.
   _ritualStep(() => {
     if (wrap) wrap.classList.remove('inhale');
     updateCloudState({ silent: true });
     if (wrap) {
-      wrap.classList.remove('bloom');
+      wrap.classList.remove('bloom', 'releasing');
+      wrap.style.transform = '';
       void wrap.offsetWidth;
       wrap.classList.add('bloom');
+      if (fromDrag) wrap.classList.add('from-drag');
     }
-  }, 440);
+  }, fromDrag ? 200 : 440);
 
   // 4. And then it says something.
   _ritualStep(() => {
@@ -3720,14 +3787,153 @@ function runSkyRitual() {
     msgEl.classList.remove('hushed', 'reveal');
     void msgEl.offsetWidth;
     msgEl.classList.add('reveal');
-  }, 1180);
+  }, fromDrag ? 940 : 1180);
 
   // 5. Hand the cloud back to its idle float.
   _ritualStep(() => {
-    if (wrap) wrap.classList.remove('bloom');
+    if (wrap) wrap.classList.remove('bloom', 'from-drag');
     _ritualTimers = [];
-  }, 2000);
+  }, fromDrag ? 1760 : 2000);
 }
+
+// ===== DRAG THE SKY =====
+// Today's fast path: drag up for a brighter mood, down for a heavier one.
+// The cloud follows your finger the whole way, so you're shaping it rather
+// than typing a number and waiting to see what happens.
+const SKY_DRAG_RANGE = 170; // px of travel for a full half-range (50 points)
+
+function currentPeriodKey() {
+  const h = new Date().getHours();
+  if (h < 12) return 'morning';
+  if (h < 18) return 'afternoon';
+  return 'evening';
+}
+
+function _dragWord(val) {
+  if (val >= 88) return '很亮';
+  if (val >= 68) return '明亮';
+  if (val >= 56) return '微亮';
+  if (val > 44) return '還好';
+  if (val >= 32) return '微涼';
+  if (val >= 12) return '沉';
+  return '很沉';
+}
+
+function _commitSkyDrag(period, mood) {
+  const now = new Date();
+  const d = String(now.getDate());
+  curYear = now.getFullYear(); curMonth = now.getMonth();
+  loadData();
+  if (!monthData[d]) monthData[d] = {};
+  const prev = monthData[d][period] || {};
+  // Keep any note already written for this period — a drag sets the
+  // score, it does not erase what you said.
+  monthData[d][period] = { type: mood.type, score: mood.score, note: prev.note };
+  saveData();
+  renderCalendar();
+}
+
+function updateDragCoach() {
+  const coach = document.getElementById('sky-drag-coach');
+  if (!coach) return;
+  let seen = false;
+  try { seen = localStorage.getItem('skyDragSeen') === '1'; } catch {}
+  const empty = PERIOD_KEYS.every(pk => getSkyDayData()[pk]?.score == null);
+  coach.style.display = (!seen && empty && isSkyToday()) ? '' : 'none';
+}
+
+(function initSkyDrag() {
+  const area = document.getElementById('cloud-area');
+  if (!area) return;
+  const $ = id => document.getElementById(id);
+
+  let active = false, moved = false, startY = 0, startVal = 50, val = 50;
+  let period = 'morning', raf = 0;
+
+  function paint() {
+    raf = 0;
+    const mood = sliderToMood(val);
+    const t = (val - 50) / 50; // -1 .. +1
+    const wrap = $('cloud-wrap');
+    if (wrap) {
+      // Up: rise and puff out. Down: sink and press flat.
+      const ty = -t * 26;
+      const sx = t >= 0 ? 1 + t * 0.13 : 1 + (-t) * 0.12;
+      const sy = t >= 0 ? 1 + t * 0.16 : 1 - (-t) * 0.20;
+      wrap.style.transform = `translateY(${ty.toFixed(1)}px) scale(${sx.toFixed(3)},${sy.toFixed(3)})`;
+      // An unrecorded day draws its cloud as a faint ghost, which would
+      // leave nothing to watch. Make it solidify as you commit.
+      const svg = wrap.querySelector('svg');
+      if (svg) svg.style.opacity = (0.30 + 0.45 * Math.min(1, Math.abs(t))).toFixed(3);
+    }
+    updateSkyGradient({ period: period, type: mood.type, score: mood.score });
+    const wordEl = $('dh-word');
+    if (wordEl) wordEl.textContent = _dragWord(val);
+  }
+  function schedule() { if (!raf) raf = requestAnimationFrame(paint); }
+
+  area.addEventListener('pointerdown', e => {
+    if (!isSkyToday()) return;
+    if (!$('page-sky').classList.contains('active')) return;
+    cancelSkyRitual();
+    active = true; moved = false;
+    startY = e.clientY;
+    period = currentPeriodKey();
+    const existing = getSkyDayData()[period];
+    startVal = existing?.score != null ? moodToSlider(existing.type, existing.score) : 50;
+    val = startVal;
+    try { area.setPointerCapture(e.pointerId); } catch {}
+  });
+
+  area.addEventListener('pointermove', e => {
+    if (!active) return;
+    const dy = e.clientY - startY;
+    if (!moved) {
+      if (Math.abs(dy) < 8) return; // a tap is not a drag
+      moved = true;
+      $('cloud-wrap')?.classList.add('dragging');
+      $('sky-bg')?.classList.add('no-transition');
+      const dp = $('dh-period');
+      if (dp) dp.textContent = PERIOD_NAMES[PERIOD_KEYS.indexOf(period)];
+      $('sky-drag-hint')?.classList.add('on');
+      $('sky-monster-msg')?.classList.add('hushed');
+      const coach = $('sky-drag-coach');
+      if (coach) coach.style.display = 'none';
+    }
+    val = Math.max(0, Math.min(100, startVal + (-dy / SKY_DRAG_RANGE) * 50));
+    schedule();
+  });
+
+  function finish(commit) {
+    if (!active) return;
+    active = false;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    const wrap = $('cloud-wrap');
+    $('sky-bg')?.classList.remove('no-transition');
+    $('sky-drag-hint')?.classList.remove('on');
+    if (!moved) { wrap?.classList.remove('dragging'); return; }
+
+    if (wrap) {
+      // Ease back from the finger's position; the ritual takes over from there.
+      wrap.classList.remove('dragging');
+      wrap.classList.add('releasing');
+      wrap.style.transform = '';
+    }
+    if (commit) {
+      _commitSkyDrag(period, sliderToMood(val));
+      try { localStorage.setItem('skyDragSeen', '1'); } catch {}
+      runSkyRitual({ fromDrag: true });
+    } else {
+      updateSkyGradient();
+      updateCloudState(); // redraw at its proper opacity
+      $('sky-monster-msg')?.classList.remove('hushed');
+      setTimeout(() => wrap?.classList.remove('releasing'), 200);
+    }
+  }
+
+  area.addEventListener('pointerup', () => finish(true));
+  area.addEventListener('pointercancel', () => finish(false));
+})();
 
 // ===== NAVIGATION =====
 function updateNavState(page) {
