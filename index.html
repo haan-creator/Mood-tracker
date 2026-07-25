@@ -611,12 +611,17 @@ input[type=number] { -moz-appearance: textfield; }
    cloud area rather than at a percentage of the viewport, which is what
    made the earlier hint collide with the message on short screens. */
 .sky-rail {
-  position: absolute; right: 14px; top: 50%;
+  position: absolute; right: 0; top: 50%;
   transform: translateY(-50%);
-  pointer-events: none;
-  color: rgba(40,35,30,0.5);
-  opacity: 0.5; transition: opacity 0.35s ease;
+  /* Grabbing a narrow, deliberate target cannot happen by accident, so
+     the rail needs no hold — it behaves like a real slider. The padding
+     is the touch target; the drawing inside stays slim. */
+  padding: 14px 20px 14px 22px;
+  touch-action: none; cursor: grab;
+  color: rgba(40,35,30,0.62);
+  opacity: 0.78; transition: opacity 0.35s ease;
 }
+.sky-rail:active { cursor: grabbing; }
 .sky-dark .sky-rail { color: rgba(255,255,255,0.72); }
 .sky-rail.live { opacity: 1; }
 .rail-tick {
@@ -625,9 +630,12 @@ input[type=number] { -moz-appearance: textfield; }
 .rail-bead {
   fill: currentColor;
   transition: cy 0.28s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease, r 0.25s ease;
-  opacity: 0.9;
+  opacity: 0.95;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.22));
 }
-.sky-rail.live .rail-bead { r: 5.4; }
+.sky-rail.live { opacity: 1; }
+.sky-rail.live .rail-bead { r: 8; }
+.sky-rail.live .rail-spine { opacity: 0.6; }
 .sky-rail.empty .rail-bead { opacity: 0.25; }
 /* While dragging, the cloud follows the finger instead of idling */
 .cloud-wrap.dragging { animation: none !important; }
@@ -1463,7 +1471,11 @@ input[type=number] { -moz-appearance: textfield; }
 const APP_VERSION = '2026.07.25';
 
 // ===== COLOR SYSTEM =====
-const WARM = [[255,220,120],[255,180,60],[240,130,50],[220,80,40],[190,45,30]];
+// A brighter mood has to read as more radiant, not deeper. The old ramp
+// ended at rgb(190,45,30) — a blood red that was the darkest of the warm
+// steps, so "happiest" landed closest to anger. It now travels
+// cream → gold → coral, gaining warmth while staying luminous.
+const WARM = [[255,240,198],[255,216,132],[255,188,90],[253,158,88],[248,132,104]];
 const COOL = [[160,210,230],[90,170,210],[50,130,180],[30,100,140],[15,70,80]];
 
 function lerp(stops, t) {
@@ -3930,9 +3942,9 @@ function buildRailTicks() {
   g.innerHTML = MOOD_LEVELS.map((L, i) => {
     const y = railY(i);
     const c = L.score === 0 ? '#b8b2aa' : getColor(L.type, L.score);
-    const half = i === MOOD_NEUTRAL ? 4 : 5.5;
+    const half = i === MOOD_NEUTRAL ? 5.5 : 7.5;
     return `<line class="rail-tick" data-i="${i}" x1="${13 - half}" y1="${y}" x2="${13 + half}" y2="${y}"
-      stroke="${c}" stroke-width="2" stroke-linecap="round" opacity="0.55"/>`;
+      stroke="${c}" stroke-width="2.6" stroke-linecap="round" opacity="0.7"/>`;
   }).join('');
 }
 
@@ -3963,9 +3975,96 @@ function updateSkyRail(preview) {
 
   rail.querySelectorAll('.rail-tick').forEach(t => {
     const on = parseInt(t.dataset.i, 10) === level;
-    t.setAttribute('opacity', on ? '1' : '0.4');
-    t.setAttribute('stroke-width', on ? '2.6' : '2');
+    t.setAttribute('opacity', on ? '1' : '0.5');
+    t.setAttribute('stroke-width', on ? '3.4' : '2.6');
   });
+}
+
+// Dragging the rail itself. No hold: you cannot brush a target this
+// narrow by accident, and requiring a hold here was what made the
+// gesture feel like work. Absolute, like a real slider — touch a tick
+// and the bead goes there.
+function attachRailDrag() {
+  const rail = document.getElementById('sky-rail');
+  const svg = rail && rail.querySelector('svg');
+  if (!rail || !svg) return;
+  let dragging = false, period = 'morning', val = 50, raf = 0;
+
+  const valFromEvent = e => {
+    const r = svg.getBoundingClientRect();
+    const y = ((e.clientY - r.top) / r.height) * 168; // viewBox units
+    const v = 100 * (RAIL_BOTTOM - y) / (RAIL_BOTTOM - RAIL_TOP);
+    return Math.max(0, Math.min(100, v));
+  };
+
+  function paint() {
+    raf = 0;
+    const L = MOOD_LEVELS[levelFromSigned((val - 50) * 2)];
+    updateSkyGradient({ period: period, type: L.type, score: L.score });
+    updateSkyRail(val);
+    const wrap = document.getElementById('cloud-wrap');
+    if (wrap) {
+      const t = (val - 50) / 50;
+      const sx = t >= 0 ? 1 + t * 0.13 : 1 + (-t) * 0.12;
+      const sy = t >= 0 ? 1 + t * 0.16 : 1 - (-t) * 0.20;
+      wrap.style.transform = `translateY(${(-t * 26).toFixed(1)}px) scale(${sx.toFixed(3)},${sy.toFixed(3)})`;
+      const s = wrap.querySelector('svg');
+      if (s) s.style.opacity = (0.30 + 0.45 * Math.min(1, Math.abs(t))).toFixed(3);
+    }
+    const w = document.getElementById('dh-word');
+    if (w) w.textContent = L.label;
+  }
+
+  rail.addEventListener('pointerdown', e => {
+    if (!isSkyToday()) return;
+    // The rail sits inside the cloud area, whose own hold-to-drag would
+    // otherwise steal the pointer capture and swallow the release.
+    e.stopPropagation();
+    e.preventDefault();
+    cancelSkyRitual();
+    dragging = true;
+    period = activePeriod();
+    val = valFromEvent(e);
+    try { rail.setPointerCapture(e.pointerId); } catch {}
+    rail.classList.add('live');
+    document.getElementById('cloud-wrap')?.classList.add('dragging');
+    document.getElementById('sky-bg')?.classList.add('no-transition');
+    const dp = document.getElementById('dh-period');
+    if (dp) dp.textContent = PERIOD_NAMES[PERIOD_KEYS.indexOf(period)];
+    document.getElementById('sky-drag-hint')?.classList.add('on');
+    document.getElementById('sky-monster-msg')?.classList.add('hushed');
+    const coach = document.getElementById('sky-drag-coach');
+    if (coach) coach.style.display = 'none';
+    paint();
+  });
+
+  rail.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    val = valFromEvent(e);
+    if (!raf) raf = requestAnimationFrame(paint);
+  });
+
+  function end() {
+    if (!dragging) return;
+    dragging = false;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    _skyDragEndedAt = Date.now();
+    rail.classList.remove('live');
+    document.getElementById('sky-bg')?.classList.remove('no-transition');
+    document.getElementById('sky-drag-hint')?.classList.remove('on');
+    const wrap = document.getElementById('cloud-wrap');
+    if (wrap) {
+      wrap.classList.remove('dragging');
+      wrap.classList.add('releasing');
+      wrap.style.transform = '';
+    }
+    const L = MOOD_LEVELS[levelFromSigned((val - 50) * 2)];
+    _commitSkyDrag(period, { type: L.type, score: L.score });
+    try { localStorage.setItem('skyDragSeen', '1'); } catch {}
+    runSkyRitual({ fromDrag: true });
+  }
+  rail.addEventListener('pointerup', end);
+  rail.addEventListener('pointercancel', end);
 }
 
 function updateDragCoach() {
@@ -4113,6 +4212,7 @@ function attachSkyDrag(area, resolvePeriod) {
 // as a hidden trick nobody would guess at; selecting one and then
 // dragging the sky keeps a single place where the gesture lives.
 attachSkyDrag(document.getElementById('cloud-area'), activePeriod);
+attachRailDrag();
 
 // ===== NAVIGATION =====
 function updateNavState(page) {
