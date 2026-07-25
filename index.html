@@ -603,7 +603,32 @@ input[type=number] { -moz-appearance: textfield; }
   flex: 1; display: flex; align-items: center; justify-content: center;
   width: 100%; transition: transform 1.8s ease;
   touch-action: none; /* the sky itself is a drag surface */
+  position: relative;
 }
+
+/* The rail — a barometer for the day, and the standing answer to
+   "how would anyone know the sky can be dragged?". Anchored inside the
+   cloud area rather than at a percentage of the viewport, which is what
+   made the earlier hint collide with the message on short screens. */
+.sky-rail {
+  position: absolute; right: 14px; top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: rgba(40,35,30,0.5);
+  opacity: 0.5; transition: opacity 0.35s ease;
+}
+.sky-dark .sky-rail { color: rgba(255,255,255,0.72); }
+.sky-rail.live { opacity: 1; }
+.rail-tick {
+  transition: opacity 0.25s ease, stroke-width 0.25s ease;
+}
+.rail-bead {
+  fill: currentColor;
+  transition: cy 0.28s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease, r 0.25s ease;
+  opacity: 0.9;
+}
+.sky-rail.live .rail-bead { r: 5.4; }
+.sky-rail.empty .rail-bead { opacity: 0.25; }
 /* While dragging, the cloud follows the finger instead of idling */
 .cloud-wrap.dragging { animation: none !important; }
 .sky-bg.no-transition { transition: none !important; }
@@ -641,15 +666,20 @@ input[type=number] { -moz-appearance: textfield; }
   color: rgba(40,35,30,0.32);
 }
 .sky-dark .sky-drag-coach { color: rgba(255,255,255,0.42); }
-.sky-drag-coach .coach-bead {
-  animation: coachBead 2.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+/* Until the gesture has been used once, the rail beckons rather than
+   sitting still, so there is one instrument on screen instead of two. */
+.sky-rail.beckon { opacity: 0.85; }
+.sky-rail.beckon .rail-bead {
+  animation: railBeckon 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  transition: none;
 }
-@keyframes coachBead {
-  0%, 100% { transform: translateY(0);     opacity: 0.3; }
-  25%      { transform: translateY(-11px); opacity: 1; }
-  50%      { transform: translateY(0);     opacity: 0.6; }
-  75%      { transform: translateY(11px);  opacity: 1; }
+@keyframes railBeckon {
+  0%, 100% { transform: translateY(0);    opacity: 0.35; }
+  25%      { transform: translateY(-46px); opacity: 1; }
+  50%      { transform: translateY(0);    opacity: 0.6; }
+  75%      { transform: translateY(46px);  opacity: 1; }
 }
+.sky-rail.live .rail-bead { animation: none; }
 .cloud-wrap {
   animation: cloudFloat 6s ease-in-out infinite;
 }
@@ -804,9 +834,17 @@ input[type=number] { -moz-appearance: textfield; }
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   cursor: pointer; transition: all 0.3s;
   font-family: var(--ff);
-  touch-action: none; /* each button is its own drag surface */
 }
 .sky-period-btn:active { transform: scale(0.96); }
+/* The period the sky gesture is aimed at */
+.sky-period-btn.selected {
+  border-color: rgba(40,35,30,0.42);
+  background: rgba(255,255,255,0.55);
+}
+.sky-dark .sky-period-btn.selected {
+  border-color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.22);
+}
 .sky-period-btn.filled {
   border-color: rgba(40,35,30,0.18);
   background: rgba(255,255,255,0.35);
@@ -1230,6 +1268,15 @@ input[type=number] { -moz-appearance: textfield; }
     </div>
     <div class="cloud-area" id="cloud-area">
       <div class="cloud-wrap idle" id="cloud-wrap"></div>
+      <div class="sky-rail" id="sky-rail" aria-hidden="true">
+        <svg viewBox="0 0 26 168" width="26" height="168" fill="none">
+          <line class="rail-spine" x1="13" y1="12" x2="13" y2="156"
+                stroke="currentColor" stroke-width="1" stroke-linecap="round"
+                stroke-dasharray="1.5 4" opacity="0.35"/>
+          <g id="rail-ticks"></g>
+          <circle class="rail-bead" id="rail-bead" cx="13" cy="84" r="4.2"/>
+        </svg>
+      </div>
     </div>
     <div class="sky-drag-hint" id="sky-drag-hint">
       <span class="dh-period" id="dh-period"></span>
@@ -1239,12 +1286,7 @@ input[type=number] { -moz-appearance: textfield; }
     <div class="glow-container" id="glow-container"></div>
     <div class="moon-container" id="moon-container"></div>
     <div class="sky-drag-coach" id="sky-drag-coach" style="display:none">
-      <svg viewBox="0 0 16 40" width="16" height="40" fill="none" aria-hidden="true">
-        <line x1="8" y1="6" x2="8" y2="34" stroke="currentColor" stroke-width="1.1"
-              stroke-linecap="round" stroke-dasharray="1.5 3.5" opacity="0.45"/>
-        <circle class="coach-bead" cx="8" cy="20" r="3.4" fill="currentColor"/>
-      </svg>
-      <span>按住後上下滑動</span>
+      <span>按住天空上下滑動</span>
     </div>
     <div class="sky-monster-msg" id="sky-monster-msg"></div>
     <div class="sky-tagline">今天的天空</div>
@@ -3277,6 +3319,7 @@ function initSkyPage() {
   updateSkyPeriods();
   updateSkyGradient();
   updateCloudState();
+  updateSkyRail();
   updateDragCoach();
 }
 
@@ -3304,10 +3347,12 @@ function skyNext() {
 
 function refreshSky() {
   cancelSkyRitual();
+  selectedPeriod = null; // a different day starts aimed at the clock again
   updateSkyDate();
   updateSkyPeriods();
   updateSkyGradient();
   updateCloudState();
+  updateSkyRail();
   updateDragCoach();
 }
 
@@ -3326,6 +3371,7 @@ function updateSkyPeriods() {
   const todayData = getSkyDayData();
   const isToday = isSkyToday();
 
+  const aimed = activePeriod();
   PERIOD_KEYS.forEach(pk => {
     const btn = document.getElementById('sky-p-' + pk);
     const scoreEl = document.getElementById('sky-sc-' + pk);
@@ -3333,6 +3379,8 @@ function updateSkyPeriods() {
     const entry = todayData[pk];
 
     btn.classList.toggle('readonly', !isToday);
+    // Which period the sky is currently pointed at.
+    btn.classList.toggle('selected', isToday && pk === aimed);
 
     if (entry?.score != null) {
       btn.classList.add('filled');
@@ -3792,6 +3840,7 @@ function runSkyRitual(opts) {
   _ritualStep(() => {
     updateSkyGradient();
     updateSkyPeriods();
+    updateSkyRail();
   }, fromDrag ? 0 : 120);
 
   // 3. The cloud re-grows in its new shape.
@@ -3836,6 +3885,12 @@ function currentPeriodKey() {
   return 'evening';
 }
 
+// Which period the sky gesture writes. Null means "whatever time it is",
+// which is right almost always; tapping another period aims it there so
+// an earlier part of the day can be filled in without leaving the sky.
+let selectedPeriod = null;
+function activePeriod() { return selectedPeriod || currentPeriodKey(); }
+
 // Hold before the gesture engages. A brush, a stray swipe, or a tap that
 // slid a little must never change a recorded mood — the earlier version
 // armed on 8px of movement, which went off by accident constantly.
@@ -3856,13 +3911,72 @@ function _commitSkyDrag(period, mood) {
   renderCalendar();
 }
 
+// ===== THE RAIL =====
+// Five ticks, coldest at the bottom, brightest at the top — the same
+// direction the gesture runs, so the rail doubles as the instruction.
+const RAIL_TOP = 12, RAIL_BOTTOM = 156;
+
+function railY(levelIdx) {
+  const span = RAIL_BOTTOM - RAIL_TOP;
+  return RAIL_BOTTOM - (levelIdx / (MOOD_LEVELS.length - 1)) * span;
+}
+function railYFromVal(val) { // val 0..100, continuous
+  return RAIL_BOTTOM - (Math.max(0, Math.min(100, val)) / 100) * (RAIL_BOTTOM - RAIL_TOP);
+}
+
+function buildRailTicks() {
+  const g = document.getElementById('rail-ticks');
+  if (!g || g.childElementCount) return;
+  g.innerHTML = MOOD_LEVELS.map((L, i) => {
+    const y = railY(i);
+    const c = L.score === 0 ? '#b8b2aa' : getColor(L.type, L.score);
+    const half = i === MOOD_NEUTRAL ? 4 : 5.5;
+    return `<line class="rail-tick" data-i="${i}" x1="${13 - half}" y1="${y}" x2="${13 + half}" y2="${y}"
+      stroke="${c}" stroke-width="2" stroke-linecap="round" opacity="0.55"/>`;
+  }).join('');
+}
+
+// `preview` is the live drag value; without it the rail shows what is stored.
+function updateSkyRail(preview) {
+  const rail = document.getElementById('sky-rail');
+  const bead = document.getElementById('rail-bead');
+  if (!rail || !bead) return;
+  buildRailTicks();
+
+  const entry = getSkyDayData()[activePeriod()];
+  const stored = entry?.score != null;
+  let level, y;
+
+  if (preview != null) {
+    y = railYFromVal(preview);
+    level = levelFromSigned((preview - 50) * 2);
+  } else {
+    level = stored ? levelFromEntry(entry) : MOOD_NEUTRAL;
+    y = railY(level);
+  }
+
+  bead.setAttribute('cy', y.toFixed(1));
+  const L = MOOD_LEVELS[level];
+  bead.style.fill = (!stored && preview == null) || L.score === 0
+    ? 'currentColor' : getColor(L.type, L.score);
+  rail.classList.toggle('empty', !stored && preview == null);
+
+  rail.querySelectorAll('.rail-tick').forEach(t => {
+    const on = parseInt(t.dataset.i, 10) === level;
+    t.setAttribute('opacity', on ? '1' : '0.4');
+    t.setAttribute('stroke-width', on ? '2.6' : '2');
+  });
+}
+
 function updateDragCoach() {
   const coach = document.getElementById('sky-drag-coach');
   if (!coach) return;
   let seen = false;
   try { seen = localStorage.getItem('skyDragSeen') === '1'; } catch {}
   const empty = PERIOD_KEYS.every(pk => getSkyDayData()[pk]?.score == null);
-  coach.style.display = (!seen && empty && isSkyToday()) ? '' : 'none';
+  const show = !seen && empty && isSkyToday();
+  coach.style.display = show ? '' : 'none';
+  document.getElementById('sky-rail')?.classList.toggle('beckon', show);
 }
 
 // Set when a drag actually moved, so the period button's tap handler can
@@ -3901,6 +4015,7 @@ function attachSkyDrag(area, resolvePeriod) {
     // Preview the level that will actually be stored, so releasing
     // never shifts the colour you were looking at.
     updateSkyGradient({ period: period, type: L.type, score: L.score });
+    updateSkyRail(val);
     const wordEl = $('dh-word');
     if (wordEl) wordEl.textContent = L.label;
   }
@@ -3915,6 +4030,7 @@ function attachSkyDrag(area, resolvePeriod) {
     const dp = $('dh-period');
     if (dp) dp.textContent = PERIOD_NAMES[PERIOD_KEYS.indexOf(period)];
     $('sky-drag-hint')?.classList.add('on');
+    $('sky-rail')?.classList.add('live');
     $('sky-monster-msg')?.classList.add('hushed');
     const coach = $('sky-drag-coach');
     if (coach) coach.style.display = 'none';
@@ -3967,6 +4083,7 @@ function attachSkyDrag(area, resolvePeriod) {
     const wrap = $('cloud-wrap');
     $('sky-bg')?.classList.remove('no-transition');
     $('sky-drag-hint')?.classList.remove('on');
+    $('sky-rail')?.classList.remove('live');
     if (wrap) {
       // Ease back from the finger's position; the ritual takes over from there.
       wrap.classList.remove('dragging');
@@ -3982,6 +4099,7 @@ function attachSkyDrag(area, resolvePeriod) {
     } else {
       updateSkyGradient();
       updateCloudState(); // redraw at its proper opacity
+      updateSkyRail();
       $('sky-monster-msg')?.classList.remove('hushed');
       setTimeout(() => wrap?.classList.remove('releasing'), 200);
     }
@@ -3991,13 +4109,10 @@ function attachSkyDrag(area, resolvePeriod) {
   area.addEventListener('pointercancel', () => finish(false));
 }
 
-// The sky writes whatever period the clock is in — the everyday case.
-attachSkyDrag(document.getElementById('cloud-area'), currentPeriodKey);
-// Each period button writes its own, so a morning logged at night, or a
-// correction to an earlier one, is the same single gesture.
-PERIOD_KEYS.forEach(pk => {
-  attachSkyDrag(document.getElementById('sky-p-' + pk), () => pk);
-});
+// Only the sky is draggable. Dragging the period buttons themselves read
+// as a hidden trick nobody would guess at; selecting one and then
+// dragging the sky keeps a single place where the gesture lives.
+attachSkyDrag(document.getElementById('cloud-area'), activePeriod);
 
 // ===== NAVIGATION =====
 function updateNavState(page) {
@@ -4096,14 +4211,19 @@ document.getElementById('settings-import-file').addEventListener('change', funct
 document.getElementById('sky-prev').addEventListener('click', skyPrev);
 document.getElementById('sky-next').addEventListener('click', skyNext);
 
-// Sky period taps — open entry sheet (today only).
-// A drag on the button already recorded that period, so don't also
-// open the sheet on the tap that follows it.
+// Tapping a period aims the sky gesture at it. Tapping the one already
+// aimed at opens its sheet, where the note and cycle markers live.
 document.getElementById('sky-periods').addEventListener('click', e => {
-  if (Date.now() - _skyDragEndedAt < 500) return;
   const btn = e.target.closest('.sky-period-btn');
   if (!btn || btn.classList.contains('readonly')) return;
-  openEntrySheet(btn.dataset.p);
+  const pk = btn.dataset.p;
+  if (activePeriod() === pk) {
+    openEntrySheet(pk);
+  } else {
+    selectedPeriod = pk;
+    updateSkyPeriods();
+    updateSkyRail();
+  }
 });
 
 // Entry overlay tap to close
