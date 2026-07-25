@@ -648,6 +648,153 @@ input[type=number] { -moz-appearance: textfield; }
   position: relative;
 }
 
+/* Restored: removing the rail took a non-greedy regex through the
+   middle of this file and deleted the cloud animations, the ritual,
+   the weather, the moon, the message and the wave along with it. */
+.cloud-wrap {
+  animation: cloudFloat 6s ease-in-out infinite;
+  position: relative; z-index: 1;
+}
+.cloud-wrap.idle { animation-duration: 8s; }
+.cloud-wrap.dragging { animation: none !important; }
+.cloud-wrap.wind {
+  animation: cloudWind 2.8s ease-in-out forwards;
+}
+.cloud-wrap.inhale {
+  animation: cloudInhale 0.42s cubic-bezier(0.4, 0, 0.7, 0.2) forwards;
+}
+.cloud-wrap.bloom {
+  animation: cloudBloom 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.cloud-wrap.releasing {
+  transition: transform 0.18s ease-out; animation: none !important;
+}
+.cloud-wrap.bloom.from-drag { animation-name: cloudBloomFromDrag; }
+.sky-bg.no-transition { transition: none !important; }
+.rain-container {
+  position: absolute; top: 50%; left: 8%; width: 84%; height: 35%;
+  pointer-events: none; overflow: hidden;
+  opacity: 0; transition: opacity 1.2s ease;
+}
+.rain-container.active { opacity: 1; }
+.raindrop {
+  position: absolute; top: -8px;
+  width: 1.5px; border-radius: 1px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.25));
+  animation: rainFall linear infinite;
+}
+.glow-container {
+  position: absolute; top: 30%; left: 8%; width: 84%; height: 40%;
+  pointer-events: none; overflow: hidden;
+  opacity: 0; transition: opacity 1.2s ease;
+}
+.glow-container.active { opacity: 1; }
+.glow-dot {
+  position: absolute; bottom: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,220,130,0.7), rgba(255,195,80,0.15));
+  animation: glowFloat linear infinite;
+}
+.moon-container {
+  position: absolute; top: 22%; right: 8%;
+  pointer-events: none;
+  opacity: 0; transition: opacity 1.5s ease;
+}
+.moon-container.active { opacity: 1; }
+.sky-monster-msg {
+  text-align: center; padding: 0 20px;
+  font-family: var(--ff); font-size: 17px; font-weight: 600;
+  color: rgba(40,35,30,0.6);
+  letter-spacing: 0.5px; line-height: 1.4;
+  min-height: 24px; margin-top: -4px;
+  transition: opacity 0.4s ease;
+  /* Own compositing layer: this text animates while the whole sky-bg is
+     mid-transition behind it, which is exactly when Safari leaves a
+     repaint ghost of the previous message. */
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.sky-monster-msg.hushed { opacity: 0; }
+.sky-monster-msg.reveal {
+  animation: msgReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.sky-tagline {
+  font-family: var(--ff); font-size: 13px;
+  color: rgba(40,35,30,0.22); letter-spacing: 2.5px;
+  padding: 4px 0 0; text-align: center;
+}
+.wave-area { width: 100%; height: 30px; margin: 12px 0 4px; overflow: visible; }
+.wave-svg {
+  width: 100%; height: 30px;
+  animation: waveFloat 6s ease-in-out infinite;
+}
+.sky-drag-hint {
+  position: absolute; left: 0; right: 0; top: 25%;
+  text-align: center; pointer-events: none;
+  font-family: var(--ff); font-weight: 700;
+  opacity: 0; transition: opacity 0.18s ease;
+  z-index: 2;
+}
+.sky-drag-hint.on { opacity: 1; }
+.sky-drag-hint .dh-period {
+  display: block; font-size: 12px; font-weight: 600;
+  letter-spacing: 3px; color: rgba(40,35,30,0.4); margin-bottom: 2px;
+}
+.sky-drag-hint .dh-word {
+  display: block; font-size: 30px; letter-spacing: 2px;
+  color: rgba(40,35,30,0.72);
+}
+.sky-dark .sky-drag-hint .dh-period { color: rgba(255,255,255,0.5); }
+.sky-dark .sky-drag-hint .dh-word { color: rgba(255,255,255,0.92); }
+@keyframes cloudFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.015); }
+}
+@keyframes cloudWind {
+  0% { transform: translateX(0) scale(1); }
+  25% { transform: translateX(22px) scale(1.025, 0.975); }
+  50% { transform: translateX(30px) scale(1.02, 0.98); }
+  75% { transform: translateX(14px) scale(1.008, 0.995); }
+  100% { transform: translateX(0) scale(1); }
+}
+@keyframes cloudInhale {
+  0%   { transform: scale(1) translateY(0); opacity: 1; }
+  100% { transform: scale(0.86) translateY(7px); opacity: 0.3; }
+}
+@keyframes cloudBloom {
+  0%   { transform: scale(0.86) translateY(7px); opacity: 0.3; }
+  45%  { transform: scale(1.07) translateY(-7px); opacity: 1; }
+  72%  { transform: scale(0.982) translateY(2px); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes cloudBloomFromDrag {
+  0%   { transform: scale(1) translateY(0); opacity: 0.45; }
+  40%  { transform: scale(1.07) translateY(-7px); opacity: 1; }
+  70%  { transform: scale(0.985) translateY(2px); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes glowFloat {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 0.8; }
+  80% { opacity: 0.5; }
+  100% { transform: translateY(var(--glow-dist, -110px)); opacity: 0; }
+}
+@keyframes rainFall {
+  0% { transform: translateY(0); opacity: 0; }
+  8% { opacity: 1; }
+  85% { opacity: 0.6; }
+  100% { transform: translateY(var(--rain-dist, 120px)); opacity: 0; }
+}
+@keyframes msgReveal {
+  0%   { opacity: 0; transform: translateY(9px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes waveFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
 /* The brush, and the colours it opens. The app's own tagline is
    為你的天空填色, so recording is picking up a brush and choosing a
    colour — a thing you can see and reach, rather than a gesture on an
@@ -673,13 +820,16 @@ input[type=number] { -moz-appearance: textfield; }
 .sky-dark .sky-brush.open { background: rgba(255,255,255,0.24); }
 
 .sky-palette {
-  position: absolute; right: 14px; bottom: 62px;
-  display: flex; flex-direction: column-reverse; gap: 2px;
+  position: absolute; right: 14px; bottom: 66px;
+  display: flex; flex-direction: column-reverse; gap: 6px;
   z-index: 12; pointer-events: none;
 }
 .sky-palette .sp-item {
-  display: flex; align-items: center; justify-content: flex-end; gap: 9px;
-  background: none; border: none; padding: 4px 3px; cursor: pointer;
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  /* 44px is the smallest target a thumb can hit reliably; these were 32
+     with 34 between centres, which is why they were fiddly. */
+  min-height: 46px;
+  background: none; border: none; padding: 2px 3px; cursor: pointer;
   opacity: 0; transform: translateY(14px) scale(0.9);
   transition: opacity 0.24s ease, transform 0.3s cubic-bezier(0.22,1,0.36,1);
   -webkit-tap-highlight-color: transparent;
@@ -3344,10 +3494,15 @@ function updateSkyGradient(provisional) {
   const bot = periodColor('evening');
   bg.style.background = `linear-gradient(180deg, ${top} 0%, ${top} 20%, ${mid} 45%, ${mid} 55%, ${bot} 80%, ${bot} 100%)`;
 
-  // Adaptive text
+  // Adaptive text. This used to flip on "any period is deeply negative",
+  // but the message and the labels sit low on the screen, where the
+  // colour comes from the evening. A heavy morning followed by a bright
+  // evening left white text on a pale sky. Read the actual brightness
+  // underneath the text instead.
   const skyEl = document.getElementById('page-sky');
-  const hasDeepNeg = PERIOD_KEYS.some(pk => todayData[pk]?.type === 'negative' && todayData[pk]?.score > 35);
-  skyEl.classList.toggle('sky-dark', hasDeepNeg);
+  const m = /(\d+),\s*(\d+),\s*(\d+)/.exec(bot);
+  const lum = m ? 0.2126 * +m[1] + 0.7152 * +m[2] + 0.0722 * +m[3] : 255;
+  skyEl.classList.toggle('sky-dark', lum < 150);
 }
 
 // ===== CLOUD SYSTEM =====
