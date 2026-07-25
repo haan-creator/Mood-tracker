@@ -177,7 +177,7 @@ input[type=number] { -moz-appearance: textfield; }
   width: 80%; height: 3px; border-radius: 2px; margin-bottom: 1px; opacity: 0.7;
 }
 .cycle-bar.period { background: linear-gradient(90deg, #d44060, #e06080); }
-.cycle-bar.pms { background: linear-gradient(90deg, #4090d0, #60b0e8); }
+.cycle-bar.pms { background: linear-gradient(90deg, #7a4fd0, #a37ce8); }
 .note-dot {
   position: absolute; bottom: 2px; right: 2px;
   width: 4px; height: 4px; border-radius: 50%; background: #c0b8b0;
@@ -613,9 +613,9 @@ input[type=number] { -moz-appearance: textfield; }
   border-radius: 2px; background: transparent;
   transition: width 0.3s cubic-bezier(0.22,1,0.36,1), background 0.3s ease;
 }
-.sky-datebtn.pms-on    .cycle-underline { width: 30px; background: #3f8fd0; }
+.sky-datebtn.pms-on    .cycle-underline { width: 30px; background: #8257d6; }
 .sky-datebtn.period-on .cycle-underline { width: 30px; background: #d1476a; }
-.sky-dark .sky-datebtn.pms-on    .cycle-underline { background: #8fc8f0; }
+.sky-dark .sky-datebtn.pms-on    .cycle-underline { background: #c3a6f5; }
 .sky-dark .sky-datebtn.period-on .cycle-underline { background: #f093aa; }
 
 .cycle-pop {
@@ -634,7 +634,7 @@ input[type=number] { -moz-appearance: textfield; }
 }
 .cycle-pop button:active { background: rgba(120,110,100,0.09); }
 .cycle-pop button.on { font-weight: 700; }
-.cycle-pop button#cycle-opt-pms.on    { color: #2b7ab8; background: rgba(64,144,208,0.1); }
+.cycle-pop button#cycle-opt-pms.on    { color: #6b3fb8; background: rgba(130,87,214,0.12); }
 .cycle-pop button#cycle-opt-period.on { color: #b8355a; background: rgba(200,60,90,0.09); }
 
 /* Read-only past day */
@@ -648,222 +648,55 @@ input[type=number] { -moz-appearance: textfield; }
   position: relative;
 }
 
-/* The rail — a barometer for the day, and the standing answer to
-   "how would anyone know the sky can be dragged?". Anchored inside the
-   cloud area rather than at a percentage of the viewport, which is what
-   made the earlier hint collide with the message on short screens. */
-.sky-rail {
-  position: absolute; right: 0; top: 50%;
-  transform: translateY(-50%);
-  /* A reading, not a control. Its job — the one it was added for — is to
-     show that up is brighter and down is heavier, so the sky gesture is
-     guessable, and to say where today sits. Making it draggable as well
-     is what put a control under a resting thumb. */
-  padding: 14px 20px 14px 22px;
-  pointer-events: none;
-  color: rgba(40,35,30,0.62);
-  opacity: 0.78; transition: opacity 0.35s ease;
+/* The brush, and the colours it opens. The app's own tagline is
+   為你的天空填色, so recording is picking up a brush and choosing a
+   colour — a thing you can see and reach, rather than a gesture on an
+   expanse of sky with no edges to tell you it is there. */
+.sky-brush {
+  position: absolute; right: 16px; bottom: 8px;
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 1.5px solid rgba(40,35,30,0.12);
+  background: rgba(255,255,255,0.34);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(40,35,30,0.5); cursor: pointer;
+  transition: transform 0.28s cubic-bezier(0.22,1,0.36,1), background 0.25s;
+  z-index: 12;
 }
-.sky-rail:active { cursor: grabbing; }
-.sky-dark .sky-rail { color: rgba(255,255,255,0.72); }
-.sky-rail.live { opacity: 1; }
-.rail-tick {
-  transition: opacity 0.25s ease, stroke-width 0.25s ease;
+.sky-brush svg { width: 20px; height: 20px; }
+.sky-brush:active { transform: scale(0.93); }
+.sky-brush.open { transform: rotate(-14deg); background: rgba(255,255,255,0.55); }
+.sky-dark .sky-brush {
+  border-color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.8);
 }
-.sky-rail.live { opacity: 1; }
-.sky-rail.live .rail-spine { opacity: 0.6; }
-.sky-rail.empty .rail-tick.on { opacity: 0.45 !important; }
-/* While dragging, the cloud follows the finger instead of idling */
-.cloud-wrap.dragging { animation: none !important; }
-.sky-bg.no-transition { transition: none !important; }
+.sky-dark .sky-brush.open { background: rgba(255,255,255,0.24); }
 
-/* Live readout while dragging the sky */
-.sky-drag-hint {
-  position: absolute; left: 0; right: 0; top: 25%;
-  text-align: center; pointer-events: none;
-  font-family: var(--ff); font-weight: 700;
-  opacity: 0; transition: opacity 0.18s ease;
-  z-index: 2;
+.sky-palette {
+  position: absolute; right: 14px; bottom: 62px;
+  display: flex; flex-direction: column-reverse; gap: 2px;
+  z-index: 12; pointer-events: none;
 }
-.sky-drag-hint.on { opacity: 1; }
-.sky-drag-hint .dh-period {
-  display: block; font-size: 12px; font-weight: 600;
-  letter-spacing: 3px; color: rgba(40,35,30,0.4); margin-bottom: 2px;
+.sky-palette .sp-item {
+  display: flex; align-items: center; justify-content: flex-end; gap: 9px;
+  background: none; border: none; padding: 4px 3px; cursor: pointer;
+  opacity: 0; transform: translateY(14px) scale(0.9);
+  transition: opacity 0.24s ease, transform 0.3s cubic-bezier(0.22,1,0.36,1);
+  -webkit-tap-highlight-color: transparent;
 }
-.sky-drag-hint .dh-word {
-  display: block; font-size: 30px; letter-spacing: 2px;
-  color: rgba(40,35,30,0.72);
+.sky-palette.open { pointer-events: auto; }
+.sky-palette.open .sp-item { opacity: 1; transform: none; }
+.sp-name {
+  font-family: var(--ff); font-size: 13px; font-weight: 600;
+  letter-spacing: 2px; color: rgba(40,35,30,0.6);
+  background: rgba(255,255,255,0.55); padding: 3px 10px; border-radius: 10px;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  white-space: nowrap;
 }
-.sky-dark .sky-drag-hint .dh-period { color: rgba(255,255,255,0.5); }
-.sky-dark .sky-drag-hint .dh-word { color: rgba(255,255,255,0.92); }
-
-/* First-run nudge telling you the sky is draggable — a bead travelling
-   a dotted axis, so the hint is drawn rather than spelled with a symbol */
-/* In normal flow, directly above the message. Percentage positioning
-   collided with the message text on shorter screens. It is only ever
-   shown on a day with no entries, where that message is empty. */
-.sky-drag-coach {
-  pointer-events: none;
-  display: flex; flex-direction: column; align-items: center; gap: 5px;
-  margin-bottom: 8px;
-  font-family: var(--ff); font-size: 12px; letter-spacing: 2px;
-  color: rgba(40,35,30,0.32);
-}
-.sky-dark .sky-drag-coach { color: rgba(255,255,255,0.42); }
-/* Until the gesture has been used once, the rail beckons rather than
-   sitting still, so there is one instrument on screen instead of two. */
-.sky-rail.beckon { opacity: 0.85; }
-.sky-rail.beckon .rail-tick {
-  animation: railBeckon 2.4s ease-in-out infinite;
-}
-.sky-rail.beckon .rail-tick[data-i="4"] { animation-delay: 0s; }
-.sky-rail.beckon .rail-tick[data-i="3"] { animation-delay: 0.12s; }
-.sky-rail.beckon .rail-tick[data-i="2"] { animation-delay: 0.24s; }
-.sky-rail.beckon .rail-tick[data-i="1"] { animation-delay: 0.36s; }
-.sky-rail.beckon .rail-tick[data-i="0"] { animation-delay: 0.48s; }
-@keyframes railBeckon {
-  0%, 60%, 100% { opacity: 0.3; }
-  25%           { opacity: 1; }
-}
-.sky-rail.live .rail-tick { animation: none; }
-.cloud-wrap {
-  animation: cloudFloat 6s ease-in-out infinite;
-}
-.cloud-wrap.idle { animation-duration: 8s; }
-
-/* Rain */
-.rain-container {
-  position: absolute; top: 50%; left: 8%; width: 84%; height: 35%;
-  pointer-events: none; overflow: hidden;
-  opacity: 0; transition: opacity 1.2s ease;
-}
-.rain-container.active { opacity: 1; }
-.raindrop {
-  position: absolute; top: -8px;
-  width: 1.5px; border-radius: 1px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.25));
-  animation: rainFall linear infinite;
-}
-@keyframes rainFall {
-  0% { transform: translateY(0); opacity: 0; }
-  8% { opacity: 1; }
-  85% { opacity: 0.6; }
-  100% { transform: translateY(var(--rain-dist, 120px)); opacity: 0; }
-}
-
-/* Golden particles */
-.glow-container {
-  position: absolute; top: 30%; left: 8%; width: 84%; height: 40%;
-  pointer-events: none; overflow: hidden;
-  opacity: 0; transition: opacity 1.2s ease;
-}
-.glow-container.active { opacity: 1; }
-.glow-dot {
-  position: absolute; bottom: -6px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,220,130,0.7), rgba(255,195,80,0.15));
-  animation: glowFloat linear infinite;
-}
-@keyframes glowFloat {
-  0% { transform: translateY(0); opacity: 0; }
-  10% { opacity: 0.8; }
-  80% { opacity: 0.5; }
-  100% { transform: translateY(var(--glow-dist, -110px)); opacity: 0; }
-}
-
-/* Moon */
-.moon-container {
-  position: absolute; top: 22%; right: 8%;
-  pointer-events: none;
-  opacity: 0; transition: opacity 1.5s ease;
-}
-.moon-container.active { opacity: 1; }
-@keyframes cloudFloat {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-5px) scale(1.015); }
-}
-@keyframes cloudWind {
-  0% { transform: translateX(0) scale(1); }
-  25% { transform: translateX(22px) scale(1.025, 0.975); }
-  50% { transform: translateX(30px) scale(1.02, 0.98); }
-  75% { transform: translateX(14px) scale(1.008, 0.995); }
-  100% { transform: translateX(0) scale(1); }
-}
-.cloud-wrap.wind {
-  animation: cloudWind 2.8s ease-in-out forwards;
-}
-
-/* Recording ritual — cloud inhales, then blooms into its new shape */
-@keyframes cloudInhale {
-  0%   { transform: scale(1) translateY(0); opacity: 1; }
-  100% { transform: scale(0.86) translateY(7px); opacity: 0.3; }
-}
-.cloud-wrap.inhale {
-  animation: cloudInhale 0.42s cubic-bezier(0.4, 0, 0.7, 0.2) forwards;
-}
-@keyframes cloudBloom {
-  0%   { transform: scale(0.86) translateY(7px); opacity: 0.3; }
-  45%  { transform: scale(1.07) translateY(-7px); opacity: 1; }
-  72%  { transform: scale(0.982) translateY(2px); }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
-}
-.cloud-wrap.bloom {
-  animation: cloudBloom 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-/* Released from a drag the cloud is already at full size, so it blooms
-   from where the finger left it instead of popping down first. */
-.cloud-wrap.releasing {
-  transition: transform 0.18s ease-out; animation: none !important;
-}
-@keyframes cloudBloomFromDrag {
-  0%   { transform: scale(1) translateY(0); opacity: 0.45; }
-  40%  { transform: scale(1.07) translateY(-7px); opacity: 1; }
-  70%  { transform: scale(0.985) translateY(2px); }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
-}
-.cloud-wrap.bloom.from-drag { animation-name: cloudBloomFromDrag; }
-
-/* Monster message */
-.sky-monster-msg {
-  text-align: center; padding: 0 20px;
-  font-family: var(--ff); font-size: 17px; font-weight: 600;
-  color: rgba(40,35,30,0.6);
-  letter-spacing: 0.5px; line-height: 1.4;
-  min-height: 24px; margin-top: -4px;
-  transition: opacity 0.4s ease;
-  /* Own compositing layer: this text animates while the whole sky-bg is
-     mid-transition behind it, which is exactly when Safari leaves a
-     repaint ghost of the previous message. */
-  will-change: opacity, transform;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-.sky-monster-msg.hushed { opacity: 0; }
-@keyframes msgReveal {
-  0%   { opacity: 0; transform: translateY(9px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-.sky-monster-msg.reveal {
-  animation: msgReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-/* Tagline */
-.sky-tagline {
-  font-family: var(--ff); font-size: 13px;
-  color: rgba(40,35,30,0.22); letter-spacing: 2.5px;
-  padding: 4px 0 0; text-align: center;
-}
-
-/* Wave */
-.wave-area { width: 100%; height: 30px; margin: 12px 0 4px; overflow: visible; }
-.wave-svg {
-  width: 100%; height: 30px;
-  animation: waveFloat 6s ease-in-out infinite;
-}
-@keyframes waveFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-2px); }
-}
+.sky-dark .sp-name { color: rgba(40,35,30,0.75); background: rgba(255,255,255,0.7); }
+.sp-item svg { display: block; width: 40px; height: auto; }
+.sp-item.on svg { width: 50px; filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2)); }
+.sp-item.on .sp-name { font-weight: 700; color: rgba(40,35,30,0.85); }
 
 /* Periods */
 .sky-periods {
@@ -976,7 +809,7 @@ input[type=number] { -moz-appearance: textfield; }
   transition: all 0.2s;
 }
 .entry-cycle-btn.pms-on {
-  border-color: #4090d0; background: rgba(64,144,208,0.08); color: #4090d0;
+  border-color: #4090d0; background: rgba(130,87,214,0.09); color: #4090d0;
 }
 .entry-cycle-btn.period-on {
   border-color: #d44060; background: rgba(212,64,96,0.08); color: #d44060;
@@ -1000,19 +833,17 @@ input[type=number] { -moz-appearance: textfield; }
   display: flex; align-items: center; justify-content: center;
   -webkit-tap-highlight-color: transparent;
 }
-.mp-dot span {
-  display: block; width: 20px; height: 20px; border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba(0,0,0,0);
-  transition: width 0.24s cubic-bezier(0.22,1,0.36,1),
-              height 0.24s cubic-bezier(0.22,1,0.36,1),
-              box-shadow 0.24s ease, opacity 0.24s ease;
-  opacity: 0.42;
+.mp-stroke {
+  display: block; width: 30px; height: auto;
+  opacity: 0.45;
+  transition: width 0.26s cubic-bezier(0.22,1,0.36,1), opacity 0.26s ease,
+              filter 0.26s ease;
 }
-.mp-dot.on span {
-  width: 34px; height: 34px; opacity: 1;
-  box-shadow: 0 0 0 3.5px rgba(255,255,255,0.9), 0 2px 8px rgba(0,0,0,0.13);
+.mp-dot.on .mp-stroke {
+  width: 46px; opacity: 1;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.16));
 }
-.mp-dot:active span { opacity: 0.8; }
+.mp-dot:active .mp-stroke { opacity: 0.75; }
 /* Collapsible note */
 .entry-note-toggle {
   display: flex; align-items: center; gap: 8px;
@@ -1321,14 +1152,14 @@ input[type=number] { -moz-appearance: textfield; }
     </div>
     <div class="cloud-area" id="cloud-area">
       <div class="cloud-wrap idle" id="cloud-wrap"></div>
-      <div class="sky-rail" id="sky-rail" aria-hidden="true">
-        <svg viewBox="0 0 26 168" width="26" height="168" fill="none">
-          <line class="rail-spine" x1="13" y1="12" x2="13" y2="156"
-                stroke="currentColor" stroke-width="1" stroke-linecap="round"
-                stroke-dasharray="1.5 4" opacity="0.35"/>
-          <g id="rail-ticks"></g>
+      <div class="sky-palette" id="sky-palette"></div>
+      <button class="sky-brush" id="sky-brush" aria-label="填色">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15.5 3.5a2.1 2.1 0 0 1 3 3L10 15l-4 1 1-4 8.5-8.5z"/>
+          <path d="M6 16c-1.6.5-2.4 1.8-2.6 3.6 1.9-.2 3.1-1 3.6-2.6"/>
         </svg>
-      </div>
+      </button>
     </div>
     <div class="sky-drag-hint" id="sky-drag-hint">
       <span class="dh-period" id="dh-period"></span>
@@ -1337,9 +1168,6 @@ input[type=number] { -moz-appearance: textfield; }
     <div class="rain-container" id="rain-container"></div>
     <div class="glow-container" id="glow-container"></div>
     <div class="moon-container" id="moon-container"></div>
-    <div class="sky-drag-coach" id="sky-drag-coach" style="display:none">
-      <span>按住天空上下滑動</span>
-    </div>
     <div class="sky-monster-msg" id="sky-monster-msg"></div>
     <div class="sky-tagline">今天的天空</div>
     <div class="wave-area">
@@ -1428,7 +1256,7 @@ input[type=number] { -moz-appearance: textfield; }
           <span>負向</span>
         </div>
         <div class="legend-item">
-          <div class="legend-bar" style="background:linear-gradient(90deg,#4090d0,#60b0e8)"></div>
+          <div class="legend-bar" style="background:linear-gradient(90deg,#7a4fd0,#a37ce8)"></div>
           <span>經前</span>
         </div>
         <div class="legend-item">
@@ -1515,7 +1343,10 @@ const APP_VERSION = '2026.07.25';
 // ended at rgb(190,45,30) — a blood red that was the darkest of the warm
 // steps, so "happiest" landed closest to anger. It now travels
 // cream → gold → coral, gaining warmth while staying luminous.
-const WARM = [[255,240,198],[255,216,132],[255,188,90],[253,158,88],[248,132,104]];
+// 不錯 sat at rgb(255,194,98) — a washed-out amber too close to 還好 to
+// feel like anything. The middle of the ramp is a vivid gold now, so the
+// step from neutral to good actually reads as one.
+const WARM = [[255,246,210],[255,228,140],[255,205,60],[253,170,70],[248,132,104]];
 const COOL = [[160,210,230],[90,170,210],[50,130,180],[30,100,140],[15,70,80]];
 
 function lerp(stops, t) {
@@ -1562,12 +1393,43 @@ function levelFromEntry(entry) {
 
 // One picker, used by both the today sheet and the postcard editor.
 // Before this the slider existed twice, in two near-identical copies.
+// Each level gets its own dab of paint, grown once from a fixed seed —
+// the same seeded-noise trick the clouds use, so a colour keeps its
+// shape for good rather than being redrawn differently every render.
+// Five copies of one symmetrical capsule read as a chart legend; five
+// different blobs read as paint.
+const _blobCache = {};
+function paintBlob(i) {
+  if (_blobCache[i]) return _blobCache[i];
+  const r = _cRng(i * 977 + 13);
+  const n = 11, rx = 20, ry = 10, rough = 0.42;
+  const pts = [];
+  for (let k = 0; k < n; k++) {
+    const a = (k / n) * Math.PI * 2;
+    const m = 1 + (r() - 0.5) * 2 * rough;
+    // squeezed paint spreads sideways more than it swells upward
+    pts.push([Math.cos(a) * rx * m, Math.sin(a) * ry * (1 + (r() - 0.5) * rough)]);
+  }
+  let d = '';
+  for (let k = 0; k < n; k++) {
+    const p0 = pts[(k - 1 + n) % n], p1 = pts[k], p2 = pts[(k + 1) % n], p3 = pts[(k + 2) % n];
+    if (k === 0) d += `M${p1[0].toFixed(1)} ${p1[1].toFixed(1)}`;
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += `C${c1[0].toFixed(1)} ${c1[1].toFixed(1)},${c2[0].toFixed(1)} ${c2[1].toFixed(1)},${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+  }
+  return (_blobCache[i] = d + 'Z');
+}
+const BLOB_VIEWBOX = '-30 -16 60 32';
+
 function createMoodPicker(host, onChange) {
   host.className = 'mood-picker';
   host.innerHTML =
     '<div class="mp-label"></div><div class="mp-row">' +
     MOOD_LEVELS.map((L, i) =>
-      `<button type="button" class="mp-dot" data-i="${i}" aria-label="${L.label}"><span></span></button>`
+      `<button type="button" class="mp-dot" data-i="${i}" aria-label="${L.label}">
+         <svg class="mp-stroke" viewBox="${BLOB_VIEWBOX}" aria-hidden="true"><path d="${paintBlob(i)}"/></svg>
+       </button>`
     ).join('') + '</div>';
 
   let level = MOOD_NEUTRAL, touched = false, original = null;
@@ -1575,8 +1437,8 @@ function createMoodPicker(host, onChange) {
   function paint() {
     host.querySelectorAll('.mp-dot').forEach((b, i) => {
       const L = MOOD_LEVELS[i];
-      b.querySelector('span').style.background =
-        L.score === 0 ? '#c8c3be' : getColor(L.type, L.score);
+      b.querySelector('path').setAttribute('fill',
+        L.score === 0 ? '#c8c3be' : getColor(L.type, L.score));
       b.classList.toggle('on', i === level);
     });
     host.querySelector('.mp-label').textContent = MOOD_LEVELS[level].label;
@@ -2069,7 +1931,7 @@ function openDayModal(day) {
     });
     html += '</div>';
     html += `<div style="display:flex;gap:8px;margin-top:12px">
-      <button class="pc-cycle-btn" id="pc-pms" style="flex:1;padding:10px 0;border-radius:10px;border:1px solid ${dc.pms?'rgba(64,144,208,0.3)':'#e0dcd8'};background:${dc.pms?'rgba(64,144,208,0.08)':'transparent'};font-size:13px;color:${dc.pms?'#1a5580':'#a09890'};cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--ff)">
+      <button class="pc-cycle-btn" id="pc-pms" style="flex:1;padding:10px 0;border-radius:10px;border:1px solid ${dc.pms?'rgba(130,87,214,0.32)':'#e0dcd8'};background:${dc.pms?'rgba(130,87,214,0.09)':'transparent'};font-size:13px;color:${dc.pms?'#5a2f9e':'#a09890'};cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--ff)">
         <svg width="14" height="14" viewBox="0 0 12 12" fill="currentColor"><path d="M7.5 2C5.5 2.5 4 4.3 4 6.5S5.5 10.5 7.5 11c-3 0-5-2.2-5-4.5S4.5 2 7.5 2z"/></svg>經前
       </button>
       <button class="pc-cycle-btn" id="pc-period" style="flex:1;padding:10px 0;border-radius:10px;border:1px solid ${dc.period?'rgba(200,60,90,0.2)':'#e0dcd8'};background:${dc.period?'rgba(200,60,90,0.06)':'transparent'};font-size:13px;color:${dc.period?'#8a2040':'#a09890'};cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--ff)">
@@ -3371,9 +3233,8 @@ function initSkyPage() {
   updateSkyPeriods();
   updateSkyGradient();
   updateCloudState();
-  updateSkyRail();
+  updateBrush();
   updateCycleMoon();
-  updateDragCoach();
 }
 
 function updateSkyDate() {
@@ -3405,9 +3266,8 @@ function refreshSky() {
   updateSkyPeriods();
   updateSkyGradient();
   updateCloudState();
-  updateSkyRail();
+  updateBrush();
   updateCycleMoon();
-  updateDragCoach();
 }
 
 function getSkyDayData() {
@@ -3894,7 +3754,7 @@ function runSkyRitual(opts) {
   _ritualStep(() => {
     updateSkyGradient();
     updateSkyPeriods();
-    updateSkyRail();
+    updateBrush();
   }, fromDrag ? 0 : 120);
 
   // 3. The cloud re-grows in its new shape.
@@ -4026,67 +3886,73 @@ function toggleCycleToday(which) {
   document.addEventListener('click', closeCyclePop);
 })();
 
-// ===== THE RAIL =====
-// Five ticks, coldest at the bottom, brightest at the top — the same
-// direction the gesture runs, so the rail doubles as the instruction.
-const RAIL_TOP = 12, RAIL_BOTTOM = 156;
-
-function railY(levelIdx) {
-  const span = RAIL_BOTTOM - RAIL_TOP;
-  return RAIL_BOTTOM - (levelIdx / (MOOD_LEVELS.length - 1)) * span;
-}
-function railYFromVal(val) { // val 0..100, continuous
-  return RAIL_BOTTOM - (Math.max(0, Math.min(100, val)) / 100) * (RAIL_BOTTOM - RAIL_TOP);
-}
-
-function buildRailTicks() {
-  const g = document.getElementById('rail-ticks');
-  if (!g || g.childElementCount) return;
-  g.innerHTML = MOOD_LEVELS.map((L, i) => {
-    const y = railY(i);
-    const c = L.score === 0 ? '#b8b2aa' : getColor(L.type, L.score);
-    const half = i === MOOD_NEUTRAL ? 5.5 : 7.5;
-    return `<line class="rail-tick" data-i="${i}" x1="${13 - half}" y1="${y}" x2="${13 + half}" y2="${y}"
-      stroke="${c}" stroke-width="2.6" stroke-linecap="round" opacity="0.7"/>`;
+// ===== THE BRUSH =====
+// Two taps, finger free between them: open the colours, choose one.
+// No holding, no dragging, and nothing to find — the brush is visible.
+function buildPalette() {
+  const pal = document.getElementById('sky-palette');
+  if (!pal || pal.childElementCount) return;
+  // Painted brightest-first so the column reads top-down like the sky.
+  pal.innerHTML = MOOD_LEVELS.map((L, i) => {
+    const c = L.score === 0 ? '#c8c3be' : getColor(L.type, L.score);
+    return `<button type="button" class="sp-item" data-i="${i}" aria-label="${L.label}">
+      <span class="sp-name">${L.label}</span>
+      <svg viewBox="${BLOB_VIEWBOX}" aria-hidden="true"><path d="${paintBlob(i)}" fill="${c}"/></svg>
+    </button>`;
   }).join('');
 }
 
-// `preview` is the live drag value; without it the rail shows what is stored.
-// The reading is the tick itself. A separate bead riding the line looked
-// like something had failed to render, and having it be grabbable kept
-// putting a control where a thumb rests.
-function updateSkyRail(preview) {
-  const rail = document.getElementById('sky-rail');
-  if (!rail) return;
-  buildRailTicks();
+function closePalette() {
+  document.getElementById('sky-palette')?.classList.remove('open');
+  document.getElementById('sky-brush')?.classList.remove('open');
+}
 
-  const entry = getSkyDayData()[activePeriod()];
-  const stored = entry?.score != null;
-  const level = preview != null
-    ? levelFromSigned((preview - 50) * 2)
-    : (stored ? levelFromEntry(entry) : MOOD_NEUTRAL);
-
-  rail.classList.toggle('empty', !stored && preview == null);
-
-  rail.querySelectorAll('.rail-tick').forEach(t => {
-    const on = parseInt(t.dataset.i, 10) === level;
-    t.classList.toggle('on', on);
-    t.setAttribute('opacity', on ? '1' : '0.32');
-    t.setAttribute('stroke-width', on ? '4.5' : '2.4');
+function updateBrush() {
+  const brush = document.getElementById('sky-brush');
+  const pal = document.getElementById('sky-palette');
+  if (!brush || !pal) return;
+  buildPalette();
+  // Past days are painted from their postcard, same as their cycle.
+  const today = isSkyToday();
+  brush.style.display = today ? '' : 'none';
+  if (!today) closePalette();
+  const level = levelFromEntry(getSkyDayData()[activePeriod()]);
+  const stored = getSkyDayData()[activePeriod()]?.score != null;
+  pal.querySelectorAll('.sp-item').forEach(b => {
+    b.classList.toggle('on', stored && parseInt(b.dataset.i, 10) === level);
   });
 }
 
+(function initBrush() {
+  const brush = document.getElementById('sky-brush');
+  const pal = document.getElementById('sky-palette');
+  if (!brush || !pal) return;
+  // Both sit inside the cloud area, whose hold-to-drag captures the
+  // pointer on pointerdown and would swallow the click that follows.
+  const keep = e => e.stopPropagation();
+  brush.addEventListener('pointerdown', keep);
+  pal.addEventListener('pointerdown', keep);
 
-function updateDragCoach() {
-  const coach = document.getElementById('sky-drag-coach');
-  if (!coach) return;
-  let seen = false;
-  try { seen = localStorage.getItem('skyDragSeen') === '1'; } catch {}
-  const empty = PERIOD_KEYS.every(pk => getSkyDayData()[pk]?.score == null);
-  const show = !seen && empty && isSkyToday();
-  coach.style.display = show ? '' : 'none';
-  document.getElementById('sky-rail')?.classList.toggle('beckon', show);
-}
+  brush.addEventListener('click', e => {
+    e.stopPropagation();
+    buildPalette();
+    const opening = !pal.classList.contains('open');
+    pal.classList.toggle('open', opening);
+    brush.classList.toggle('open', opening);
+  });
+  pal.addEventListener('click', e => {
+    const btn = e.target.closest('.sp-item');
+    if (!btn) return;
+    e.stopPropagation();
+    const L = MOOD_LEVELS[parseInt(btn.dataset.i, 10)];
+    _commitSkyDrag(activePeriod(), { type: L.type, score: L.score });
+    try { localStorage.setItem('skyDragSeen', '1'); } catch {}
+    closePalette();                      // chosen, so it puts itself away
+    runSkyRitual({ fromDrag: true });
+  });
+  document.addEventListener('click', closePalette);
+})();
+
 
 // Set when a drag actually moved, so the period button's tap handler can
 // tell "dragged this period" from "tapped to open the sheet".
@@ -4124,7 +3990,6 @@ function attachSkyDrag(area, resolvePeriod) {
     // Preview the level that will actually be stored, so releasing
     // never shifts the colour you were looking at.
     updateSkyGradient({ period: period, type: L.type, score: L.score });
-    updateSkyRail(val);
     const wordEl = $('dh-word');
     if (wordEl) wordEl.textContent = L.label;
   }
@@ -4139,10 +4004,7 @@ function attachSkyDrag(area, resolvePeriod) {
     const dp = $('dh-period');
     if (dp) dp.textContent = PERIOD_NAMES[PERIOD_KEYS.indexOf(period)];
     $('sky-drag-hint')?.classList.add('on');
-    $('sky-rail')?.classList.add('live');
     $('sky-monster-msg')?.classList.add('hushed');
-    const coach = $('sky-drag-coach');
-    if (coach) coach.style.display = 'none';
     paint();
   }
 
@@ -4192,7 +4054,6 @@ function attachSkyDrag(area, resolvePeriod) {
     const wrap = $('cloud-wrap');
     $('sky-bg')?.classList.remove('no-transition');
     $('sky-drag-hint')?.classList.remove('on');
-    $('sky-rail')?.classList.remove('live');
     if (wrap) {
       // Ease back from the finger's position; the ritual takes over from there.
       wrap.classList.remove('dragging');
@@ -4208,7 +4069,6 @@ function attachSkyDrag(area, resolvePeriod) {
     } else {
       updateSkyGradient();
       updateCloudState(); // redraw at its proper opacity
-      updateSkyRail();
       $('sky-monster-msg')?.classList.remove('hushed');
       setTimeout(() => wrap?.classList.remove('releasing'), 200);
     }
@@ -4331,7 +4191,7 @@ document.getElementById('sky-periods').addEventListener('click', e => {
   } else {
     selectedPeriod = pk;
     updateSkyPeriods();
-    updateSkyRail();
+    updateBrush();
   }
 });
 
