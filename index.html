@@ -628,18 +628,24 @@ input[type=number] { -moz-appearance: textfield; }
 .sky-dark .sky-drag-hint .dh-period { color: rgba(255,255,255,0.5); }
 .sky-dark .sky-drag-hint .dh-word { color: rgba(255,255,255,0.92); }
 
-/* First-run nudge telling you the sky is draggable */
+/* First-run nudge telling you the sky is draggable — a bead travelling
+   a dotted axis, so the hint is drawn rather than spelled with a symbol */
 .sky-drag-coach {
-  position: absolute; left: 0; right: 0; top: 63%;
-  text-align: center; pointer-events: none;
-  font-family: var(--ff); font-size: 12px; letter-spacing: 1.5px;
-  color: rgba(40,35,30,0.3);
-  animation: coachBob 2.6s ease-in-out infinite;
+  position: absolute; left: 0; right: 0; top: 61%;
+  pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  font-family: var(--ff); font-size: 12px; letter-spacing: 2px;
+  color: rgba(40,35,30,0.32);
 }
-.sky-dark .sky-drag-coach { color: rgba(255,255,255,0.4); }
-@keyframes coachBob {
-  0%, 100% { transform: translateY(0); opacity: 0.55; }
-  50%      { transform: translateY(-6px); opacity: 1; }
+.sky-dark .sky-drag-coach { color: rgba(255,255,255,0.42); }
+.sky-drag-coach .coach-bead {
+  animation: coachBead 2.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes coachBead {
+  0%, 100% { transform: translateY(0);     opacity: 0.3; }
+  25%      { transform: translateY(-11px); opacity: 1; }
+  50%      { transform: translateY(0);     opacity: 0.6; }
+  75%      { transform: translateY(11px);  opacity: 1; }
 }
 .cloud-wrap {
   animation: cloudFloat 6s ease-in-out infinite;
@@ -789,6 +795,7 @@ input[type=number] { -moz-appearance: textfield; }
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   cursor: pointer; transition: all 0.3s;
   font-family: var(--ff);
+  touch-action: none; /* each button is its own drag surface */
 }
 .sky-period-btn:active { transform: scale(0.96); }
 .sky-period-btn.filled {
@@ -1224,7 +1231,14 @@ input[type=number] { -moz-appearance: textfield; }
       <span class="dh-period" id="dh-period"></span>
       <span class="dh-word" id="dh-word"></span>
     </div>
-    <div class="sky-drag-coach" id="sky-drag-coach" style="display:none">↕ 在天空上滑動</div>
+    <div class="sky-drag-coach" id="sky-drag-coach" style="display:none">
+      <svg viewBox="0 0 16 40" width="16" height="40" fill="none" aria-hidden="true">
+        <line x1="8" y1="6" x2="8" y2="34" stroke="currentColor" stroke-width="1.1"
+              stroke-linecap="round" stroke-dasharray="1.5 3.5" opacity="0.45"/>
+        <circle class="coach-bead" cx="8" cy="20" r="3.4" fill="currentColor"/>
+      </svg>
+      <span>在天空上滑動</span>
+    </div>
     <div class="rain-container" id="rain-container"></div>
     <div class="glow-container" id="glow-container"></div>
     <div class="moon-container" id="moon-container"></div>
@@ -1272,7 +1286,12 @@ input[type=number] { -moz-appearance: textfield; }
   <div class="grid-bg-inner"></div>
   <div class="cal-close-bar">
     <h2 id="cal-overlay-title">那些天空 .......</h2>
-    <button class="cal-close-btn" id="close-cal-overlay">✕</button>
+    <button class="cal-close-btn" id="close-cal-overlay" aria-label="關閉">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+           stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+        <line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/>
+      </svg>
+    </button>
   </div>
   <div id="page-main" style="position:relative;z-index:1;padding:6px 8px 20px;">
     <div class="content" style="padding-bottom:20px;">
@@ -2034,7 +2053,7 @@ function openDayModal(day) {
         if (!monthData[dk]) monthData[dk] = {};
         monthData[dk][pk] = { type: m.type, score: m.score, note: n };
         saveData();
-        saveBtn.textContent = '已記錄 ✓'; saveBtn.style.opacity = '0.6';
+        saveBtn.textContent = '已記錄'; saveBtn.style.opacity = '0.6';
         setTimeout(() => { saveBtn.textContent = '記下來'; saveBtn.style.opacity = '1'; }, 1500);
       }
     });
@@ -3828,7 +3847,7 @@ function _commitSkyDrag(period, mood) {
   const prev = monthData[d][period] || {};
   // Keep any note already written for this period — a drag sets the
   // score, it does not erase what you said.
-  monthData[d][period] = { type: mood.type, score: mood.score, note: prev.note };
+  monthData[d][period] = { type: mood.type, score: mood.score, note: prev.note || undefined };
   saveData();
   renderCalendar();
 }
@@ -3842,8 +3861,13 @@ function updateDragCoach() {
   coach.style.display = (!seen && empty && isSkyToday()) ? '' : 'none';
 }
 
-(function initSkyDrag() {
-  const area = document.getElementById('cloud-area');
+// Set when a drag actually moved, so the period button's tap handler can
+// tell "dragged this period" from "tapped to open the sheet".
+let _skyDragEndedAt = 0;
+
+// The same gesture, attached to any surface. `resolvePeriod` decides which
+// period it writes: the clock for the sky, a fixed one for a period button.
+function attachSkyDrag(area, resolvePeriod) {
   if (!area) return;
   const $ = id => document.getElementById(id);
 
@@ -3878,7 +3902,7 @@ function updateDragCoach() {
     cancelSkyRitual();
     active = true; moved = false;
     startY = e.clientY;
-    period = currentPeriodKey();
+    period = resolvePeriod();
     const existing = getSkyDayData()[period];
     startVal = existing?.score != null ? moodToSlider(existing.type, existing.score) : 50;
     val = startVal;
@@ -3912,6 +3936,7 @@ function updateDragCoach() {
     $('sky-bg')?.classList.remove('no-transition');
     $('sky-drag-hint')?.classList.remove('on');
     if (!moved) { wrap?.classList.remove('dragging'); return; }
+    _skyDragEndedAt = Date.now(); // suppress the tap that follows
 
     if (wrap) {
       // Ease back from the finger's position; the ritual takes over from there.
@@ -3933,7 +3958,15 @@ function updateDragCoach() {
 
   area.addEventListener('pointerup', () => finish(true));
   area.addEventListener('pointercancel', () => finish(false));
-})();
+}
+
+// The sky writes whatever period the clock is in — the everyday case.
+attachSkyDrag(document.getElementById('cloud-area'), currentPeriodKey);
+// Each period button writes its own, so a morning logged at night, or a
+// correction to an earlier one, is the same single gesture.
+PERIOD_KEYS.forEach(pk => {
+  attachSkyDrag(document.getElementById('sky-p-' + pk), () => pk);
+});
 
 // ===== NAVIGATION =====
 function updateNavState(page) {
@@ -4032,8 +4065,11 @@ document.getElementById('settings-import-file').addEventListener('change', funct
 document.getElementById('sky-prev').addEventListener('click', skyPrev);
 document.getElementById('sky-next').addEventListener('click', skyNext);
 
-// Sky period taps — open entry sheet (today only)
+// Sky period taps — open entry sheet (today only).
+// A drag on the button already recorded that period, so don't also
+// open the sheet on the tap that follows it.
 document.getElementById('sky-periods').addEventListener('click', e => {
+  if (Date.now() - _skyDragEndedAt < 500) return;
   const btn = e.target.closest('.sky-period-btn');
   if (!btn || btn.classList.contains('readonly')) return;
   openEntrySheet(btn.dataset.p);
@@ -4258,7 +4294,7 @@ function saveEntry() {
   // Show confirmed state, then get out of the way and let the sky answer.
   const saveBtn = document.getElementById('entry-save');
   saveBtn.classList.add('saved');
-  saveBtn.textContent = '已記錄 ✓';
+  saveBtn.textContent = '已記錄';
   if (window._saveRevertTimer) clearTimeout(window._saveRevertTimer);
   if (ritual) {
     if (window._ritualStartTimer) clearTimeout(window._ritualStartTimer);
