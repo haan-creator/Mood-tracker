@@ -1,5 +1,5 @@
 // Bumping this name is what retires the previous cache on activate.
-const CACHE = 'moodsky-v2';
+const CACHE = 'moodsky-v5';
 
 // Only assets that change rarely belong here. index.html deliberately
 // does not: it is the thing that changes on every release.

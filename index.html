@@ -110,11 +110,6 @@ input[type=number] { -moz-appearance: textfield; }
   display: flex; align-items: center; gap: 2px;
   flex: 0 0 auto;
 }
-.topbar .controls-divider {
-  width: 1px; height: 16px; background: rgba(120,110,100,0.18);
-  margin: 0 6px;
-}
-
 /* View-toggle: icon-only, no frame (avoids box-vs-grid misalignment) */
 
 /* Nav buttons: icon + text (page-level action) */
@@ -202,8 +197,6 @@ input[type=number] { -moz-appearance: textfield; }
 .pc-front, .pc-back { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
 .pc-front { cursor: pointer; }
 .pc-back { transform: rotateY(180deg); background: #f5f2ee; display: flex; flex-direction: column; }
-.pc-strip-seg.active { color: #fff; font-weight: 700; }
-.pc-strip-seg.active::after { content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--seg-color, #b0a8a0); z-index: 2; }
 .pc-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px 8px; }
 .pc-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 13px; color: #b0a8a0; padding: 4px 8px; font-family: var(--ff); }
 .pc-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 18px 18px; }
@@ -254,15 +247,11 @@ input[type=number] { -moz-appearance: textfield; }
   color: #a09080; font-family: var(--ff); font-weight: 600;
 }
 .stats-title { margin: 0; font-size: 16px; font-weight: 800; color: var(--text-dark); }
-.stat-card .label { font-size: 10px; color: var(--text-light); font-family: var(--mono); margin-bottom: 4px; }
-.stat-card .value { font-size: 24px; font-weight: 800; font-family: var(--mono); }
 .section-box {
   background: rgba(255,255,255,0.7); border-radius: 14px; padding: 14px 16px;
   border: 1px solid var(--border-light); margin-bottom: 20px;
 }
 .section-title { font-size: 13px; font-weight: 700; color: #665; margin-bottom: 10px; }
-.bar { width: 100%; max-width: 8px; border-radius: 3px; transition: height 0.4s ease, background 0.3s; }
-.bar.empty-bar { height: 2px !important; background: #ece8e4; }
 
 /* Backup section */
 .backup-btns { display: flex; gap: 8px; }
@@ -273,12 +262,6 @@ input[type=number] { -moz-appearance: textfield; }
 .export-btn { border: 2px solid #b0a898; background: white; color: #887870; }
 .import-btn { border: 2px solid #b0a898; background: white; color: #887870; }
 #import-file { display: none; }
-
-/* Pattern analysis */
-.insight-box.warn { background: rgba(200,70,40,0.08); color: #a03020; }
-.insight-box.good { background: rgba(40,160,90,0.08); color: #2a7040; }
-.row-tag.worst { background: rgba(26,154,138,0.12); color: var(--cool-accent); }
-.row-tag.best { background: rgba(208,96,64,0.12); color: var(--warm-accent); }
 
 .discovery-list { display: flex; flex-direction: column; gap: 8px; }
 .discovery-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,0.6); border: 1px solid var(--border-light); font-size: 13px; line-height: 1.5; color: var(--text-dark); }
@@ -312,11 +295,19 @@ input[type=number] { -moz-appearance: textfield; }
   padding: 3px; border-radius: 10px; margin-bottom: 10px;
 }
 .journal-tab {
-  flex: 1; padding: 8px 0; border: none; background: transparent;
+  flex: 1; min-width: 0; padding: 8px 2px; border: none; background: transparent;
   border-radius: 8px; font-family: var(--ff); font-size: 13px;
   color: #6a6a70; cursor: pointer; transition: all 0.2s;
   font-weight: 500;
 }
+.journal-tab:not([data-filter="all"])::before {
+  content: ""; display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; margin-right: 4px; vertical-align: 1px;
+  background: var(--mood-dot);
+}
+.journal-tab[data-filter="negative"] { --mood-dot: #3A8ABA; }
+.journal-tab[data-filter="neutral"] { --mood-dot: #BCC0C3; }
+.journal-tab[data-filter="positive"] { --mood-dot: #FFD24C; }
 .journal-tab.active {
   background: #fff; color: #2a2a2e; font-weight: 600;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
@@ -435,6 +426,9 @@ input[type=number] { -moz-appearance: textfield; }
 .journal-period.neg {
   background: rgba(200,220,235,0.3);
 }
+.journal-period.neutral {
+  background: rgba(238,240,241,0.72);
+}
 .journal-period:last-child { margin-bottom: 0; }
 .journal-period-head {
   display: flex; align-items: baseline; justify-content: space-between;
@@ -473,6 +467,48 @@ input[type=number] { -moz-appearance: textfield; }
   position: fixed; inset: 0; z-index: 0;
   transition: background 1.2s ease;
   background: linear-gradient(180deg, #ecd898 0%, #f2dda0 35%, #e8dcc0 65%, #c8dce8 100%);
+  overflow: hidden;
+}
+/* 還好不是一塊沒有內容的白色，而是有空氣感的霧。每一段霧只覆蓋
+   自己的時區，因此早上還好、晚上低落時，霧不會洗掉晚上的藍。 */
+.sky-fog-layer {
+  position: absolute; inset: 0; pointer-events: none;
+}
+.fog-band {
+  position: absolute; left: -16%; width: 132%; height: 42%;
+  opacity: 0; overflow: hidden;
+  transition: opacity 1.2s ease;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+          mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+}
+.fog-band.morning { top: -5%; }
+.fog-band.afternoon { top: 29%; }
+.fog-band.evening { top: 63%; }
+.fog-band.active { opacity: 0.82; }
+.fog-band::before,
+.fog-band::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 12% 48%, rgba(174,184,190,0.20) 0 8%, transparent 30%),
+    radial-gradient(ellipse at 42% 62%, rgba(255,255,255,0.72) 0 12%, transparent 35%),
+    radial-gradient(ellipse at 76% 38%, rgba(181,190,195,0.16) 0 9%, transparent 32%),
+    radial-gradient(ellipse at 96% 68%, rgba(255,255,255,0.64) 0 10%, transparent 34%);
+  filter: blur(12px);
+  transform: translate3d(-2%,0,0) scale(1.05);
+  animation: fogDrift 18s ease-in-out infinite alternate;
+}
+.fog-band::after {
+  opacity: 0.55;
+  transform: translate3d(3%,5%,0) scale(1.12);
+  animation-duration: 25s;
+  animation-direction: alternate-reverse;
+}
+@keyframes fogDrift {
+  from { transform: translate3d(-3%,0,0) scale(1.05); }
+  to   { transform: translate3d(3%,2%,0) scale(1.1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fog-band::before, .fog-band::after { animation: none; }
 }
 .sky-content {
   position: relative; z-index: 1;
@@ -513,7 +549,7 @@ input[type=number] { -moz-appearance: textfield; }
 }
 .sky-arrow:active { background: rgba(0,0,0,0.08); }
 .sky-arrow:disabled { opacity: 0.2; pointer-events: none; }
-.sky-dark .sky-arrow { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
+.sky-top-dark .sky-arrow { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.72); }
 
 /* Cycle marker — per-day data, so it annotates the date rather than
    living in the per-period sheet, where it was asked three times a day.
@@ -535,8 +571,8 @@ input[type=number] { -moz-appearance: textfield; }
 }
 .sky-datebtn.pms-on    .cycle-underline { width: 30px; background: #8257d6; }
 .sky-datebtn.period-on .cycle-underline { width: 30px; background: #d1476a; }
-.sky-dark .sky-datebtn.pms-on    .cycle-underline { background: #c3a6f5; }
-.sky-dark .sky-datebtn.period-on .cycle-underline { background: #f093aa; }
+.sky-top-dark .sky-datebtn.pms-on    .cycle-underline { background: #c3a6f5; }
+.sky-top-dark .sky-datebtn.period-on .cycle-underline { background: #f093aa; }
 
 .cycle-pop {
   position: absolute; top: 100%; left: 0; margin-top: 6px; z-index: 40;
@@ -574,6 +610,21 @@ input[type=number] { -moz-appearance: textfield; }
 .cloud-wrap {
   animation: cloudFloat 6s ease-in-out infinite;
   position: relative; z-index: 1;
+}
+.cloud-wrap svg {
+  transition: opacity 0.5s, filter 0.8s ease;
+}
+/* The cloud needs depth on fog-white without becoming a sticker.
+   drop-shadow follows the generated cloud silhouette, unlike box-shadow. */
+.cloud-wrap.cloud-on-light svg {
+  filter:
+    drop-shadow(0 8px 14px rgba(76,92,102,0.16))
+    drop-shadow(0 1px 2px rgba(55,70,80,0.12));
+}
+.cloud-wrap.cloud-on-dark svg {
+  filter:
+    drop-shadow(0 0 1.5px rgba(255,255,255,0.38))
+    drop-shadow(0 7px 13px rgba(8,28,38,0.10));
 }
 .cloud-wrap.idle { animation-duration: 8s; }
 .cloud-wrap.dragging { animation: none !important; }
@@ -665,8 +716,8 @@ input[type=number] { -moz-appearance: textfield; }
   display: block; font-size: 30px; letter-spacing: 2px;
   color: rgba(40,35,30,0.72);
 }
-.sky-dark .sky-drag-hint .dh-period { color: rgba(255,255,255,0.5); }
-.sky-dark .sky-drag-hint .dh-word { color: rgba(255,255,255,0.92); }
+.sky-mid-dark .sky-drag-hint .dh-period { color: rgba(255,255,255,0.65); }
+.sky-mid-dark .sky-drag-hint .dh-word { color: rgba(255,255,255,0.95); }
 @keyframes cloudFloat {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-5px) scale(1.015); }
@@ -733,11 +784,11 @@ input[type=number] { -moz-appearance: textfield; }
 .sky-brush svg { width: 20px; height: 20px; }
 .sky-brush:active { transform: scale(0.93); }
 .sky-brush.open { transform: rotate(-14deg); background: rgba(255,255,255,0.55); }
-.sky-dark .sky-brush {
+.sky-mid-dark .sky-brush {
   border-color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.14);
   color: rgba(255,255,255,0.8);
 }
-.sky-dark .sky-brush.open { background: rgba(255,255,255,0.24); }
+.sky-mid-dark .sky-brush.open { background: rgba(255,255,255,0.24); }
 
 .sky-palette {
   position: absolute; right: 14px; bottom: 66px;
@@ -763,7 +814,7 @@ input[type=number] { -moz-appearance: textfield; }
   backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   white-space: nowrap;
 }
-.sky-dark .sp-name { color: rgba(40,35,30,0.75); background: rgba(255,255,255,0.7); }
+.sky-mid-dark .sp-name { color: rgba(40,35,30,0.75); background: rgba(255,255,255,0.78); }
 .sp-item svg { display: block; width: 40px; height: auto; }
 .sp-item.on svg { width: 50px; filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2)); }
 .sp-item.on .sp-name { font-weight: 700; color: rgba(40,35,30,0.85); }
@@ -790,7 +841,7 @@ input[type=number] { -moz-appearance: textfield; }
   border-color: rgba(40,35,30,0.42);
   background: rgba(255,255,255,0.55);
 }
-.sky-dark .sky-period-btn.selected {
+.sky-bottom-dark .sky-period-btn.selected {
   border-color: rgba(255,255,255,0.6);
   background: rgba(255,255,255,0.22);
 }
@@ -817,26 +868,28 @@ input[type=number] { -moz-appearance: textfield; }
 }
 .sky-period-btn.filled .sky-period-icon { opacity: 0.8; color: rgba(40,35,30,0.6); }
 
-/* Adaptive colors for dark sky */
-.sky-dark .sky-date,
-.sky-dark .sky-monster-msg { color: rgba(255,255,255,0.9); }
-.sky-dark .sky-weekday { color: rgba(255,255,255,0.6); }
-.sky-dark .sky-tagline { color: rgba(255,255,255,0.25); }
-.sky-dark .sky-period-label { color: rgba(255,255,255,0.8); }
-.sky-dark .sky-period-btn.filled .sky-period-label { color: rgba(255,255,255,0.95); }
-.sky-dark .sky-period-btn {
+/* Adaptive colours follow the part of the gradient they actually sit on.
+   A single whole-page switch made a dark evening turn the date white even
+   when the morning behind that date was fog-white. */
+.sky-top-dark .sky-date { color: rgba(255,255,255,0.96); }
+.sky-top-dark .sky-weekday { color: rgba(255,255,255,0.76); }
+.sky-bottom-dark .sky-monster-msg { color: rgba(255,255,255,0.96); }
+.sky-bottom-dark .sky-tagline { color: rgba(255,255,255,0.58); }
+.sky-bottom-dark .sky-period-label { color: rgba(255,255,255,0.86); }
+.sky-bottom-dark .sky-period-btn.filled .sky-period-label { color: rgba(255,255,255,0.98); }
+.sky-bottom-dark .sky-period-btn {
   border-color: rgba(255,255,255,0.2);
   background: rgba(255,255,255,0.1);
 }
-.sky-dark .sky-period-btn.filled {
+.sky-bottom-dark .sky-period-btn.filled {
   border-color: rgba(255,255,255,0.3);
   background: rgba(255,255,255,0.15);
 }
-.sky-dark .sky-period-dot { background: rgba(255,255,255,0.2); }
-.sky-dark .sky-period-icon { color: rgba(255,255,255,0.6); }
-.sky-dark .sky-period-btn.filled .sky-period-icon { color: rgba(255,255,255,0.8); }
-.sky-dark .sky-cal-btn { background: rgba(255,255,255,0.1); }
-.sky-dark .sky-cal-btn svg { stroke: rgba(255,255,255,0.7); }
+.sky-bottom-dark .sky-period-dot { background: rgba(255,255,255,0.3); }
+.sky-bottom-dark .sky-period-icon { color: rgba(255,255,255,0.72); }
+.sky-bottom-dark .sky-period-btn.filled .sky-period-icon { color: rgba(255,255,255,0.9); }
+.sky-top-dark .sky-cal-btn { background: rgba(255,255,255,0.12); }
+.sky-top-dark .sky-cal-btn svg { stroke: rgba(255,255,255,0.82); }
 
 /* ===== ENTRY SHEET (sky page) ===== */
 .entry-overlay {
@@ -990,9 +1043,9 @@ input[type=number] { -moz-appearance: textfield; }
 .sky-arc svg { width: 100%; height: 100%; }
 
 /* Adaptive nav for dark sky */
-.sky-dark .bnav-item { color: rgba(255,255,255,0.55); }
-.sky-dark .bnav-item.active { color: rgba(255,255,255,0.95); }
-.sky-dark .bnav-item.active::after { background: rgba(255,255,255,0.6); }
+.top-nav.sky-top-dark .bnav-item { color: rgba(255,255,255,0.7); }
+.top-nav.sky-top-dark .bnav-item.active { color: rgba(255,255,255,0.98); }
+.top-nav.sky-top-dark .bnav-item.active::after { background: rgba(255,255,255,0.72); }
 
 /* ===== CALENDAR OVERLAY ===== */
 .cal-overlay {
@@ -1151,7 +1204,13 @@ input[type=number] { -moz-appearance: textfield; }
 
 <!-- Sky Page (default) -->
 <div id="page-sky" class="page active">
-  <div class="sky-bg" id="sky-bg"></div>
+  <div class="sky-bg" id="sky-bg">
+    <div class="sky-fog-layer" aria-hidden="true">
+      <div class="fog-band morning" id="fog-morning"></div>
+      <div class="fog-band afternoon" id="fog-afternoon"></div>
+      <div class="fog-band evening" id="fog-evening"></div>
+    </div>
+  </div>
   <div class="sky-content">
     <div class="sky-topbar">
       <div style="display:flex;align-items:center;gap:6px;">
@@ -1330,7 +1389,7 @@ input[type=number] { -moz-appearance: textfield; }
 <div class="entry-sheet" id="entry-sheet">
   <div class="entry-sheet-handle"></div>
   <div class="entry-sheet-header" style="position:relative;">
-    <button class="entry-close" onclick="closeEntrySheet()">
+    <button class="entry-close" aria-label="關閉心情編輯器" onclick="closeEntrySheet()">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round">
         <line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/>
       </svg>
@@ -1359,7 +1418,7 @@ input[type=number] { -moz-appearance: textfield; }
   <div class="entry-sheet-title" style="margin-bottom:16px;">設定</div>
   <div style="padding:0 4px;">
     <div style="font-size:13px;font-weight:600;color:var(--text-dark);margin-bottom:6px;">資料備份</div>
-    <p style="font-size:11px;color:#a09888;margin-bottom:12px;line-height:1.6;">匯出加密備份 / 匯入還原資料</p>
+    <p style="font-size:11px;color:#a09888;margin-bottom:12px;line-height:1.6;">匯出加密備份 / 安全合併舊資料</p>
     <div class="backup-btns">
       <button class="backup-btn export-btn" id="settings-export">匯出備份</button>
       <button class="backup-btn import-btn" id="settings-import">匯入備份</button>
@@ -1379,7 +1438,7 @@ input[type=number] { -moz-appearance: textfield; }
 // which build is actually loaded rather than guessing at the cache.
 // Bump this on every handover — it was left unchanged across several,
 // which made the readout useless for the one question it exists for.
-const APP_VERSION = '2026.07.25 · v13';
+const APP_VERSION = '2026.07.26 · v16';
 
 // ===== COLOR SYSTEM =====
 // A brighter mood has to read as more radiant, not deeper. The old ramp
@@ -1398,6 +1457,7 @@ const WARM = [[238,240,241],[255,228,140],[255,205,60],[253,170,70],[248,132,104
 // than the sky because a small dab needs the contrast a full-screen wash
 // does not; both stay colourless so neither leans warm or cool.
 const NEUTRAL_DAB = 'rgb(188,192,195)';
+const NEUTRAL_SKY = 'rgb(238,240,241)';
 const EMPTY_SKY = 'rgb(198,199,201)';
 const COOL = [[160,210,230],[90,170,210],[50,130,180],[30,100,140],[15,70,80]];
 
@@ -1411,6 +1471,19 @@ function lerp(stops, t) {
 function getColor(type, score) {
   if (score == null) return '#e0dcd8';
   return lerp(type === 'positive' ? WARM : COOL, score / 100);
+}
+
+// Whether a colour needs pale foreground ink to meet accessible contrast.
+// Kept beside the colour system so text and the cloud edge use one answer.
+function needsLightText(rgb) {
+  const m = /(\d+),\s*(\d+),\s*(\d+)/.exec(rgb);
+  if (!m) return false;
+  const linear = [m[1], m[2], m[3]].map(v => {
+    const s = Number(v) / 255;
+    return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  const relativeLum = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+  return relativeLum <= 0.179;
 }
 
 // ===== MOOD LEVELS =====
@@ -1454,6 +1527,37 @@ function levelFromSigned(signed) {
 function levelFromEntry(entry) {
   if (!entry || entry.score == null) return MOOD_NEUTRAL;
   return levelFromSigned(_signed(entry.type, entry.score));
+}
+
+// One semantic answer for every consumer. The storage layer deliberately
+// keeps legacy 0–100 scores, but the current product speaks five levels.
+// Centralising the mapping prevents "還好" (stored as positive + 0 for
+// backwards compatibility) from being mistaken for a warm/positive mood.
+function moodKind(entry) {
+  if (!entry || entry.score == null) return 'empty';
+  const level = levelFromEntry(entry);
+  if (level < MOOD_NEUTRAL) return 'negative';
+  if (level > MOOD_NEUTRAL) return 'positive';
+  return 'neutral';
+}
+
+function moodSigned(entry) {
+  if (!entry || entry.score == null) return 0;
+  const level = levelFromEntry(entry);
+  if (level === MOOD_NEUTRAL) return 0;
+  const mood = MOOD_LEVELS[level];
+  return _signed(mood.type, mood.score);
+}
+
+// Recorded colours are categorical now: the same stored entry must paint
+// the same colour in the main sky, calendar, postcard, journal and 月貌.
+// Legacy scores remain untouched in storage; only their presentation is
+// mapped to the nearest current level.
+function moodColor(entry, fallback = EMPTY_SKY) {
+  if (!entry || entry.score == null) return fallback;
+  const level = levelFromEntry(entry);
+  const mood = MOOD_LEVELS[level];
+  return level === MOOD_NEUTRAL ? NEUTRAL_SKY : getColor(mood.type, mood.score);
 }
 
 // One picker, used by both the today sheet and the postcard editor.
@@ -1527,7 +1631,6 @@ function createMoodPicker(host, onChange) {
       paint();
       return api;
     },
-    isTouched() { return touched; },
     // An untouched old entry keeps its exact score, so merely opening a
     // record and saving never quietly rounds it.
     mood() {
@@ -1572,48 +1675,69 @@ function getMonsterMessage(dayData) {
   if (entries.length === 0) return '';
 
   // deterministic daily pick
-  const _d = new Date();
+  const _d = typeof skyDate !== 'undefined' ? skyDate : new Date();
   const _pick = (arr) => arr[(_d.getDate() + _d.getMonth()) % arr.length];
 
   // ── 分類 ──
-  function classify(type, score) {
-    return (type === 'positive' ? 'P' : 'N') + '低中高'[bandOf(score)];
+  function classify(entry) {
+    const level = levelFromEntry(entry);
+    return ['N高', 'N中', 'U', 'P中', 'P高'][level];
   }
 
   // ── 只填了一段 ──
   if (entries.length === 1) {
-    const c = classify(entries[0].type, entries[0].score);
+    const c = classify(entries[0]);
+    if (c === 'U') return _pick(['今天是一片白色的朦朧','霧輕輕覆著天空，沒有偏冷也沒有偏暖','今天的感受停在一層柔白的霧裡']);
     if (c === 'P高') return _pick(['今天捕捉到了一抹很亮的暖色','天空透出了非常明亮的光澤','有一道很鮮明的暖意留下來了']);
     if (c === 'P中') return _pick(['看見了一道很柔和的暖色','天空染上了溫和的色彩','留下了一抹淡淡的溫暖痕跡']);
-    if (c === 'P低' || c === 'N低') return _pick(['是很輕的一筆，還看不出冷暖','天空裡留下了一道淡淡的影子','有一抹很淡很淡的痕跡']);
     if (c === 'N中') return _pick(['天空慢慢聚起了一些偏冷的色調','看見了一抹帶著涼意的色彩','今天的天空有一點微涼']);
     return _pick(['今天有一抹很深很深的藍色','天空承載著一片很沉的色澤','看見了很濃郁的冷色調']);
   }
 
   // ── 填了兩段 ──
   if (entries.length === 2) {
-    const c0 = classify(entries[0].type, entries[0].score);
-    const c1 = classify(entries[1].type, entries[1].score);
-    const bothPos = entries[0].type === 'positive' && entries[1].type === 'positive';
-    const bothNeg = entries[0].type === 'negative' && entries[1].type === 'negative';
+    const c0 = classify(entries[0]);
+    const c1 = classify(entries[1]);
+    const kinds = entries.map(moodKind);
+    const bothPos = kinds.every(k => k === 'positive');
+    const bothNeg = kinds.every(k => k === 'negative');
+    const neutralCount = kinds.filter(k => k === 'neutral').length;
     const hasNHigh = c0 === 'N高' || c1 === 'N高';
-    const bothLow = c0 === 'P低' && c1 === 'P低';
 
-    if (bothPos && !bothLow) return _pick(['連續兩段暖色，天空漸漸明朗了','兩段光線交織出很明亮的色澤','兩次捕捉到的都是溫暖的光澤']);
-    if (bothPos && bothLow) return _pick(['都是輕輕淺淺的，但透著暖意','雖然很淡，但都是明亮的色調','天空裡有著若有似無的微光']);
+    if (neutralCount === 2) return _pick(['兩段感受都停在柔白的霧裡','今天的天空一直朦朦朧朧','兩筆都是不冷不暖的白霧']);
+    if (neutralCount === 1) {
+      const other = kinds.find(k => k !== 'neutral');
+      return other === 'positive'
+        ? _pick(['白霧裡透進了一點暖光','朦朧之間，留住了一段溫暖','一段平淡，一段微微發亮'])
+        : _pick(['白霧裡帶進了一點涼意','朦朧之間，有一段稍微沉了下來','一段平淡，一段染上冷色']);
+    }
+    if (bothPos) return _pick(['連續兩段暖色，天空漸漸明朗了','兩段光線交織出很明亮的色澤','兩次捕捉到的都是溫暖的光澤']);
     if (bothNeg && hasNHigh) return _pick(['是很沉的顏色，我都接住了','兩段色彩疊加出很深厚的藍','今天的空氣透著一股厚重感']);
     if (bothNeg) return _pick(['連續兩筆都帶著一點微涼的氣息','天空的色調一直維持著偏冷','兩段色彩都靜靜地沉下來了']);
     return _pick(['一暖一冷，天空有了不同的層次','光線和陰影在今天交替出現了','不同的溫度正在相互交錯著']);
   }
 
   // ── 三段完整 ──
-  const types  = entries.map(e => e.type);
+  const kinds = entries.map(moodKind);
   const scores = entries.map(e => e.score);
-  const L = entries.map(e => classify(e.type, e.score));
-  const dir = types.map(t => t === 'positive' ? 'P' : 'N').join('');
+  const L = entries.map(classify);
+  const dir = kinds.map(k => k === 'positive' ? 'P' : k === 'negative' ? 'N' : 'U').join('');
   const trend = scores[2] - scores[0];
   const hasHigh = tag => L.some(l => l === tag);
   const allSame = tag => L.every(l => l === tag);
+
+  const neutralCount = kinds.filter(k => k === 'neutral').length;
+  if (neutralCount === 3) {
+    return _pick(['一整天都覆著柔白的霧','今天沒有特別冷暖，只是朦朦朧朧','三段感受都安靜地停在白霧裡']);
+  }
+  if (neutralCount > 0) {
+    const directional = kinds.filter(k => k !== 'neutral');
+    const pos = directional.filter(k => k === 'positive').length;
+    const neg = directional.filter(k => k === 'negative').length;
+    if (pos > neg) return _pick(['白霧之間，還是透進了暖光','朦朧的一天裡，有些時刻是明亮的','平淡與暖意交織成今天的天空']);
+    if (neg > pos) return _pick(['白霧之間，夾著一些涼意','朦朧的一天裡，有些時刻沉了下來','平淡與冷色交織成今天的天空']);
+    return _pick(['冷暖都來過，也有一段白色的朦朧','今天的天空有冷、有暖，也有平淡','不同感受在白霧裡交錯著']);
+  }
 
   const rules = [
     // ===== PPP =====
@@ -1621,20 +1745,12 @@ function getMonsterMessage(dayData) {
       msgs: ['今天一整天都閃閃發亮著','是充滿光亮與溫度的一天','今天的天空非常明亮耀眼'] },
     { test: () => dir === 'PPP' && hasHigh('P高') && trend > 20,
       msgs: ['天空的色彩越來越明朗了','溫度隨著時間慢慢升高了','走到後面，光線變得好飽滿'] },
-    { test: () => dir === 'PPP' && hasHigh('P高') && trend < -20 && L[2] === 'P低',
-      msgs: ['耀眼的開場，在夜裡安靜收尾了','一開始很亮，後來輕輕地淡出了','光線在入夜後漸漸轉淡了'] },
     { test: () => dir === 'PPP' && hasHigh('P高') && trend < -20,
       msgs: ['白天很明亮，晚上安靜了下來','今天一直都亮著，最後收得溫和','光線漸漸轉為柔和的微光'] },
-    { test: () => dir === 'PPP' && L[1] === 'P低' && L[0] !== 'P低' && L[2] !== 'P低',
-      msgs: ['中途雖然轉淡，幸好首尾都有光','中間稍稍變淡，後來又聚起光了','中途有些輕淡，但首尾都溫暖'] },
     { test: () => dir === 'PPP' && hasHigh('P高'),
       msgs: ['今天有一段時間的光線特別耀眼','捕捉到了一抹特別明亮的色彩','今天的某個時刻特別有光澤'] },
     { test: () => dir === 'PPP' && allSame('P中'),
       msgs: ['一整天都維持著柔和的暖意','小小的光亮，平穩地亮了一天','是很平靜也帶點溫暖的一天'] },
-    { test: () => dir === 'PPP' && allSame('P低'),
-      msgs: ['輕輕淺淺的，但都有微光','一整天的色調都淡淡的好','輕柔得像微風一樣的一天'] },
-    { test: () => dir === 'PPP' && scores.some(s => s < 10),
-      msgs: ['有發亮的時刻，也有很淡的瞬間','雖然有些模糊，但都是暖色調','光線有時明顯，有時很輕微'] },
     { test: () => dir === 'PPP',
       msgs: ['今天的天空維持著溫暖的底色','一整天都沉浸在明亮的色調裡','把今天滿滿的暖意都收好了'] },
 
@@ -1645,28 +1761,18 @@ function getMonsterMessage(dayData) {
       msgs: ['顏色越來越深，一層一層的','雲層漸漸堆積出厚實的樣子','越到後來，空氣感覺越厚重'] },
     { test: () => dir === 'NNN' && trend < -20,
       msgs: ['深沉的顏色到了晚上慢慢化開了','早上的重量，後來稍微鬆脫了些','雖然帶著涼意，但慢慢變淡了'] },
-    { test: () => dir === 'NNN' && allSame('N低'),
-      msgs: ['一整天都罩著一層淡淡的霧','一整天都覆蓋著一層薄薄的灰','帶著一點點淡淡的微涼感'] },
     { test: () => dir === 'NNN',
       msgs: ['沉悶的空氣，都被輕輕接攏了','天空透著涼意，今天就是這樣','今天一整天都有些沉沉的呢'] },
 
     // ===== NPP =====
-    { test: () => dir === 'NPP' && L[0] === 'N高' && L[2] !== 'P低',
-      msgs: ['早上那麼重，後來慢慢透出光了','從深藍色裡，逐漸走出了暖意','早上的重量，終於在夜晚化開了'] },
     { test: () => dir === 'NPP' && L[0] === 'N高',
-      msgs: ['一開始很沉重，後來慢慢轉暖了','早上的深色調，後來被光蓋過了','走過了沉重的早晨，迎來了光線'] },
-    { test: () => dir === 'NPP' && L[2] === 'P低',
-      msgs: ['方向慢慢變暖了，輕輕柔柔的','雖然光線很微弱，但漸漸好轉了','最後留下了一抹淡淡的暖光'] },
+      msgs: ['早上那麼重，後來慢慢透出光了','從深藍色裡，逐漸走出了暖意','早上的重量，終於在夜晚化開了'] },
     { test: () => dir === 'NPP',
       msgs: ['色彩慢慢地從冷調變成暖色了','天空漸漸好轉，透出了明亮','逐漸散開了冷意，迎來了溫暖'] },
 
     // ===== PPN =====
-    { test: () => dir === 'PPN' && L[2] === 'N高' && L[0] === 'P低',
-      msgs: ['到了晚上突然變得好沉重啊','白天淺淺的，晚上卻積累得很厚','夜晚的空氣突然變得又冷又重'] },
     { test: () => dir === 'PPN' && L[2] === 'N高',
       msgs: ['前面都好好的，晚上突然變沉了','白天的光被夜晚的深藍蓋住了','夜幕降臨後，雲層變得好厚重'] },
-    { test: () => dir === 'PPN' && L[2] === 'N中' && L[0] === 'P低',
-      msgs: ['到了最後，輕輕地染上了一層灰','白天淡淡的，晚上稍微沉了一點','最後的色彩稍微暗了下來'] },
     { test: () => dir === 'PPN' && L[2] === 'N中',
       msgs: ['入夜後沉了一點，但前面是暖的','晚上稍稍降溫了，但白天不錯','雖然最後有點涼，但有過光亮'] },
     { test: () => dir === 'PPN' && hasHigh('P高'),
@@ -1677,8 +1783,6 @@ function getMonsterMessage(dayData) {
     // ===== PNN =====
     { test: () => dir === 'PNN' && L[0] === 'P高',
       msgs: ['早上那麼耀眼，後來慢慢暗下了','開局很明亮，後來漸漸被遮蔽了','早上的光線，在午後漸漸轉涼了'] },
-    { test: () => dir === 'PNN' && L[0] === 'P低',
-      msgs: ['一開始就淡淡的，後來變沉重了','微弱的光線慢慢被冷色取代了','從一點點微光，走進了深藍裡'] },
     { test: () => dir === 'PNN',
       msgs: ['從溫暖的早晨，慢慢走進了涼意','光線漸漸褪去，天空冷了下來','開頭是好的，後來慢慢沉下去了'] },
 
@@ -1691,8 +1795,6 @@ function getMonsterMessage(dayData) {
       msgs: ['沉重的色調在最後慢慢化開了','走到了晚上，總算透出一點暖意','晚上的天空有慢慢變暖和了呢'] },
 
     // ===== PNP =====
-    { test: () => dir === 'PNP' && L[2] === 'P低',
-      msgs: ['下午沉了一下，晚上剩一點微光','中間降溫了，晚上只留下輕輕的暖','經歷了微涼的下午，晚上淡淡的'] },
     { test: () => dir === 'PNP',
       msgs: ['下午稍微轉冷，但晚上又暖了','雲層遮住了一下子，後來又散開了','中途暗了一下，最後又找回了光'] },
 
@@ -1751,11 +1853,11 @@ function renderCalendar() {
       const entries = PERIOD_KEYS.map(pk => dayD?.[pk]).filter(e => e?.score != null);
       if (entries.length > 0) {
         if (entries.length === 1) {
-          html += `<div class="gradient-fill" style="background:${getColor(entries[0].type, entries[0].score)}"></div>`;
+          html += `<div class="gradient-fill" style="background:${moodColor(entries[0])}"></div>`;
         } else {
           const colors = entries.map((e, i) => {
             const pct = (i / (entries.length - 1)) * 100;
-            return `${getColor(e.type, e.score)} ${pct}%`;
+            return `${moodColor(e)} ${pct}%`;
           });
           html += `<div class="gradient-fill" style="background:linear-gradient(180deg,${colors.join(',')})"></div>`;
         }
@@ -1812,11 +1914,10 @@ function openDayModal(day) {
   const cloud = generateCloudForDay(date, dayD);
   const entries = PERIOD_KEYS.map(pk => dayD[pk] || null);
   const filled = entries.filter(e => e?.score != null);
-  const allNeg = filled.length === 3 && filled.every(e => e.type === 'negative');
-  const allPos = filled.length === 3 && filled.every(e => e.type === 'positive');
-  const gradC = entries.map(e => e ? getColor(e.type, e.score) : EMPTY_SKY);
+  const allNeg = filled.length === 3 && filled.every(e => moodKind(e) === 'negative');
+  const allPos = filled.length === 3 && filled.every(e => moodKind(e) === 'positive');
+  const gradC = entries.map(e => moodColor(e));
   const skyGrad = `linear-gradient(180deg,${gradC[0]} 0%,${gradC[0]} 25%,${gradC[1]} 50%,${gradC[2]} 75%,${gradC[2]} 100%)`;
-  const stripC = entries.map(e => e ? getColor(e.type, e.score) : '#d8d4d0');
   const cloudSvg = renderCloudSVG(cloud, filled.length);
   const wd = ['日','一','二','三','四','五','六'][date.getDay()];
 
@@ -1849,7 +1950,7 @@ function openDayModal(day) {
               <div class="pc-date-num">${curMonth+1}/${day}</div>
               <div class="pc-date-weekday">週${wd}</div>
             </div>
-            <button id="pc-close" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border:none;background:rgba(0,0,0,0.12);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center">
+            <button id="pc-close" aria-label="關閉明信片" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border:none;background:rgba(0,0,0,0.12);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
             </button>
             <div class="pc-hint">輕觸翻面</div>
@@ -1860,7 +1961,7 @@ function openDayModal(day) {
                 <div id="pc-header-left" style="font-family:var(--display);font-size:22px;font-weight:700;color:#3a3530">
                   ${curMonth+1}/${day} <span style="font-size:13px;font-weight:400;color:#a09890">週${wd}</span>
                 </div>
-                <button id="pc-back-close" style="width:30px;height:30px;border:none;background:rgba(0,0,0,0.06);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <button id="pc-back-close" aria-label="關閉明信片" style="width:30px;height:30px;border:none;background:rgba(0,0,0,0.06);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a8078" stroke-width="1.8" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
                 </button>
               </div>
@@ -1904,8 +2005,7 @@ function openDayModal(day) {
     const dd = monthData[dk] || {};
     const ents = PERIOD_KEYS.map(pk => dd[pk] || null);
     const fl = ents.filter(e => e?.score != null);
-    const gC = ents.map(e => e ? getColor(e.type, e.score) : EMPTY_SKY);
-    const sC = ents.map(e => e ? getColor(e.type, e.score) : '#d8d4d0');
+    const gC = ents.map(e => moodColor(e));
     const front = document.getElementById('pc-front');
     front.style.background = `linear-gradient(180deg,${gC[0]} 0%,${gC[0]} 25%,${gC[1]} 50%,${gC[2]} 75%,${gC[2]} 100%)`;
     // The cloud is grown from the mood, so re-grow it after an edit.
@@ -1913,8 +2013,8 @@ function openDayModal(day) {
     if (cloudHost) cloudHost.innerHTML = renderCloudSVG(generateCloudForDay(date, dd), fl.length);
     // Update weather
     const wEl = document.getElementById('pc-weather');
-    const aN = fl.length === 3 && fl.every(e => e.type === 'negative');
-    const aP = fl.length === 3 && fl.every(e => e.type === 'positive');
+    const aN = fl.length === 3 && fl.every(e => moodKind(e) === 'negative');
+    const aP = fl.length === 3 && fl.every(e => moodKind(e) === 'positive');
     let wHTML = '';
     if (aN) {
       wHTML = '<div class="pc-rain">';
@@ -1977,7 +2077,7 @@ function openDayModal(day) {
     PERIOD_KEYS.forEach((pk, i) => {
       const e = dd[pk];
       const has = e?.score != null;
-      const barC = has ? getColor(e.type, e.score) : '#e0dcd8';
+      const barC = has ? moodColor(e) : '#e0dcd8';
       const iconColor = has ? barC : '#c8c0b8';
       const bg = has ? `linear-gradient(90deg, ${barC}18 0%, rgba(255,255,255,0.6) 100%)` : 'rgba(255,255,255,0.3)';
       const rightHTML = has ? '' : '<span style="font-size:12px;color:#c8c0b8">未記錄</span>';
@@ -2044,7 +2144,6 @@ function openDayModal(day) {
     const saveBtn = document.getElementById('pc-save');
     const noteDisp = document.getElementById('pc-note-display');
     const noteIn = document.getElementById('pc-note-input');
-    let noteTouched = false;
 
     function paintSave() {
       const m = picker.mood();
@@ -2065,19 +2164,16 @@ function openDayModal(day) {
       noteDisp.querySelector('span').textContent = v || '說說你的感受';
       noteDisp.style.color = v ? 'var(--text-mid)' : '#c0b8b0';
       noteDisp.style.display = ''; noteIn.style.display = 'none';
-      if (v) noteTouched = true;
     });
 
     saveBtn.addEventListener('click', () => {
       const m = picker.mood();
       const n = noteIn.value.trim().slice(0, 500);
-      if (picker.isTouched() || noteTouched || has) {
-        if (!monthData[dk]) monthData[dk] = {};
-        monthData[dk][pk] = { type: m.type, score: m.score, note: n };
-        saveData();
-        saveBtn.textContent = '已記錄'; saveBtn.style.opacity = '0.6';
-        setTimeout(() => { saveBtn.textContent = '記下來'; saveBtn.style.opacity = '1'; }, 1500);
-      }
+      if (!monthData[dk]) monthData[dk] = {};
+      monthData[dk][pk] = { type: m.type, score: m.score, note: n };
+      saveData();
+      saveBtn.textContent = '已記錄'; saveBtn.style.opacity = '0.6';
+      setTimeout(() => { saveBtn.textContent = '記下來'; saveBtn.style.opacity = '1'; }, 1500);
     });
 
     document.getElementById('pc-delete')?.addEventListener('click', () => {
@@ -2112,10 +2208,8 @@ function openStats() {
   statsPage.classList.add('active');
 
   const dim = daysInMonth(curYear, curMonth);
-  let posCount=0, negCount=0, posSum=0, negSum=0;
+  let posCount=0, negCount=0, neutralCount=0;
   let pmsDays=0, periodDays=0;
-  let pmsMoodNeg=[], nonPmsMoodNeg=[];
-  const dailyAvgs = [];
 
   for (let d=1; d<=dim; d++) {
     const dk = String(d);
@@ -2123,33 +2217,23 @@ function openStats() {
     const dayC = cycleData[dk];
     if (dayC?.pms) pmsDays++;
     if (dayC?.period) periodDays++;
-    let scores = [];
     if (dayD) {
       PERIOD_KEYS.forEach(pk => {
         const e = dayD[pk];
         if (e?.score != null) {
-          scores.push(e.score);
-          if (e.type==='positive') { posCount++; posSum+=e.score; }
-          else { negCount++; negSum+=e.score; }
-          if (e.type==='negative') {
-            if (dayC?.pms || dayC?.period) pmsMoodNeg.push(e.score);
-            else nonPmsMoodNeg.push(e.score);
-          }
+          const kind = moodKind(e);
+          if (kind === 'positive') posCount++;
+          else if (kind === 'negative') negCount++;
+          else neutralCount++;
         }
       });
     }
-    dailyAvgs.push(scores.length > 0 ? scores.reduce((a,b)=>a+b,0)/scores.length : null);
   }
 
   const filledDays = Object.keys(monthData).filter(k => {
     const d = monthData[k];
     return d && PERIOD_KEYS.some(pk => d[pk]?.score != null);
   }).length;
-  const posAvg = posCount > 0 ? Math.round(posSum/posCount) : null;
-  const negAvg = negCount > 0 ? Math.round(negSum/negCount) : null;
-  const pmsNegAvg = pmsMoodNeg.length > 0 ? Math.round(pmsMoodNeg.reduce((a,b)=>a+b,0)/pmsMoodNeg.length) : null;
-  const nonPmsNegAvg = nonPmsMoodNeg.length > 0 ? Math.round(nonPmsMoodNeg.reduce((a,b)=>a+b,0)/nonPmsMoodNeg.length) : null;
-
   // Cycle correlation: compare neg rate on cycle days vs non-cycle days, broken down by time of day
   let cycleTotalEntries = 0, cycleNegEntries = 0;
   let nonCycleTotalEntries = 0, nonCycleNegEntries = 0;
@@ -2166,10 +2250,10 @@ function openStats() {
           if (isCycle) {
             cycleTotalEntries++;
             cycleByPeriod[pi].total++;
-            if (e.type === 'negative') { cycleNegEntries++; cycleByPeriod[pi].neg++; }
+            if (moodKind(e) === 'negative') { cycleNegEntries++; cycleByPeriod[pi].neg++; }
           } else {
             nonCycleTotalEntries++;
-            if (e.type === 'negative') nonCycleNegEntries++;
+            if (moodKind(e) === 'negative') nonCycleNegEntries++;
           }
         }
       });
@@ -2181,17 +2265,17 @@ function openStats() {
   // ===== ADDITIONAL ANALYTICS =====
   const DOW_TW = ['日','一','二','三','四','五','六'];
 
-  // Time of day: negative frequency + intensity per period
+  // Time of day: negative frequency per period
   const periodAnalysis = PERIOD_KEYS.map(pk => {
-    let negCnt = 0, negSum = 0, total = 0;
+    let negCnt = 0, total = 0;
     for (let d = 1; d <= dim; d++) {
       const e = monthData[String(d)]?.[pk];
       if (e?.score != null) {
         total++;
-        if (e.type === 'negative') { negCnt++; negSum += e.score; }
+        if (moodKind(e) === 'negative') negCnt++;
       }
     }
-    return { total, negCnt, negAvg: negCnt > 0 ? Math.round(negSum / negCnt) : null };
+    return { total, negCnt };
   });
 
   // Day of week: negative entry count per weekday
@@ -2204,7 +2288,7 @@ function openStats() {
         const e = dayD[pk];
         if (e?.score != null) {
           dowStats[dow].total++;
-          if (e.type === 'negative') dowStats[dow].negCnt++;
+          if (moodKind(e) === 'negative') dowStats[dow].negCnt++;
         }
       });
     }
@@ -2219,8 +2303,9 @@ function openStats() {
       PERIOD_KEYS.forEach(pk => {
         const e = dayD[pk];
         if (e?.score != null) {
-          if (e.type === 'positive') weekCounts[wk].pos++;
-          else weekCounts[wk].neg++;
+          const kind = moodKind(e);
+          if (kind === 'positive') weekCounts[wk].pos++;
+          else if (kind === 'negative') weekCounts[wk].neg++;
         }
       });
     }
@@ -2230,8 +2315,7 @@ function openStats() {
   let maxLowRun = [], curLowRun = [];
   for (let d = 1; d <= dim; d++) {
     const dayD = monthData[String(d)];
-    const isLow = dayD && PERIOD_KEYS.some(pk =>
-      dayD[pk]?.type === 'negative' && bandOf(dayD[pk].score) === 2);
+    const isLow = dayD && PERIOD_KEYS.some(pk => levelFromEntry(dayD[pk]) === 0);
     if (isLow) {
       curLowRun.push(d);
     } else {
@@ -2251,19 +2335,16 @@ function openStats() {
     if (typeof dayD !== 'object' || !dayD) return;
     PERIOD_KEYS.forEach(pk => {
       const e = dayD[pk];
-      if (e?.score != null) prevValArr.push(e.type === 'positive' ? e.score : -e.score);
+      if (e?.score != null) prevValArr.push(moodSigned(e));
     });
   });
   for (let d = 1; d <= dim; d++) {
     const dayD = monthData[String(d)];
     if (dayD) PERIOD_KEYS.forEach(pk => {
       const e = dayD[pk];
-      if (e?.score != null) curValArr.push(e.type === 'positive' ? e.score : -e.score);
+      if (e?.score != null) curValArr.push(moodSigned(e));
     });
   }
-  const prevNetAvg = prevValArr.length ? Math.round(prevValArr.reduce((a, b) => a + b, 0) / prevValArr.length) : null;
-  const curNetAvg = curValArr.length ? Math.round(curValArr.reduce((a, b) => a + b, 0) / curValArr.length) : null;
-
   let cycleHTML = '';
   if (pmsDays > 0 || periodDays > 0) {
     const cycleDaysDesc = [
@@ -2404,8 +2485,10 @@ function openStats() {
     if (!dayD) { curWarmStreak = 0; continue; }
     const hasFilled = PERIOD_KEYS.some(pk => dayD[pk]?.score != null);
     if (!hasFilled) { curWarmStreak = 0; continue; }
-    const hasNeg = PERIOD_KEYS.some(pk => dayD[pk]?.type === 'negative');
-    if (!hasNeg) {
+    const kinds = PERIOD_KEYS.map(pk => dayD[pk]).filter(Boolean).map(moodKind);
+    const hasNeg = kinds.includes('negative');
+    const hasPos = kinds.includes('positive');
+    if (!hasNeg && hasPos) {
       warmDays++;
       curWarmStreak++;
       if (curWarmStreak > maxWarmStreak) maxWarmStreak = curWarmStreak;
@@ -2416,9 +2499,7 @@ function openStats() {
   const warmDayRatio = filledDays > 0 ? warmDays / filledDays : null;
 
   // ===== SUMMARY =====
-  const totalEntries = posCount + negCount;
-  const posRatio = totalEntries > 0 ? posCount / totalEntries : null;
-  const posRatioPct = posRatio !== null ? Math.round(posRatio * 100) : null;
+  const totalEntries = posCount + negCount + neutralCount;
   let summaryVerdict, verdictColor;
   if (warmDayRatio === null || filledDays < 3) {
     summaryVerdict = '開始記錄你的情緒旅程';
@@ -2467,16 +2548,7 @@ function openStats() {
   });
 
   // ===== SKY FILMSTRIP (blended gradient per day) =====
-  // One tier per mood band, so a day reads the same here as on its dot.
-  // Score 0 is 還好, and has to stay colourless here as it is everywhere
-  // else: even the palest warm tint sits on the warm half and reads as a
-  // good day, which 還好 is not. This strip used to paint it cream.
-  function moodColor(type, score) {
-    if (score === 0) return NEUTRAL_DAB;
-    return (type === 'positive'
-      ? ['rgb(250,232,200)','rgb(240,184,101)','rgb(232,145,58)']
-      : ['rgb(185,205,220)','rgb(90,120,165)','rgb(60,80,130)'])[bandOf(score)];
-  }
+  // Uses the same categorical colour source as the main sky and calendar.
   let filmstripHTML = '';
   for (let i = 0; i < dim; i++) {
     const dk = String(i + 1);
@@ -2488,7 +2560,7 @@ function openStats() {
       const colors = PERIOD_KEYS.map(pk => {
         const e = dayD[pk];
         if (!e || e.score == null) return null;
-        return moodColor(e.type, e.score);
+        return moodColor(e);
       }).filter(Boolean);
       let grad;
       if (colors.length === 1) grad = colors[0];
@@ -2588,7 +2660,7 @@ function closeStats() {
 
 // ===== JOURNAL PAGE =====
 let journalState = {
-  filter: 'all',      // 'all' | 'positive' | 'negative'
+  filter: 'all',      // 'all' | 'negative' | 'neutral' | 'positive'
   search: '',
   sortDir: 'desc',    // 'desc' (newest first) | 'asc' (oldest first)
   rendered: 0,
@@ -2627,8 +2699,9 @@ function filterJournalEntries() {
   const { filter, search, allEntries } = journalState;
   const q = search.trim().toLowerCase();
   return allEntries.filter(e => {
-    if (filter === 'positive' && e.type !== 'positive') return false;
-    if (filter === 'negative' && e.type !== 'negative') return false;
+    // Old 0–100 entries stay untouched. Their five-level display meaning is
+    // folded into three equal weather families only while filtering.
+    if (filter !== 'all' && moodKind(e) !== filter) return false;
     if (q && !e.note.toLowerCase().includes(q)) return false;
     return true;
   });
@@ -2677,7 +2750,11 @@ function renderJournalItems(append = false) {
   }
 
   if (filtered.length === 0) {
-    listEl.innerHTML = '<div class="journal-empty">還沒有日誌<br>在日曆裡打開某一天，寫下一些話</div>';
+    const weatherNames = { negative: '陰天', neutral: '白霧', positive: '晴天' };
+    const emptyText = journalState.filter === 'all'
+      ? '還沒有日誌<br>在日曆裡打開某一天，寫下一些話'
+      : `沒有「${weatherNames[journalState.filter]}」的日誌`;
+    listEl.innerHTML = `<div class="journal-empty">${emptyText}</div>`;
     const loadMoreEl = document.getElementById('journal-load-more');
     if (loadMoreEl) loadMoreEl.style.display = 'none';
     return;
@@ -2717,8 +2794,9 @@ function renderJournalItems(append = false) {
     `;
     const periodsHTML = day.periods.map((p, idx) => {
       if (!p) return '';
-      const scoreClass = p.type === 'positive' ? 'pos' : 'neg';
-      const dotColor = p.score === 0 ? NEUTRAL_DAB : getColor(p.type, p.score);
+      const kind = moodKind(p);
+      const scoreClass = kind === 'positive' ? 'pos' : kind === 'negative' ? 'neg' : 'neutral';
+      const dotColor = moodKind(p) === 'neutral' ? NEUTRAL_DAB : moodColor(p);
       const periodLabel = PERIOD_LABELS_ZH[p.period];
       return `
         <div class="journal-period ${scoreClass}">
@@ -2750,9 +2828,22 @@ function renderJournalItems(append = false) {
   }
 }
 
+function teardownJournal() {
+  const page = document.getElementById('page-journal');
+  if (page._onScroll) {
+    window.removeEventListener('scroll', page._onScroll);
+    page._onScroll = null;
+  }
+  if (page._searchTimer) {
+    clearTimeout(page._searchTimer);
+    page._searchTimer = null;
+  }
+}
+
 function openJournal(year, month) {
   document.getElementById('page-sky').classList.remove('active');
   const page = document.getElementById('page-journal');
+  teardownJournal();
   page.classList.add('active');
 
   const jY = year != null ? year : curYear;
@@ -2767,6 +2858,7 @@ function openJournal(year, month) {
   journalState = {
     filter: 'all',
     search: '',
+    sortDir: journalState.sortDir || 'desc',
     rendered: 0,
     allEntries: collectAllEntries()
   };
@@ -2791,8 +2883,9 @@ function openJournal(year, month) {
       </div>
       <div class="journal-tabs">
         <button class="journal-tab active" data-filter="all">全部</button>
-        <button class="journal-tab" data-filter="positive">正向</button>
-        <button class="journal-tab" data-filter="negative">負向</button>
+        <button class="journal-tab" data-filter="negative">陰天</button>
+        <button class="journal-tab" data-filter="neutral">白霧</button>
+        <button class="journal-tab" data-filter="positive">晴天</button>
       </div>
       <div class="journal-search-box">
         <span class="journal-search-icon">
@@ -2819,13 +2912,11 @@ function openJournal(year, month) {
   document.getElementById('journal-prev').addEventListener('click', () => {
     let y = page._jYear, m = page._jMonth - 1;
     if (m < 0) { m = 11; y--; }
-    page.innerHTML = '';
     openJournal(y, m);
   });
   document.getElementById('journal-next').addEventListener('click', () => {
     let y = page._jYear, m = page._jMonth + 1;
     if (m > 11) { m = 0; y++; }
-    page.innerHTML = '';
     openJournal(y, m);
   });
 
@@ -2842,10 +2933,11 @@ function openJournal(year, month) {
 
   // Search input (debounced)
   const searchInput = document.getElementById('journal-search-input');
-  let searchTimer = null;
   searchInput.addEventListener('input', () => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
+    if (page._searchTimer) clearTimeout(page._searchTimer);
+    page._searchTimer = setTimeout(() => {
+      page._searchTimer = null;
+      if (!page.classList.contains('active')) return;
       journalState.search = searchInput.value;
       renderJournalItems();
       window.scrollTo(0, 0);
@@ -2892,19 +2984,6 @@ function openJournal(year, month) {
   window.addEventListener('scroll', onScroll, { passive: true });
   // Store to remove on close
   page._onScroll = onScroll;
-}
-
-function closeJournal() {
-  const page = document.getElementById('page-journal');
-  if (page._onScroll) {
-    window.removeEventListener('scroll', page._onScroll);
-    page._onScroll = null;
-  }
-  page.classList.remove('active');
-  page.innerHTML = '';
-  document.getElementById('page-sky').classList.add('active');
-  updateNavState('sky');
-  window.scrollTo(0, 0);
 }
 
 // ===== EXPORT / IMPORT (ENCRYPTED) =====
@@ -3146,7 +3225,7 @@ function sanitizeMonthData(val) {
   if (typeof val !== 'object' || val === null || Array.isArray(val)) return null;
   const out = {};
   for (const [dk, dayVal] of Object.entries(val)) {
-    if (!/^\d{1,2}$/.test(dk)) continue;
+    if (!/^\d{1,2}$/.test(dk) || +dk < 1 || +dk > 31) continue;
     if (typeof dayVal !== 'object' || dayVal === null) continue;
     const dayOut = {};
     for (const pk of PERIOD_KEYS) {
@@ -3164,7 +3243,7 @@ function sanitizeCycleData(val) {
   if (typeof val !== 'object' || val === null || Array.isArray(val)) return null;
   const out = {};
   for (const [dk, dayVal] of Object.entries(val)) {
-    if (!/^\d{1,2}$/.test(dk)) continue;
+    if (!/^\d{1,2}$/.test(dk) || +dk < 1 || +dk > 31) continue;
     if (typeof dayVal !== 'object' || dayVal === null) continue;
     const clean = {};
     if (dayVal.pms === true) clean.pms = true;
@@ -3174,16 +3253,55 @@ function sanitizeCycleData(val) {
   return Object.keys(out).length > 0 ? out : null;
 }
 
-// Actually apply a parsed JSON payload to localStorage
+function isPlainRecord(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function readCleanStoredData(key, sanitizer) {
+  try {
+    return sanitizer(JSON.parse(localStorage.getItem(key))) || {};
+  } catch {
+    return {};
+  }
+}
+
+function mergeMoodMonth(imported, current) {
+  const merged = {};
+  for (const [day, entries] of Object.entries(imported)) {
+    merged[day] = { ...entries };
+  }
+  // Current device data wins at the individual period level. This lets an
+  // older full backup restore missing history without erasing newer notes.
+  for (const [day, entries] of Object.entries(current)) {
+    merged[day] = { ...(merged[day] || {}), ...entries };
+  }
+  return merged;
+}
+
+function mergeCycleMonth(imported, current) {
+  return { ...imported, ...current };
+}
+
+// Apply a parsed JSON payload as a non-destructive merge. Import files are
+// read-only; nothing in the selected JSON is rewritten.
 function applyImportedData(data) {
+  if (!isPlainRecord(data)) throw new Error('invalid backup root');
   let count = 0;
   Object.entries(data).forEach(([key, val]) => {
     if (/^mood:\d{4}-\d{2}$/.test(key)) {
       const clean = sanitizeMonthData(val);
-      if (clean) { localStorage.setItem(key, JSON.stringify(clean)); count++; }
+      if (clean) {
+        const current = readCleanStoredData(key, sanitizeMonthData);
+        localStorage.setItem(key, JSON.stringify(mergeMoodMonth(clean, current)));
+        count++;
+      }
     } else if (/^cycle:\d{4}-\d{2}$/.test(key)) {
       const clean = sanitizeCycleData(val);
-      if (clean) { localStorage.setItem(key, JSON.stringify(clean)); count++; }
+      if (clean) {
+        const current = readCleanStoredData(key, sanitizeCycleData);
+        localStorage.setItem(key, JSON.stringify(mergeCycleMonth(clean, current)));
+        count++;
+      }
     }
   });
   return count;
@@ -3226,14 +3344,14 @@ async function importData(e) {
         const data = JSON.parse(plaintext);
         const count = applyImportedData(data);
         hideBusyOverlay();
-        alert(`已匯入 ${count} 筆月份資料`);
+        alert(`已安全合併 ${count} 筆月份資料。\n裝置上已有的紀錄已保留。`);
         loadData();
         renderCalendar();
         closeStats();
       } catch (err) {
         hideBusyOverlay();
         // Don't reveal whether pwd was close — just generic error
-        alert('密碼錯誤，無法解密此備份');
+        alert('密碼錯誤，或備份內容已損壞，無法匯入。');
         console.error('decrypt error (benign):', err.name);
       }
       e.target.value = '';
@@ -3241,6 +3359,11 @@ async function importData(e) {
     }
 
     // Unencrypted legacy format — import directly with gentle reminder
+    if (!isPlainRecord(parsed)) {
+      alert('檔案格式無法識別。備份最外層必須是資料物件。');
+      e.target.value = '';
+      return;
+    }
     const looksLikeLegacy = Object.keys(parsed).some(k => /^(mood|cycle):\d{4}-\d{2}$/.test(k));
     if (!looksLikeLegacy) {
       alert('檔案格式無法識別。這可能不是 Mood Tracker 的備份檔。');
@@ -3248,7 +3371,7 @@ async function importData(e) {
       return;
     }
     const count = applyImportedData(parsed);
-    alert(`已匯入 ${count} 筆月份資料。\n\n這個備份沒有密碼保護，建議重新匯出一份加密版本。`);
+    alert(`已安全合併 ${count} 筆月份資料，裝置上已有的紀錄已保留。\n\n這個備份沒有密碼保護，建議重新匯出一份加密版本。`);
     loadData();
     renderCalendar();
     closeStats();
@@ -3362,7 +3485,7 @@ function updateSkyPeriods() {
       btn.classList.add('filled');
       scoreEl.style.display = 'block';
       scoreEl.textContent = '';
-      scoreEl.style.background = entry.score === 0 ? NEUTRAL_DAB : getColor(entry.type, entry.score);
+      scoreEl.style.background = moodKind(entry) === 'neutral' ? NEUTRAL_DAB : moodColor(entry);
       if (dotEl) dotEl.style.display = 'none';
     } else {
       btn.classList.remove('filled');
@@ -3385,11 +3508,7 @@ function updateSkyGradient(provisional) {
   const neutral = EMPTY_SKY;
 
   function periodColor(pk) {
-    const e = todayData[pk];
-    if (!e || e.score == null) return neutral;
-    const t = e.score / 100;
-    if (e.type === 'positive') return lerp(WARM, t * 0.7);
-    return lerp(COOL, t * 0.6);
+    return moodColor(todayData[pk], neutral);
   }
 
   const top = periodColor('morning');
@@ -3397,15 +3516,27 @@ function updateSkyGradient(provisional) {
   const bot = periodColor('evening');
   bg.style.background = `linear-gradient(180deg, ${top} 0%, ${top} 20%, ${mid} 45%, ${mid} 55%, ${bot} 80%, ${bot} 100%)`;
 
-  // Adaptive text. This used to flip on "any period is deeply negative",
-  // but the message and the labels sit low on the screen, where the
-  // colour comes from the evening. A heavy morning followed by a bright
-  // evening left white text on a pale sky. Read the actual brightness
-  // underneath the text instead.
+  // A neutral entry turns on a local fog layer. Missing entries remain plain
+  // overcast grey, so "nothing recorded" and "還好" still look different.
+  PERIOD_KEYS.forEach(pk => {
+    document.getElementById('fog-' + pk)?.classList.toggle(
+      'active',
+      moodKind(todayData[pk]) === 'neutral'
+    );
+  });
+
+  // Use WCAG relative luminance, not the old approximate brightness cutoff.
+  // More importantly, each group reads the colour physically behind it:
+  // date/top navigation = morning, gesture = afternoon, message/buttons = evening.
   const skyEl = document.getElementById('page-sky');
-  const m = /(\d+),\s*(\d+),\s*(\d+)/.exec(bot);
-  const lum = m ? 0.2126 * +m[1] + 0.7152 * +m[2] + 0.0722 * +m[3] : 255;
-  skyEl.classList.toggle('sky-dark', lum < 150);
+  const topDark = needsLightText(top);
+  const midDark = needsLightText(mid);
+  const bottomDark = needsLightText(bot);
+  skyEl.classList.toggle('sky-top-dark', topDark);
+  skyEl.classList.toggle('sky-mid-dark', midDark);
+  skyEl.classList.toggle('sky-bottom-dark', bottomDark);
+  const topNav = document.getElementById('top-nav');
+  topNav.classList.toggle('sky-top-dark', topDark);
 }
 
 // ===== CLOUD SYSTEM =====
@@ -3504,7 +3635,7 @@ function _genAltocumulus(rng) {
 function _moodSignature(dayData) {
   const entries = PERIOD_KEYS.map(pk => dayData?.[pk]).filter(e => e?.score != null);
   if (!entries.length) return { count: 0, avg: 0, spread: 0 };
-  const vals = entries.map(e => (e.type === 'positive' ? 1 : -1) * e.score);
+  const vals = entries.map(moodSigned);
   const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
   const spread = vals.length > 1 ? Math.max(...vals) - Math.min(...vals) : 0;
   return { count: entries.length, avg, spread };
@@ -3707,7 +3838,10 @@ function updateCloudState(opts) {
   }
 
   wrap.innerHTML = renderCloudSVG(_cachedCloud, filled.length);
-  wrap.className = 'cloud-wrap' + (filled.length === 0 ? ' idle' : '');
+  const middleColor = moodColor(todayData.afternoon, EMPTY_SKY);
+  wrap.className = 'cloud-wrap' +
+    (filled.length === 0 ? ' idle' : '') +
+    (needsLightText(middleColor) ? ' cloud-on-dark' : ' cloud-on-light');
 
   // Tagline: today vs past
   const tagEl = document.querySelector('.sky-tagline');
@@ -3716,10 +3850,7 @@ function updateCloudState(opts) {
   // Cloud vertical position: positive → float up, negative → sink down
   if (filled.length > 0) {
     let total = 0;
-    filled.forEach(e => {
-      const sign = e.type === 'positive' ? 1 : -1;
-      total += sign * e.score;
-    });
+    filled.forEach(e => { total += moodSigned(e); });
     const avg = total / filled.length; // -100 to +100
     const offset = -(avg / 100) * 18; // -18 (up) to +18 (down)
     area.style.transform = `translateY(${offset}px)`;
@@ -3730,7 +3861,7 @@ function updateCloudState(opts) {
   // Rain: all 3 periods negative
   const rainEl = document.getElementById('rain-container');
   if (rainEl) {
-    const allNeg = filled.length === 3 && filled.every(e => e.type === 'negative');
+    const allNeg = filled.length === 3 && filled.every(e => moodKind(e) === 'negative');
     if (allNeg && !rainEl.classList.contains('active')) {
       rainEl.innerHTML = _buildRainDrops();
       rainEl.classList.add('active');
@@ -3743,7 +3874,7 @@ function updateCloudState(opts) {
   // Golden particles: all 3 periods positive
   const glowEl = document.getElementById('glow-container');
   if (glowEl) {
-    const allPos = filled.length === 3 && filled.every(e => e.type === 'positive');
+    const allPos = filled.length === 3 && filled.every(e => moodKind(e) === 'positive');
     if (allPos && !glowEl.classList.contains('active')) {
       glowEl.innerHTML = _buildGlowDots();
       glowEl.classList.add('active');
@@ -4020,10 +4151,6 @@ function updateBrush() {
 })();
 
 
-// Set when a drag actually moved, so the period button's tap handler can
-// tell "dragged this period" from "tapped to open the sheet".
-let _skyDragEndedAt = 0;
-
 // The same gesture, attached to any surface. `resolvePeriod` decides which
 // period it writes: the clock for the sky, a fixed one for a period button.
 function attachSkyDrag(area, resolvePeriod) {
@@ -4115,8 +4242,6 @@ function attachSkyDrag(area, resolvePeriod) {
     if (raf) { cancelAnimationFrame(raf); raf = 0; }
     if (!armed) return;                    // never engaged; nothing happened
     armed = false;
-    _skyDragEndedAt = Date.now();          // suppress the tap that follows
-
     const wrap = $('cloud-wrap');
     $('sky-bg')?.classList.remove('no-transition');
     $('sky-drag-hint')?.classList.remove('on');
@@ -4183,10 +4308,12 @@ function updateNavState(page) {
 
 function switchPage(page) {
   // Hide all pages
+  teardownJournal();
   document.getElementById('page-sky').classList.remove('active');
   document.getElementById('page-stats').classList.remove('active');
   document.getElementById('page-journal').classList.remove('active');
   document.getElementById('page-stats').innerHTML = '';
+  if (page !== 'journal') document.getElementById('page-journal').innerHTML = '';
 
   updateNavState(page);
 
@@ -4300,18 +4427,11 @@ function openEntrySheet(period) {
   const todayD = String(nowD.getDate());
   const todayY = nowD.getFullYear(), todayM = nowD.getMonth();
   let todayData = {};
-  let todayCycle = {};
   try {
     const raw = JSON.parse(localStorage.getItem(sKey(todayY, todayM)));
     const clean = sanitizeMonthData(raw);
     if (clean && clean[todayD]) todayData = clean[todayD];
   } catch {}
-  try {
-    const rawC = JSON.parse(localStorage.getItem(cKey(todayY, todayM)));
-    const cleanC = sanitizeCycleData(rawC);
-    if (cleanC && cleanC[todayD]) todayCycle = cleanC[todayD];
-  } catch {}
-
   const existing = todayData[period];
   if (!entryPicker) {
     entryPicker = createMoodPicker(document.getElementById('entry-picker'), paintEntrySave);
@@ -4434,12 +4554,12 @@ if (_v) _v.textContent = APP_VERSION;
 document.getElementById('settings-refresh')?.addEventListener('click', async () => {
   try {
     if ('serviceWorker' in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r => r.unregister()));
+      const reg = await navigator.serviceWorker.getRegistration('./');
+      if (reg) await reg.unregister();
     }
     if (window.caches) {
       const keys = await caches.keys();
-      await Promise.all(keys.map(k => caches.delete(k)));
+      await Promise.all(keys.filter(k => k.startsWith('moodsky-')).map(k => caches.delete(k)));
     }
   } catch {}
   location.reload();
