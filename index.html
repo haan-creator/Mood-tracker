@@ -176,8 +176,6 @@ input[type=number] { -moz-appearance: textfield; }
     radial-gradient(ellipse at 92% 38%, rgba(140,158,167,0.22) 0 9%, transparent 36%),
     linear-gradient(105deg, rgba(255,255,255,0.28), rgba(125,145,155,0.08), rgba(255,255,255,0.34));
   opacity: 0.9;
-  -webkit-mask-image: var(--fog-mask);
-          mask-image: var(--fog-mask);
 }
 .empty-cell {
   border-right: 1px solid rgba(100,110,130,0.04);
@@ -1490,7 +1488,7 @@ input[type=number] { -moz-appearance: textfield; }
 // which build is actually loaded rather than guessing at the cache.
 // Bump this on every handover — it was left unchanged across several,
 // which made the readout useless for the one question it exists for.
-const APP_VERSION = '2026.07.26 · v18';
+const APP_VERSION = '2026.07.26 · v19';
 
 // ===== COLOR SYSTEM =====
 // A brighter mood has to read as more radiant, not deeper. The old ramp
@@ -1868,20 +1866,6 @@ function getMonsterMessage(dayData) {
 function daysInMonth(y,m) { return new Date(y,m+1,0).getDate(); }
 function firstDow(y,m) { return new Date(y,m,1).getDay(); }
 
-function calendarFogMask(entries) {
-  const regions = entries.length === 1
-    ? [[0, 100]]
-    : entries.length === 2
-      ? [[0, 50], [50, 100]]
-      : [[0, 25], [25, 75], [75, 100]];
-  const stops = [];
-  regions.forEach(([start, end], i) => {
-    const ink = moodKind(entries[i]) === 'neutral' ? '#000' : 'transparent';
-    stops.push(`${ink} ${start}%`, `${ink} ${end}%`);
-  });
-  return `linear-gradient(180deg,${stops.join(',')})`;
-}
-
 function renderCalendar() {
   loadData();
   document.getElementById('display-year').textContent = curYear;
@@ -1918,18 +1902,20 @@ function renderCalendar() {
       // Gradient mode: blend all period colors into one fill
       const entries = PERIOD_KEYS.map(pk => dayD?.[pk]).filter(e => e?.score != null);
       if (entries.length > 0) {
-        const hasFog = entries.some(e => moodKind(e) === 'neutral');
-        const fogHTML = hasFog
-          ? `<div class="calendar-fog" style="--fog-mask:${calendarFogMask(entries)}"></div>`
+        // Fog texture is a whole-day weather treatment. In a mixed day the
+        // neutral stop stays plain #EEF0F1 so it blends cleanly with colour.
+        const allFog = entries.every(e => moodKind(e) === 'neutral');
+        const fogHTML = allFog
+          ? '<div class="calendar-fog"></div>'
           : '';
         if (entries.length === 1) {
-          html += `<div class="gradient-fill${hasFog ? ' has-fog' : ''}" style="background:${moodColor(entries[0])}">${fogHTML}</div>`;
+          html += `<div class="gradient-fill${allFog ? ' has-fog' : ''}" style="background:${moodColor(entries[0])}">${fogHTML}</div>`;
         } else {
           const colors = entries.map((e, i) => {
             const pct = (i / (entries.length - 1)) * 100;
             return `${moodColor(e)} ${pct}%`;
           });
-          html += `<div class="gradient-fill${hasFog ? ' has-fog' : ''}" style="background:linear-gradient(180deg,${colors.join(',')})">${fogHTML}</div>`;
+          html += `<div class="gradient-fill${allFog ? ' has-fog' : ''}" style="background:linear-gradient(180deg,${colors.join(',')})">${fogHTML}</div>`;
         }
       } else {
         html += '<div class="gradient-fill" style="background:#ece8e4;opacity:0.3"></div>';
