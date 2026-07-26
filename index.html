@@ -1431,13 +1431,16 @@ const MOOD_NEUTRAL = 2; // index of 還好
 // derived from the anchors above: what a level stores and where its band
 // ends are two different questions, and deriving the second from the first
 // (nearest anchor wins) left 還好 and the middle steps 45 wide while the
-// two extremes got 33. Stated outright, every band is 40–41 wide.
+// two extremes got 33. Stated outright, every band is 39–41 wide.
 // 還好 stays tight around zero because it means "nothing either way",
 // not "mildly anything" — it is the one level drawn without colour.
+// The top band opens at 60 rather than 61: a round 60 is what someone
+// reaching for "pretty heavy" on the old slider actually typed, and it
+// should keep reading that way. That costs the middle bands one point.
 // Everything that sorts a score into words or tiers reads these, so the
 // picker, the daily line and the filmstrip cannot tell three different
 // stories about the same number.
-const MOOD_BANDS = [20, 60];
+const MOOD_BANDS = [20, 59];
 function bandOf(score) {
   return score <= MOOD_BANDS[0] ? 0 : score <= MOOD_BANDS[1] ? 1 : 2;
 }
