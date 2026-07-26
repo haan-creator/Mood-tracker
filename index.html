@@ -161,6 +161,23 @@ input[type=number] { -moz-appearance: textfield; }
 .gradient-fill {
   flex: 1; width: 85%; border-radius: 4px;
   min-height: 32px; transition: background 0.3s;
+  position: relative; overflow: hidden;
+}
+.gradient-fill.has-fog {
+  box-shadow: inset 0 0 0 1px rgba(105,125,136,0.13);
+}
+/* Static fog texture makes a recorded 還好 distinguishable from an empty
+   paper-grey day without changing the shared #EEF0F1 mood colour. */
+.calendar-fog {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse at 16% 30%, rgba(120,145,157,0.27) 0 8%, transparent 34%),
+    radial-gradient(ellipse at 58% 64%, rgba(255,255,255,0.82) 0 12%, transparent 39%),
+    radial-gradient(ellipse at 92% 38%, rgba(140,158,167,0.22) 0 9%, transparent 36%),
+    linear-gradient(105deg, rgba(255,255,255,0.28), rgba(125,145,155,0.08), rgba(255,255,255,0.34));
+  opacity: 0.9;
+  -webkit-mask-image: var(--fog-mask);
+          mask-image: var(--fog-mask);
 }
 .empty-cell {
   border-right: 1px solid rgba(100,110,130,0.04);
@@ -178,6 +195,14 @@ input[type=number] { -moz-appearance: textfield; }
 .legend-item { display: flex; align-items: center; gap: 4; }
 .legend-dots { display: flex; gap: 2; }
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+.legend-fog {
+  width: 12px; height: 8px; border-radius: 5px;
+  background:
+    radial-gradient(ellipse at 25% 40%, rgba(125,145,155,0.35), transparent 52%),
+    radial-gradient(ellipse at 78% 60%, #fff, transparent 58%),
+    #EEF0F1;
+  box-shadow: inset 0 0 0 1px rgba(105,125,136,0.16);
+}
 .legend-bar { width: 14px; height: 3px; border-radius: 2px; }
 
 .footer {
@@ -202,11 +227,34 @@ input[type=number] { -moz-appearance: textfield; }
 .pc-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 18px 18px; }
 .pc-period-item { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.3); border: 1px solid rgba(0,0,0,0.04); transition: background 0.2s; }
 .pc-period-item.filled { background: rgba(255,255,255,0.7); }
-.pc-date-stamp { position: absolute; top: 20px; left: 22px; color: rgba(255,255,255,0.8); }
+.pc-date-stamp { position: absolute; top: 20px; left: 22px; color: rgba(40,35,30,0.78); }
 .pc-date-num { font-family: var(--display); font-size: 32px; font-weight: 800; line-height: 1; }
 .pc-date-weekday { font-size: 12px; font-weight: 500; margin-top: 4px; letter-spacing: 1px; opacity: 0.7; }
-.pc-hint { position: absolute; bottom: 52px; left: 0; right: 0; text-align: center; font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
+.pc-hint { position: absolute; bottom: 52px; left: 0; right: 0; text-align: center; font-size: 11px; color: rgba(40,35,30,0.5); letter-spacing: 1px; }
 .pc-cloud { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding-bottom: 40px; }
+.pc-cloud svg { transition: opacity 0.5s, filter 0.8s ease; }
+.pc-front.pc-top-dark .pc-date-stamp { color: rgba(255,255,255,0.96); }
+.pc-front.pc-bottom-dark .pc-hint { color: rgba(255,255,255,0.68); }
+.pc-front.pc-cloud-on-light .pc-cloud svg {
+  filter:
+    drop-shadow(0 8px 14px rgba(76,92,102,0.16))
+    drop-shadow(0 1px 2px rgba(55,70,80,0.12));
+}
+.pc-front.pc-cloud-on-dark .pc-cloud svg {
+  filter:
+    drop-shadow(0 0 1.5px rgba(255,255,255,0.38))
+    drop-shadow(0 7px 13px rgba(8,28,38,0.10));
+}
+.pc-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px; border: none;
+  background: rgba(40,35,30,0.10); color: rgba(40,35,30,0.72);
+  border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.pc-front.pc-top-dark .pc-close {
+  background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.88);
+}
 .pc-rain, .pc-glow { position: absolute; left: 10%; width: 80%; overflow: hidden; pointer-events: none; }
 .pc-rain { top: 45%; height: 40%; }
 .pc-glow { top: 25%; height: 45%; }
@@ -1346,11 +1394,15 @@ input[type=number] { -moz-appearance: textfield; }
       <div class="legend" style="position:relative;bottom:auto;padding:10px 16px;">
         <div class="legend-item">
           <div class="legend-dots" id="legend-warm"></div>
-          <span>正向</span>
+          <span>晴天</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-fog" aria-hidden="true"></div>
+          <span>白霧</span>
         </div>
         <div class="legend-item">
           <div class="legend-dots" id="legend-cool"></div>
-          <span>負向</span>
+          <span>陰天</span>
         </div>
         <div class="legend-item">
           <div class="legend-bar" style="background:linear-gradient(90deg,#7a4fd0,#a37ce8)"></div>
@@ -1438,7 +1490,7 @@ input[type=number] { -moz-appearance: textfield; }
 // which build is actually loaded rather than guessing at the cache.
 // Bump this on every handover — it was left unchanged across several,
 // which made the readout useless for the one question it exists for.
-const APP_VERSION = '2026.07.26 · v17';
+const APP_VERSION = '2026.07.26 · v18';
 
 // ===== COLOR SYSTEM =====
 // A brighter mood has to read as more radiant, not deeper. The old ramp
@@ -1816,6 +1868,20 @@ function getMonsterMessage(dayData) {
 function daysInMonth(y,m) { return new Date(y,m+1,0).getDate(); }
 function firstDow(y,m) { return new Date(y,m,1).getDay(); }
 
+function calendarFogMask(entries) {
+  const regions = entries.length === 1
+    ? [[0, 100]]
+    : entries.length === 2
+      ? [[0, 50], [50, 100]]
+      : [[0, 25], [25, 75], [75, 100]];
+  const stops = [];
+  regions.forEach(([start, end], i) => {
+    const ink = moodKind(entries[i]) === 'neutral' ? '#000' : 'transparent';
+    stops.push(`${ink} ${start}%`, `${ink} ${end}%`);
+  });
+  return `linear-gradient(180deg,${stops.join(',')})`;
+}
+
 function renderCalendar() {
   loadData();
   document.getElementById('display-year').textContent = curYear;
@@ -1852,14 +1918,18 @@ function renderCalendar() {
       // Gradient mode: blend all period colors into one fill
       const entries = PERIOD_KEYS.map(pk => dayD?.[pk]).filter(e => e?.score != null);
       if (entries.length > 0) {
+        const hasFog = entries.some(e => moodKind(e) === 'neutral');
+        const fogHTML = hasFog
+          ? `<div class="calendar-fog" style="--fog-mask:${calendarFogMask(entries)}"></div>`
+          : '';
         if (entries.length === 1) {
-          html += `<div class="gradient-fill" style="background:${moodColor(entries[0])}"></div>`;
+          html += `<div class="gradient-fill${hasFog ? ' has-fog' : ''}" style="background:${moodColor(entries[0])}">${fogHTML}</div>`;
         } else {
           const colors = entries.map((e, i) => {
             const pct = (i / (entries.length - 1)) * 100;
             return `${moodColor(e)} ${pct}%`;
           });
-          html += `<div class="gradient-fill" style="background:linear-gradient(180deg,${colors.join(',')})"></div>`;
+          html += `<div class="gradient-fill${hasFog ? ' has-fog' : ''}" style="background:linear-gradient(180deg,${colors.join(',')})">${fogHTML}</div>`;
         }
       } else {
         html += '<div class="gradient-fill" style="background:#ece8e4;opacity:0.3"></div>';
@@ -1904,6 +1974,14 @@ function renderLegend() {
 }
 
 // ===== DAY MODAL =====
+function applyPostcardContrast(front, colors) {
+  if (!front) return;
+  front.classList.toggle('pc-top-dark', needsLightText(colors[0]));
+  front.classList.toggle('pc-bottom-dark', needsLightText(colors[2]));
+  front.classList.toggle('pc-cloud-on-dark', needsLightText(colors[1]));
+  front.classList.toggle('pc-cloud-on-light', !needsLightText(colors[1]));
+}
+
 function openDayModal(day) {
   document.querySelector('meta[name="theme-color"]').setAttribute('content', '#8a8b8d');
   const dk = String(day);
@@ -1950,8 +2028,8 @@ function openDayModal(day) {
               <div class="pc-date-num">${curMonth+1}/${day}</div>
               <div class="pc-date-weekday">週${wd}</div>
             </div>
-            <button id="pc-close" aria-label="關閉明信片" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border:none;background:rgba(0,0,0,0.12);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+            <button id="pc-close" class="pc-close" aria-label="關閉明信片">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
             </button>
             <div class="pc-hint">輕觸翻面</div>
           </div>
@@ -1978,6 +2056,8 @@ function openDayModal(day) {
         </div>
       </div>
     </div>`;
+
+  applyPostcardContrast(document.getElementById('pc-front'), gradC);
 
   let editingIdx = null;
 
@@ -2008,6 +2088,7 @@ function openDayModal(day) {
     const gC = ents.map(e => moodColor(e));
     const front = document.getElementById('pc-front');
     front.style.background = `linear-gradient(180deg,${gC[0]} 0%,${gC[0]} 25%,${gC[1]} 50%,${gC[2]} 75%,${gC[2]} 100%)`;
+    applyPostcardContrast(front, gC);
     // The cloud is grown from the mood, so re-grow it after an edit.
     const cloudHost = front.querySelector('.pc-cloud');
     if (cloudHost) cloudHost.innerHTML = renderCloudSVG(generateCloudForDay(date, dd), fl.length);
