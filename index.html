@@ -1491,7 +1491,7 @@ input[type=number] { -moz-appearance: textfield; }
 // which build is actually loaded rather than guessing at the cache.
 // Bump this on every handover — it was left unchanged across several,
 // which made the readout useless for the one question it exists for.
-const APP_VERSION = '2026.07.25 · v10';
+const APP_VERSION = '2026.07.25 · v12';
 
 // ===== COLOR SYSTEM =====
 // A brighter mood has to read as more radiant, not deeper. The old ramp
@@ -1501,7 +1501,16 @@ const APP_VERSION = '2026.07.25 · v10';
 // 不錯 sat at rgb(255,194,98) — a washed-out amber too close to 還好 to
 // feel like anything. The middle of the ramp is a vivid gold now, so the
 // step from neutral to good actually reads as one.
-const WARM = [[255,247,216],[255,228,140],[255,205,60],[253,170,70],[248,132,104]];
+// WARM[0] is the score-0 colour everywhere — 還好. It is deliberately
+// colourless: a pale yellow, however pale, still sits on the warm half of
+// the scale and reads as a good day, which 還好 is not.
+const WARM = [[238,240,241],[255,228,140],[255,205,60],[253,170,70],[248,132,104]];
+
+// 還好 as a swatch, and a day with nothing on it. The swatch runs darker
+// than the sky because a small dab needs the contrast a full-screen wash
+// does not; both stay colourless so neither leans warm or cool.
+const NEUTRAL_DAB = 'rgb(188,192,195)';
+const EMPTY_SKY = 'rgb(198,199,201)';
 const COOL = [[160,210,230],[90,170,210],[50,130,180],[30,100,140],[15,70,80]];
 
 function lerp(stops, t) {
@@ -1593,7 +1602,7 @@ function createMoodPicker(host, onChange) {
     host.querySelectorAll('.mp-dot').forEach((b, i) => {
       const L = MOOD_LEVELS[i];
       b.querySelector('path').setAttribute('fill',
-        L.score === 0 ? '#c8c3be' : getColor(L.type, L.score));
+        L.score === 0 ? NEUTRAL_DAB : getColor(L.type, L.score));
       b.classList.toggle('on', i === level);
     });
     host.querySelector('.mp-label').textContent = MOOD_LEVELS[level].label;
@@ -1911,7 +1920,7 @@ function openDayModal(day) {
   const filled = entries.filter(e => e?.score != null);
   const allNeg = filled.length === 3 && filled.every(e => e.type === 'negative');
   const allPos = filled.length === 3 && filled.every(e => e.type === 'positive');
-  const gradC = entries.map(e => e ? getColor(e.type, e.score) : '#c8c3be');
+  const gradC = entries.map(e => e ? getColor(e.type, e.score) : EMPTY_SKY);
   const skyGrad = `linear-gradient(180deg,${gradC[0]} 0%,${gradC[0]} 25%,${gradC[1]} 50%,${gradC[2]} 75%,${gradC[2]} 100%)`;
   const stripC = entries.map(e => e ? getColor(e.type, e.score) : '#d8d4d0');
   const cloudSvg = renderCloudSVG(cloud, filled.length);
@@ -2001,7 +2010,7 @@ function openDayModal(day) {
     const dd = monthData[dk] || {};
     const ents = PERIOD_KEYS.map(pk => dd[pk] || null);
     const fl = ents.filter(e => e?.score != null);
-    const gC = ents.map(e => e ? getColor(e.type, e.score) : '#c8c3be');
+    const gC = ents.map(e => e ? getColor(e.type, e.score) : EMPTY_SKY);
     const sC = ents.map(e => e ? getColor(e.type, e.score) : '#d8d4d0');
     const front = document.getElementById('pc-front');
     front.style.background = `linear-gradient(180deg,${gC[0]} 0%,${gC[0]} 25%,${gC[1]} 50%,${gC[2]} 75%,${gC[2]} 100%)`;
@@ -2817,7 +2826,7 @@ function renderJournalItems(append = false) {
     const periodsHTML = day.periods.map((p, idx) => {
       if (!p) return '';
       const scoreClass = p.type === 'positive' ? 'pos' : 'neg';
-      const dotColor = p.score === 0 ? '#c8c3be' : getColor(p.type, p.score);
+      const dotColor = p.score === 0 ? NEUTRAL_DAB : getColor(p.type, p.score);
       const periodLabel = PERIOD_LABELS_ZH[p.period];
       return `
         <div class="journal-period ${scoreClass}">
@@ -3455,13 +3464,13 @@ function updateSkyPeriods() {
       btn.classList.add('filled');
       scoreEl.style.display = 'block';
       scoreEl.textContent = '';
-      scoreEl.style.background = entry.score === 0 ? '#c8c3be' : getColor(entry.type, entry.score);
+      scoreEl.style.background = entry.score === 0 ? NEUTRAL_DAB : getColor(entry.type, entry.score);
       if (dotEl) dotEl.style.display = 'none';
     } else if (entry?.type === 'unclear') {
       btn.classList.add('filled');
       scoreEl.style.display = 'block';
       scoreEl.textContent = '';
-      scoreEl.style.background = '#c8c3be';
+      scoreEl.style.background = NEUTRAL_DAB;
       if (dotEl) dotEl.style.display = 'none';
     } else {
       btn.classList.remove('filled');
@@ -3479,11 +3488,9 @@ function updateSkyGradient(provisional) {
     todayData[provisional.period] = { type: provisional.type, score: provisional.score };
   }
   const bg = document.getElementById('sky-bg');
-  // A day with nothing on it. Deliberately cool and desaturated: grey in a
-  // sky reads as overcast, and overcast belongs to the day you have not
-  // painted, not to a day that was merely ordinary. The warm grey this
-  // replaces looked like 還好 with the lights down.
-  const neutral = 'rgb(211,212,214)';
+  // Dimmer than 還好, which is the whole distinction: overcast is grey
+  // *and* dim, an ordinary day is grey *and* bright.
+  const neutral = EMPTY_SKY;
 
   function periodColor(pk) {
     const e = todayData[pk];
@@ -3975,7 +3982,7 @@ function activePeriod() { return selectedPeriod || currentPeriodKey(); }
 const SKY_DRAG_HOLD_MS = 300;
 const SKY_DRAG_ARM_SLOP = 10; // moving further than this cancels the hold
 
-function _commitSkyDrag(period, mood) {
+function _commitPeriodMood(period, mood) {
   const now = new Date();
   const d = String(now.getDate());
   curYear = now.getFullYear(); curMonth = now.getMonth();
@@ -4058,7 +4065,7 @@ function buildPalette() {
   if (!pal || pal.childElementCount) return;
   // Painted brightest-first so the column reads top-down like the sky.
   pal.innerHTML = MOOD_LEVELS.map((L, i) => {
-    const c = L.score === 0 ? '#c8c3be' : getColor(L.type, L.score);
+    const c = L.score === 0 ? NEUTRAL_DAB : getColor(L.type, L.score);
     return `<button type="button" class="sp-item" data-i="${i}" aria-label="${L.label}">
       <span class="sp-name">${L.label}</span>
       <svg viewBox="${BLOB_VIEWBOX}" aria-hidden="true"><path d="${paintBlob(i)}" fill="${c}"/></svg>
@@ -4109,10 +4116,13 @@ function updateBrush() {
     if (!btn) return;
     e.stopPropagation();
     const L = MOOD_LEVELS[parseInt(btn.dataset.i, 10)];
-    _commitSkyDrag(activePeriod(), { type: L.type, score: L.score });
+    _commitPeriodMood(activePeriod(), { type: L.type, score: L.score });
     try { localStorage.setItem('skyDragSeen', '1'); } catch {}
     closePalette();                      // chosen, so it puts itself away
-    runSkyRitual({ fromDrag: true });
+    // The full ritual, not the drag's. fromDrag exists to skip the wind-up
+    // when a finger has already displaced the cloud; a tap on a colour
+    // never touched it, so skipping left almost nothing to watch.
+    runSkyRitual();
   });
   document.addEventListener('click', closePalette);
 })();
@@ -4227,7 +4237,7 @@ function attachSkyDrag(area, resolvePeriod) {
     // Armed but never moved: they thought better of it. Leave the day alone.
     if (commit && movedSinceArm) {
       const L = MOOD_LEVELS[level];
-      _commitSkyDrag(period, { type: L.type, score: L.score });
+      _commitPeriodMood(period, { type: L.type, score: L.score });
       try { localStorage.setItem('skyDragSeen', '1'); } catch {}
       runSkyRitual({ fromDrag: true });
     } else {
