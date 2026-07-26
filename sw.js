@@ -1,12 +1,11 @@
 // Bumping this name is what retires the previous cache on activate.
-const CACHE = 'moodsky-v5';
+const CACHE = 'moodsky-v6';
 
 // Only assets that change rarely belong here. index.html deliberately
 // does not: it is the thing that changes on every release.
 const ASSETS = [
   './manifest.json',
   './DMSans-Variable.woff2',
-  './Syne-Variable.woff2',
   './icon-192.png',
   './icon-512.png',
 ];
