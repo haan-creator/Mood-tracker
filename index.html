@@ -116,12 +116,17 @@ input[type=number] { -moz-appearance: textfield; }
 
 /* Calendar */
 .cal-wrap {
-  background: rgba(255,255,255,0.55); border-radius: 14px; overflow: hidden;
-  border: 1px solid var(--border-light); box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+  background: rgba(232,238,242,0.60); border-radius: 14px; overflow: hidden;
+  border: 1px solid rgba(100,120,132,0.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.72), 0 8px 24px rgba(64,82,94,0.06);
+  padding: 7px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 .cal-weekdays {
   display: grid; grid-template-columns: repeat(7, 1fr);
-  border-bottom: 1px solid rgba(100,110,130,0.1);
+  gap: 7px;
+  border-bottom: 0;
 }
 .cal-weekdays span {
   text-align: center; padding: 7px 0; font-size: 11px; color: #a09888;
@@ -129,16 +134,18 @@ input[type=number] { -moz-appearance: textfield; }
 }
 .cal-grid {
   display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 7px;
   transition: opacity 0.3s;
 }
 .day-cell {
-  position: relative; background: transparent; border: none;
-  border-right: 1px solid rgba(100,110,130,0.08); border-bottom: 1px solid rgba(100,110,130,0.08);
+  position: relative; background: rgba(255,255,255,0.30); border: 1px solid rgba(255,255,255,0.58);
+  border-radius: 7px;
   padding: 3px 1px 4px; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; gap: 1;
   min-height: 66px;
+  box-shadow: inset 0 0 0 1px rgba(93,116,128,0.025);
 }
-.day-cell.today { background: rgba(100,110,130,0.06); outline: 1.5px solid rgba(180,60,80,0.25); outline-offset: -1px; }
+.day-cell.today { background: rgba(255,255,255,0.42); outline: 1.5px solid rgba(180,60,80,0.28); outline-offset: 0; }
 .day-cell .day-num {
   font-size: 10px; font-weight: 400; color: #a09888;
   font-family: var(--mono); line-height: 1.2;
@@ -178,8 +185,9 @@ input[type=number] { -moz-appearance: textfield; }
   opacity: 0.9;
 }
 .empty-cell {
-  border-right: 1px solid rgba(100,110,130,0.04);
-  border-bottom: 1px solid rgba(100,110,130,0.04);
+  border: 1px solid rgba(255,255,255,0.30);
+  border-radius: 7px;
+  background: rgba(120,138,150,0.045);
   min-height: 66px;
 }
 /* Legend */
@@ -4417,8 +4425,10 @@ function updateCellHeight() {
   const contentPadTop = 6;
   const bottomReserved = 90;
   const calWrapBorder = 2;
-  const available = window.innerHeight - topbarH - weekdaysH - contentPadTop - bottomReserved - calWrapBorder - 16;
-  const h = Math.max(66, Math.min(88, Math.floor(available / rows)));
+  const calendarPadding = 14;
+  const rowGaps = Math.max(0, rows - 1) * 7;
+  const available = window.innerHeight - topbarH - weekdaysH - contentPadTop - bottomReserved - calWrapBorder - calendarPadding - rowGaps - 16;
+  const h = Math.max(54, Math.min(88, Math.floor(available / rows)));
   document.documentElement.style.setProperty('--cell-h', h + 'px');
 }
 
