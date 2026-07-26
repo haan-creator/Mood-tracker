@@ -1419,24 +1419,34 @@ function getColor(type, score) {
 // They sit on the same 0–100 scale the app has always stored, so older
 // entries keep working untouched — this changes input granularity only.
 const MOOD_LEVELS = [
-  { label: '很沉',   type: 'negative', score: 90 },
-  { label: '有點沉', type: 'negative', score: 45 },
+  { label: '低落',   type: 'negative', score: 90 },
+  { label: '有點悶', type: 'negative', score: 45 },
   { label: '還好',   type: 'positive', score: 0  },
   { label: '不錯',   type: 'positive', score: 45 },
-  { label: '很亮',   type: 'positive', score: 90 },
+  { label: '很棒',   type: 'positive', score: 90 },
 ];
 const MOOD_NEUTRAL = 2; // index of 還好
 
+// Where one level ends and the next begins, on |score|. Deliberately not
+// derived from the anchors above: what a level stores and where its band
+// ends are two different questions, and deriving the second from the first
+// (nearest anchor wins) left 還好 and the middle steps 45 wide while the
+// two extremes got 33. Stated outright, every band is 40–41 wide.
+// 還好 stays tight around zero because it means "nothing either way",
+// not "mildly anything" — it is the one level drawn without colour.
+// Everything that sorts a score into words or tiers reads these, so the
+// picker, the daily line and the filmstrip cannot tell three different
+// stories about the same number.
+const MOOD_BANDS = [20, 60];
+function bandOf(score) {
+  return score <= MOOD_BANDS[0] ? 0 : score <= MOOD_BANDS[1] ? 1 : 2;
+}
+
 function _signed(type, score) { return (type === 'positive' ? 1 : -1) * score; }
 
-// Nearest level to an arbitrary stored score, so a legacy 62 lands on 不錯.
+// Band an arbitrary stored score falls in, so a legacy 52 lands on 不錯.
 function levelFromSigned(signed) {
-  let best = MOOD_NEUTRAL, bestD = Infinity;
-  MOOD_LEVELS.forEach((L, i) => {
-    const d = Math.abs(_signed(L.type, L.score) - signed);
-    if (d < bestD) { bestD = d; best = i; }
-  });
-  return best;
+  return MOOD_NEUTRAL + Math.sign(signed) * bandOf(Math.abs(signed));
 }
 function levelFromEntry(entry) {
   if (!entry || entry.score == null) return MOOD_NEUTRAL;
@@ -1564,15 +1574,7 @@ function getMonsterMessage(dayData) {
 
   // ── 分類 ──
   function classify(type, score) {
-    if (type === 'positive') {
-      if (score >= 60) return 'P高';
-      if (score >= 30) return 'P中';
-      return 'P低';
-    } else {
-      if (score >= 60) return 'N高';
-      if (score >= 30) return 'N中';
-      return 'N低';
-    }
+    return (type === 'positive' ? 'P' : 'N') + '低中高'[bandOf(score)];
   }
 
   // ── 只填了一段 ──
@@ -2221,11 +2223,12 @@ function openStats() {
     }
   }
 
-  // Consecutive low mood: days with any negative entry scoring >= 50
+  // Consecutive low mood: days with any entry in the 低落 band
   let maxLowRun = [], curLowRun = [];
   for (let d = 1; d <= dim; d++) {
     const dayD = monthData[String(d)];
-    const isLow = dayD && PERIOD_KEYS.some(pk => dayD[pk]?.type === 'negative' && dayD[pk].score >= 50);
+    const isLow = dayD && PERIOD_KEYS.some(pk =>
+      dayD[pk]?.type === 'negative' && bandOf(dayD[pk].score) === 2);
     if (isLow) {
       curLowRun.push(d);
     } else {
@@ -2461,18 +2464,15 @@ function openStats() {
   });
 
   // ===== SKY FILMSTRIP (blended gradient per day) =====
+  // One tier per mood band, so a day reads the same here as on its dot.
+  // Score 0 is 還好, and has to stay colourless here as it is everywhere
+  // else: even the palest warm tint sits on the warm half and reads as a
+  // good day, which 還好 is not. This strip used to paint it cream.
   function moodColor(type, score) {
-    if (type === 'positive') {
-      if (score > 65) return 'rgb(232,145,58)';
-      if (score > 40) return 'rgb(240,184,101)';
-      if (score > 20) return 'rgb(245,211,148)';
-      return 'rgb(250,232,200)';
-    } else {
-      if (score > 65) return 'rgb(60,80,130)';
-      if (score > 40) return 'rgb(90,120,165)';
-      if (score > 20) return 'rgb(140,170,200)';
-      return 'rgb(185,205,220)';
-    }
+    if (score === 0) return NEUTRAL_DAB;
+    return (type === 'positive'
+      ? ['rgb(250,232,200)','rgb(240,184,101)','rgb(232,145,58)']
+      : ['rgb(185,205,220)','rgb(90,120,165)','rgb(60,80,130)'])[bandOf(score)];
   }
   let filmstripHTML = '';
   for (let i = 0; i < dim; i++) {
